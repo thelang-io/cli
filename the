@@ -1,1 +1,40 @@
 #!/usr/bin/env bash
+
+base_path="$(pwd -P)"
+file_path=""
+is_lex=false
+
+panic () {
+  >&2 echo "$1"
+  exit 1
+}
+
+for (( i=1; i <= "$#"; i++ )); do
+  arg="${!i}"
+
+  if (( i == 1 )); then
+    if [ "$arg" == "lex" ]; then
+      is_lex=true
+    else
+      panic "Unknown option: $arg"
+    fi
+  elif (( i == 2 )); then
+    file_dir="$(cd "$base_path/$(dirname "$arg")" && pwd -P)"
+    file_name="$(basename "$arg")"
+    file_path="$file_dir/$file_name"
+
+    if [ -e "$file_path" ]; then
+      if [ ! -f "$file_path" ]; then
+        panic "'$file_path' is not a file"
+      fi
+    else
+      panic "File '$file_path' does not exists"
+    fi
+  else
+    panic "Unknown option: $arg"
+  fi
+done
+
+if [ "$is_lex" = true ]; then
+  echo "File '$file_path' will be lexed"
+fi
