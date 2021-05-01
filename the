@@ -9,17 +9,15 @@ throw () {
 }
 
 request () {
-  params=()
-  params+=("-Sfs")
-  params+=("-H")
-  params+=("Content-Type: application/octet-stream")
-  params+=("-X")
-  params+=("POST")
-  params+=("--data-binary")
-  params+=("@$2")
-  params+=("$1")
+  req_params=(
+    "-S" "-f" "-s"
+    "-H" "Content-Type: application/octet-stream"
+    "-X" "POST"
+    "--data-binary" "@$2"
+    "$1"
+  )
 
-  res_body="$(curl "${params[@]}" 2>&1)"
+  res_body="$(curl "${req_params[@]}" 2>&1)"
   res_code="$?"
 
   if [ "$res_code" -eq 0 ]; then
