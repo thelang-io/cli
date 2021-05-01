@@ -2,6 +2,7 @@
 
 base_path="$(pwd -P)"
 file_path=""
+is_compile=false
 is_lex=false
 
 panic () {
@@ -13,7 +14,9 @@ for (( i=1; i <= "$#"; i++ )); do
   arg="${!i}"
 
   if (( i == 1 )); then
-    if [ "$arg" == "lex" ]; then
+    if [ "$arg" == "compile" ]; then
+      is_compile=true
+    elif [ "$arg" == "lex" ]; then
       is_lex=true
     else
       panic "Unknown option: $arg"
@@ -35,6 +38,8 @@ for (( i=1; i <= "$#"; i++ )); do
   fi
 done
 
-if [ "$is_lex" = true ]; then
+if [ "$is_compile" = true ]; then
+  panic "Compiling is not supported yet"
+elif [ "$is_lex" = true ]; then
   echo "File '$file_path' will be lexed"
 fi
