@@ -42,7 +42,7 @@ for (( i=1; i <= "$#"; i++ )); do
     elif [ "$arg" == "lex" ]; then
       is_lex=true
     else
-      throw "Unknown option '$arg'"
+      throw "Unknown action '$arg'"
     fi
   elif (( i == 2 )); then
     file_dir="$(cd "$base_path/$(dirname "$arg")" && pwd -P)"
