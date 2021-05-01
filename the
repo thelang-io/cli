@@ -1,14 +1,37 @@
 #!/usr/bin/env bash
 
 base_path="$(pwd -P)"
+endpoint_url="https://the.delasy.com"
+
+panic () {
+  >&2 echo "$@"
+  exit 1
+}
+
+request () {
+  params=()
+  params+=("-Sfs")
+  params+=("-H")
+  params+=("Content-Type: application/octet-stream")
+  params+=("-X")
+  params+=("POST")
+  params+=("--data-binary")
+  params+=("@$2")
+  params+=("$1")
+
+  res_body="$(curl "${params[@]}" 2>&1)"
+  res_code="$?"
+
+  if [ "$res_code" -eq 0 ]; then
+    echo "$res_body"
+  else
+    panic "Failed to connect with status code $res_code"
+  fi
+}
+
 file_path=""
 is_compile=false
 is_lex=false
-
-panic () {
-  >&2 echo "$1"
-  exit 1
-}
 
 for (( i=1; i <= "$#"; i++ )); do
   arg="${!i}"
@@ -41,5 +64,5 @@ done
 if [ "$is_compile" = true ]; then
   panic "Compiling is not supported yet"
 elif [ "$is_lex" = true ]; then
-  echo "File '$file_path' will be lexed"
+  request "$endpoint_url/lex" "$file_path"
 fi
