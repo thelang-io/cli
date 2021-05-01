@@ -3,7 +3,7 @@
 base_path="$(pwd -P)"
 endpoint_url="https://the.delasy.com"
 
-main () {
+function main () {
   file_path=""
   is_compile=false
   is_lex=false
@@ -43,7 +43,7 @@ main () {
   fi
 }
 
-request () {
+function request () {
   req_params=(
     "-S" "-f" "-s"
     "-H" "Content-Type: application/octet-stream"
@@ -62,7 +62,7 @@ request () {
   fi
 }
 
-throw () {
+function throw () {
   >&2 echo "$1"
   exit 1
 }
