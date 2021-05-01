@@ -3,9 +3,44 @@
 base_path="$(pwd -P)"
 endpoint_url="https://the.delasy.com"
 
-throw () {
-  >&2 echo "$1"
-  exit 1
+main () {
+  file_path=""
+  is_compile=false
+  is_lex=false
+
+  for (( i=1; i <= "$#"; i++ )); do
+    arg="${!i}"
+
+    if (( i == 1 )); then
+      if [ "$arg" == "compile" ]; then
+        is_compile=true
+      elif [ "$arg" == "lex" ]; then
+        is_lex=true
+      else
+        throw "Error: Unknown action '$arg'"
+      fi
+    elif (( i == 2 )); then
+      file_dir="$(cd "$base_path/$(dirname "$arg")" && pwd -P)"
+      file_name="$(basename "$arg")"
+      file_path="$file_dir/$file_name"
+
+      if [ -e "$file_path" ]; then
+        if [ ! -f "$file_path" ]; then
+          throw "Error: '$file_path' is not a file"
+        fi
+      else
+        throw "Error: File '$file_path' does not exists"
+      fi
+    else
+      throw "Error: Unknown option '$arg'"
+    fi
+  done
+
+  if [ "$is_compile" = true ]; then
+    throw "Error: Compiling is not supported yet"
+  elif [ "$is_lex" = true ]; then
+    request "$endpoint_url/lex" "$file_path"
+  fi
 }
 
 request () {
@@ -27,40 +62,9 @@ request () {
   fi
 }
 
-file_path=""
-is_compile=false
-is_lex=false
+throw () {
+  >&2 echo "$1"
+  exit 1
+}
 
-for (( i=1; i <= "$#"; i++ )); do
-  arg="${!i}"
-
-  if (( i == 1 )); then
-    if [ "$arg" == "compile" ]; then
-      is_compile=true
-    elif [ "$arg" == "lex" ]; then
-      is_lex=true
-    else
-      throw "Error: Unknown action '$arg'"
-    fi
-  elif (( i == 2 )); then
-    file_dir="$(cd "$base_path/$(dirname "$arg")" && pwd -P)"
-    file_name="$(basename "$arg")"
-    file_path="$file_dir/$file_name"
-
-    if [ -e "$file_path" ]; then
-      if [ ! -f "$file_path" ]; then
-        throw "Error: '$file_path' is not a file"
-      fi
-    else
-      throw "Error: File '$file_path' does not exists"
-    fi
-  else
-    throw "Error: Unknown option '$arg'"
-  fi
-done
-
-if [ "$is_compile" = true ]; then
-  throw "Error: Compiling is not supported yet"
-elif [ "$is_lex" = true ]; then
-  request "$endpoint_url/lex" "$file_path"
-fi
+main "$@"
