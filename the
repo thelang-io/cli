@@ -4,7 +4,7 @@ base_path="$(pwd -P)"
 endpoint_url="https://the.delasy.com"
 
 throw () {
-  >&2 echo "Error: $1"
+  >&2 echo "$1"
   exit 1
 }
 
@@ -23,7 +23,7 @@ request () {
   if [ "$res_code" -eq 0 ]; then
     echo "$res_body"
   else
-    throw "Failed to connect with status code $res_code"
+    throw "NetworkError: Failed to connect with code $res_code"
   fi
 }
 
@@ -40,7 +40,7 @@ for (( i=1; i <= "$#"; i++ )); do
     elif [ "$arg" == "lex" ]; then
       is_lex=true
     else
-      throw "Unknown action '$arg'"
+      throw "Error: Unknown action '$arg'"
     fi
   elif (( i == 2 )); then
     file_dir="$(cd "$base_path/$(dirname "$arg")" && pwd -P)"
@@ -49,18 +49,18 @@ for (( i=1; i <= "$#"; i++ )); do
 
     if [ -e "$file_path" ]; then
       if [ ! -f "$file_path" ]; then
-        throw "'$file_path' is not a file"
+        throw "Error: '$file_path' is not a file"
       fi
     else
-      throw "File '$file_path' does not exists"
+      throw "Error: File '$file_path' does not exists"
     fi
   else
-    throw "Unknown option '$arg'"
+    throw "Error: Unknown option '$arg'"
   fi
 done
 
 if [ "$is_compile" = true ]; then
-  throw "Compiling is not supported yet"
+  throw "Error: Compiling is not supported yet"
 elif [ "$is_lex" = true ]; then
   request "$endpoint_url/lex" "$file_path"
 fi
