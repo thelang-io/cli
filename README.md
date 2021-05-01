@@ -1,4 +1,4 @@
-# cli
+# CLI
 CLI for The Programming Language
 
 ## Installation
