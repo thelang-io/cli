@@ -3,7 +3,7 @@
 base_path="$(pwd -P)"
 endpoint_url="https://the.delasy.com"
 
-panic () {
+throw () {
   >&2 echo "$@"
   exit 1
 }
@@ -25,7 +25,7 @@ request () {
   if [ "$res_code" -eq 0 ]; then
     echo "$res_body"
   else
-    panic "Failed to connect with status code $res_code"
+    throw "Failed to connect with status code $res_code"
   fi
 }
 
@@ -42,7 +42,7 @@ for (( i=1; i <= "$#"; i++ )); do
     elif [ "$arg" == "lex" ]; then
       is_lex=true
     else
-      panic "Unknown option: $arg"
+      throw "Unknown option: $arg"
     fi
   elif (( i == 2 )); then
     file_dir="$(cd "$base_path/$(dirname "$arg")" && pwd -P)"
@@ -51,18 +51,18 @@ for (( i=1; i <= "$#"; i++ )); do
 
     if [ -e "$file_path" ]; then
       if [ ! -f "$file_path" ]; then
-        panic "'$file_path' is not a file"
+        throw "'$file_path' is not a file"
       fi
     else
-      panic "File '$file_path' does not exists"
+      throw "File '$file_path' does not exists"
     fi
   else
-    panic "Unknown option: $arg"
+    throw "Unknown option: $arg"
   fi
 done
 
 if [ "$is_compile" = true ]; then
-  panic "Compiling is not supported yet"
+  throw "Compiling is not supported yet"
 elif [ "$is_lex" = true ]; then
   request "$endpoint_url/lex" "$file_path"
 fi
