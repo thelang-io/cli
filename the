@@ -63,7 +63,7 @@ function request () {
   if [ "$res_code" -eq 0 ]; then
     echo "$res_body"
   else
-    throw "NetworkError: Failed to connect with code $res_code"
+    throw "Error: Request failed with exit code $res_code"
   fi
 }
 
