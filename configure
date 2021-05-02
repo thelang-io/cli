@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-curl -o /usr/local/bin/the -s https://cdn.jsdelivr.net/gh/langthe/cli/the
-chmod +x /usr/local/bin/the
+sudo curl -O -s https://cdn.jsdelivr.net/gh/langthe/cli/the
+sudo mv the /usr/local/bin
+sudo chmod +x /usr/local/bin/the
