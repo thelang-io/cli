@@ -40,9 +40,9 @@ function main () {
     throw "Error: Authentication token is not set"
   fi
 
-  if [ "$is_compile" = true ]; then
+  if [ "$is_compile" == true ]; then
     throw "Error: Compiling is not supported yet"
-  elif [ "$is_lex" = true ]; then
+  elif [ "$is_lex" == true ]; then
     request "$endpoint_url/lex" "$file_path"
   fi
 }
