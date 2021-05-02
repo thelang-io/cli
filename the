@@ -36,6 +36,10 @@ function main () {
     fi
   done
 
+  if [ "$AUTH_TOKEN" == "" ]; then
+    throw "Error: Authentication token is not set"
+  fi
+
   if [ "$is_compile" = true ]; then
     throw "Error: Compiling is not supported yet"
   elif [ "$is_lex" = true ]; then
@@ -46,6 +50,7 @@ function main () {
 function request () {
   req_params=(
     "-S" "-f" "-s"
+    "-H" "Authorization: $AUTH_TOKEN"
     "-H" "Content-Type: application/octet-stream"
     "-X" "POST"
     "--data-binary" "@$2"
