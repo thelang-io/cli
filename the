@@ -8,6 +8,10 @@ function main () {
   is_compile=false
   is_lex=false
 
+  if (( $# == 0 )); then
+    throw "Error: Action is not set"
+  fi
+
   for (( i=1; i <= "$#"; i++ )); do
     arg="${!i}"
 
@@ -36,7 +40,9 @@ function main () {
     fi
   done
 
-  if [ "$AUTH_TOKEN" == "" ]; then
+  if [ -z "$file_path" ]; then
+    throw "Error: File path is not set"
+  elif [ -z "$AUTH_TOKEN" ]; then
     throw "Error: Authentication token is not set"
   fi
 
