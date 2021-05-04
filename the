@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 base_path="$(pwd -P)"
-endpoint_url="https://the.delasy.com"
+endpoint_url="https://api.the.delasy.com"
 
 function main () {
   file_path=""
