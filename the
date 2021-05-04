@@ -67,7 +67,9 @@ function request () {
   res_code="$?"
 
   if [ "$res_code" -eq 0 ]; then
-    echo "$res_body"
+    if [ -n "$res_body" ]; then
+      echo "$res_body"
+    fi
   else
     throw "Error: Request failed with exit code $res_code"
   fi
