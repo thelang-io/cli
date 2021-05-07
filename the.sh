@@ -76,7 +76,7 @@ function request () {
 }
 
 function throw () {
-  >&2 echo "$1"
+  echo "$1" 1>&2
   exit 1
 }
 
