@@ -24,7 +24,14 @@ function main () {
         throw "Error: Unknown action '$arg'"
       fi
     elif (( i == 2 )); then
-      file_dir="$(cd "$base_path/$(dirname "$arg")" && pwd -P)"
+      file_relative_dir="$(dirname "$arg")"
+
+      if [ "${file_relative_dir:0:1}" == "/" ]; then
+        file_dir="$file_relative_dir"
+      else
+        file_dir="$(cd "$base_path/$(dirname "$arg")" && pwd -P)"
+      fi
+
       file_name="$(basename "$arg")"
       file_path="$file_dir/$file_name"
 
