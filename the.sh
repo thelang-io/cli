@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 base_path="$(pwd -P)"
 endpoint_url="https://api.the.delasy.com"
