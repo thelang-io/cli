@@ -62,7 +62,7 @@ function aws_s3_put_object {
 
   header_authorization="authorization:AWS4-HMAC-SHA256 Credential=$s3id/$date/$s3region/s3/aws4_request, SignedHeaders=$signed_headers, Signature=$sign"
 
-  curl -X "$method" -T "$file" \
+  curl -s -X "$method" -T "$file" \
     -H "$header_authorization" \
     -H "$header_content_type" \
     -H "$header_host" \
