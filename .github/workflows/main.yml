@@ -16,4 +16,4 @@ jobs:
           AWS_CLOUDFRONT_DISTRO_ID: ${{ secrets.AWS_CLOUDFRONT_DISTRO_ID }}
           AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
           AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
-        run: scripts/deploy.sh
+        run: .github/workflows/deploy.sh
