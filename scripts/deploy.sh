@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 s3bucket="$AWS_S3_BUCKET_NAME"
 s3id="$AWS_ACCESS_KEY_ID"
