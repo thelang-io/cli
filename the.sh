@@ -3,7 +3,7 @@
 base_path="$(pwd -P)"
 endpoint_url="https://api.the.delasy.com"
 
-function main () {
+function main {
   file_path=""
   is_compile=false
   is_lex=false
@@ -60,7 +60,7 @@ function main () {
   fi
 }
 
-function request () {
+function request {
   req_params=(
     "-S" "-f" "-s"
     "-H" "Authorization: $AUTH_TOKEN"
@@ -82,7 +82,7 @@ function request () {
   fi
 }
 
-function throw () {
+function throw {
   echo "$1" 1>&2
   exit 1
 }
