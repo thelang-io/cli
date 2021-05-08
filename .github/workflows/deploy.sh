@@ -24,7 +24,7 @@ function aws_s3_put_object {
 
   date="$(date -u "+%Y%m%d")"
   datetime="${date}T$(date -u "+%H%M%S")Z"
-  hash="$(hash_sha256 "")"
+  hash="$(openssl dgst -sha256 < "$file" | sed "s/^.* //")"
 
   header_content_type="content-type:application/octet-stream"
   header_host="host:$host"
@@ -41,18 +41,18 @@ function aws_s3_put_object {
   signed_headers+="x-amz-content-sha256;"
   signed_headers+="x-amz-date"
 
-  canonical_req="$method"$'\n'
-  canonical_req+="$resource"$'\n'
-  canonical_req+=$'\n'
-  canonical_req+="$canonical_headers"$'\n'
-  canonical_req+=$'\n'
-  canonical_req+="$signed_headers"$'\n'
-  canonical_req+="$hash"
+  req_canonical="$method"$'\n'
+  req_canonical+="$resource"$'\n'
+  req_canonical+=$'\n'
+  req_canonical+="$canonical_headers"$'\n'
+  req_canonical+=$'\n'
+  req_canonical+="$signed_headers"$'\n'
+  req_canonical+="$hash"
 
   sign_str="AWS4-HMAC-SHA256"$'\n'
   sign_str+="$datetime"$'\n'
   sign_str+="$date/$s3region/s3/aws4_request"$'\n'
-  sign_str+="$(hash_sha256 "$canonical_req")"
+  sign_str+="$(hash_sha256 "$req_canonical")"
 
   step1="$(hmac_sha256 "key:AWS4$s3secret" "$date")"
   step2="$(hmac_sha256 "hexkey:$step1" "$s3region")"
@@ -72,9 +72,8 @@ function aws_s3_put_object {
 }
 
 function main {
-  # aws_s3_put_object "configure.sh" "cli@latest"
-  # aws_s3_put_object "the.sh" "the@latest"
-  aws_s3_put_object "configure.sh" "cli"
+  aws_s3_put_object "configure.sh" "cli%40latest"
+  aws_s3_put_object "the.sh" "the%40latest"
 }
 
 main "$@"
