@@ -16,6 +16,7 @@ jobs:
           AWS_CLOUDFRONT_DISTRIBUTION: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
-        run: which cmake
-      - run: ls /usr/bin
-      - run: ls /usr/local/bin
+        run: |
+          aws --version &&
+          aws s3 cp configure.sh s3://$AWS_S3_BUCKET/cli@latest &&
+          aws s3 cp the.sh s3://$AWS_S3_BUCKET/the@latest
