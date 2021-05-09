@@ -4,8 +4,8 @@ set -e
 aws_access_key="$AWS_ACCESS_KEY"
 aws_access_secret="$AWS_ACCESS_SECRET"
 aws_cloudfront_distribution="$AWS_CLOUDFRONT_DISTRIBUTION"
-aws_s3_region="$AWS_S3_REGION"
 aws_s3_bucket="$AWS_S3_BUCKET"
+aws_s3_region="$AWS_S3_REGION"
 lf=$'\n'
 
 function hash_sha256 {
