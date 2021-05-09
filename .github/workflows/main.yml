@@ -22,4 +22,7 @@ jobs:
             --content-type application/octet-stream &&
             aws s3 cp the.sh s3://$AWS_S3_BUCKET/the@latest \
               --acl public-read \
-              --content-type application/octet-stream
+              --content-type application/octet-stream &&
+            aws cloudfront create-invalidation \
+              --distribution-id $AWS_CLOUDFRONT_DISTRO \
+              --paths "/cli@latest" "/the@latest"
