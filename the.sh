@@ -4,6 +4,33 @@ set -e
 base_path="$(pwd -P)"
 endpoint_url="https://api.the.delasy.com"
 
+function throw {
+  echo "$1" 1>&2
+  exit 1
+}
+
+function request {
+  req_params=(
+    "-S" "-f" "-s"
+    "-H" "Authorization: $AUTH_TOKEN"
+    "-H" "Content-Type: application/octet-stream"
+    "-X" "POST"
+    "--data-binary" "@$2"
+    "$1"
+  )
+
+  res_body="$(curl "${req_params[@]}" 2>&1)"
+  res_code="$?"
+
+  if [ "$res_code" -eq 0 ]; then
+    if [ -n "$res_body" ]; then
+      echo "$res_body"
+    fi
+  else
+    throw "Error: Request failed with exit code $res_code"
+  fi
+}
+
 function main {
   file_path=""
   is_compile=false
@@ -59,33 +86,6 @@ function main {
   elif [ "$is_lex" == true ]; then
     request "$endpoint_url/lex" "$file_path"
   fi
-}
-
-function request {
-  req_params=(
-    "-S" "-f" "-s"
-    "-H" "Authorization: $AUTH_TOKEN"
-    "-H" "Content-Type: application/octet-stream"
-    "-X" "POST"
-    "--data-binary" "@$2"
-    "$1"
-  )
-
-  res_body="$(curl "${req_params[@]}" 2>&1)"
-  res_code="$?"
-
-  if [ "$res_code" -eq 0 ]; then
-    if [ -n "$res_body" ]; then
-      echo "$res_body"
-    fi
-  else
-    throw "Error: Request failed with exit code $res_code"
-  fi
-}
-
-function throw {
-  echo "$1" 1>&2
-  exit 1
 }
 
 main "$@"
