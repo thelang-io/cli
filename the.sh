@@ -38,6 +38,39 @@ function main {
 
   if (( $# == 0 )); then
     throw "Error: Action is not set"
+  elif [[ $# -eq 1 && ("$1" == "-h" || "$1" == "--help") ]]; then
+    echo
+    echo "  Usage:"
+    echo
+    echo "     the [option]"
+    echo "     the [action] file"
+    echo
+    echo "  Options:"
+    echo
+    echo "    -h, --help        Print help information"
+    echo "    -v, --version     Print version"
+    echo
+    echo "  Actions:"
+    echo
+    echo "    compile           Compile file (soon)"
+    echo "    lex               Lex file"
+    echo
+    echo "  Examples:"
+    echo
+    echo "    $ the -h"
+    echo "    $ the --version"
+    echo
+    echo "    $ the compile /path/to/file"
+    echo "    $ the lex /path/to/file"
+    echo
+
+    exit
+  elif [[ $# -eq 1 && ("$1" == "-v" || "$1" == "--version") ]]; then
+    echo "The Programming Language"
+    echo "Version 0.1.0 (Hummingbird)"
+    echo "Copyright (c) Aaron Delasy"
+
+    exit
   fi
 
   for (( i=1; i <= "$#"; i++ )); do
