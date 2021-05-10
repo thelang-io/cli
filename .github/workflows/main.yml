@@ -3,6 +3,9 @@ on:
     branches: [main]
     paths: [".github/workflows/**", "configure.sh", "the.sh"]
 
+env:
+  VERSION: 0.1.0
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -14,14 +17,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}
           aws-region: ${{ secrets.AWS_REGION }}
       - run: |
-          aws s3 cp configure.sh s3://${{ secrets.AWS_S3_BUCKET }}/cli@latest \
+          aws s3 cp configure.sh \
+            s3://${{ secrets.AWS_S3_BUCKET }}/cli@latest \
             --acl public-read \
             --content-type application/octet-stream
       - run: |
-          aws s3 cp the.sh s3://${{ secrets.AWS_S3_BUCKET }}/the@latest \
+          aws s3 cp configure.sh \
+            s3://${{ secrets.AWS_S3_BUCKET }}/cli@$VERSION \
+            --acl public-read \
+            --content-type application/octet-stream
+      - run: |
+          aws s3 cp the.sh \
+            s3://${{ secrets.AWS_S3_BUCKET }}/the@latest \
+            --acl public-read \
+            --content-type application/octet-stream
+      - run: |
+          aws s3 cp the.sh \
+            s3://${{ secrets.AWS_S3_BUCKET }}/the@$VERSION \
             --acl public-read \
             --content-type application/octet-stream
       - run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} \
-            --paths "/cli@latest" "/the@latest"
+            --paths "/cli@latest" "/the@latest" "/cli@$VERSION" "/the@$VERSION"
