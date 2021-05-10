@@ -1,7 +1,7 @@
 on:
   push:
     branches: [main]
-    paths: ["configure.sh", "the.sh"]
+    paths: [".github/workflows/**", "configure.sh", "the.sh"]
 
 jobs:
   deploy:
