@@ -35,6 +35,7 @@ function main {
   file_path=""
   is_compile=false
   is_lex=false
+  the="latest"
 
   if (( $# == 0 )); then
     throw "Error: Action is not set"
@@ -59,6 +60,7 @@ function main {
     echo
     echo "    --the=x.x.x       Specify The Programming Language version," \
       "valid values:"
+    echo "                        latest"
     echo "                        0.1 - alias for 0.1.x"
     echo "                        0.1.0"
     echo
@@ -113,7 +115,11 @@ function main {
         throw "Error: File '$file_path' does not exists"
       fi
     else
-      throw "Error: Unknown option '$arg'"
+      if [ "${arg:0:6}" == "--the=" ]; then
+        the="${arg:6}"
+      else
+        throw "Error: Unknown option '$arg'"
+      fi
     fi
   done
 
@@ -126,7 +132,7 @@ function main {
   if [ "$is_compile" == true ]; then
     throw "Error: Compiling is not supported yet"
   elif [ "$is_lex" == true ]; then
-    request "$endpoint_url/lex" "$file_path"
+    request "$endpoint_url/lex?v=$the" "$file_path"
   fi
 }
 
