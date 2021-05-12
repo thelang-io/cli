@@ -43,7 +43,7 @@ function main {
     echo "  Usage:"
     echo
     echo "     the [option]"
-    echo "     the [action] file"
+    echo "     the [action] file [action-options]"
     echo
     echo "  Options:"
     echo
@@ -55,6 +55,13 @@ function main {
     echo "    compile           Compile file (soon)"
     echo "    lex               Lex file"
     echo
+    echo "  Action Options:"
+    echo
+    echo "    --the=x.x.x       Specify The Programming Language version," \
+      "valid values:"
+    echo "                        0.1 - alias for 0.1.x"
+    echo "                        0.1.0"
+    echo
     echo "  Examples:"
     echo
     echo "    $ the -h"
@@ -62,6 +69,8 @@ function main {
     echo
     echo "    $ the compile /path/to/file"
     echo "    $ the lex /path/to/file"
+    echo "    $ the compile /path/to/file --the=1.0"
+    echo "    $ the lex /path/to/file --the=1.0.0"
     echo
 
     exit
