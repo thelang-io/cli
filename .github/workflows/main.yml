@@ -1,16 +1,16 @@
 on:
-  push:
-    branches: [main]
-    paths: [".github/workflows/**", "configure.sh", "the.sh"]
-
-env:
-  VERSION: 0.1.0
+  release:
+    types: [published]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: |
+          msg="$(git log -1 --pretty=format:%B)"
+          echo "VERSION=${msg:9:$((${#msg} - 10))}" >> $GITHUB_ENV
+      - run: echo $VERSION
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
