@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+#
+# Copyright (c) 2021-present Aaron Delasy
+# Licensed under the MIT License
+#
+
 set -e
 
 base_path="$(pwd -P)"
