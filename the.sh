@@ -80,7 +80,7 @@ function main {
     exit
   elif [[ $# -eq 1 && ("$1" == "-v" || "$1" == "--version") ]]; then
     echo "The Programming Language"
-    echo "Version 0.1.0 (Hummingbird)"
+    echo "Version 0.1.1 (Hummingbird)"
     echo "Copyright (c) Aaron Delasy"
 
     exit
