@@ -2,7 +2,7 @@
 set -e
 
 base_path="$(pwd -P)"
-endpoint_url="https://api.the.delasy.com"
+endpoint_url="https://api.thelang.io"
 
 function throw {
   echo "$1" 1>&2

@@ -3,7 +3,7 @@ CLI for The Programming Language
 
 ## Installation
 ```sh
-$ curl -s https://the.delasy.com/cli@latest | bash
+$ curl -s https://cdn.thelang.io/cli@latest | bash
 ```
 
 ## Authentication
