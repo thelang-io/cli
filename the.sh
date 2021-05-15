@@ -61,8 +61,6 @@ function main {
     echo "    --the=x.x.x       Specify The Programming Language version," \
       "valid values:"
     echo "                        latest"
-    echo "                        0.2"
-    echo "                        0.2.0"
     echo "                        0.1"
     echo "                        0.1.0"
     echo
