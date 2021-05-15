@@ -8,8 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          msg="$(git log -1 --pretty=format:%B)"
-          echo "VERSION=${msg:9:$((${#msg} - 10))}" >> $GITHUB_ENV
+          msg="${{ github.event.release.tag_name }}"
+          echo "VERSION=${msg:1}" >> $GITHUB_ENV
       - run: echo $VERSION
       - uses: aws-actions/configure-aws-credentials@v1
         with:
