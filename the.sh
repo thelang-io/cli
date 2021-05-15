@@ -19,15 +19,12 @@ function request {
     "$1"
   )
 
-  res_body="$(curl "${req_params[@]}" 2>&1)"
-  res_code="$?"
-
-  if [ "$res_code" -eq 0 ]; then
+  if res_body="$(curl "${req_params[@]}" 2>&1)"; then
     if [ -n "$res_body" ]; then
       echo "$res_body"
     fi
   else
-    throw "Error: Request failed with exit code $res_code"
+    throw "Error: Request failed with exit code $?"
   fi
 }
 
