@@ -19,22 +19,18 @@ jobs:
       - run: |
           aws s3 cp configure.sh \
             s3://${{ secrets.AWS_S3_BUCKET }}/cli@latest \
-            --acl public-read \
             --content-type application/octet-stream
       - run: |
           aws s3 cp configure.sh \
             s3://${{ secrets.AWS_S3_BUCKET }}/cli@$VERSION \
-            --acl public-read \
             --content-type application/octet-stream
       - run: |
           aws s3 cp the.sh \
             s3://${{ secrets.AWS_S3_BUCKET }}/the@latest \
-            --acl public-read \
             --content-type application/octet-stream
       - run: |
           aws s3 cp the.sh \
             s3://${{ secrets.AWS_S3_BUCKET }}/the@$VERSION \
-            --acl public-read \
             --content-type application/octet-stream
       - run: |
           aws cloudfront create-invalidation \
