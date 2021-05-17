@@ -38,6 +38,7 @@ function main {
   file_path=""
   is_compile=false
   is_lex=false
+  is_upgrade=false
   the="latest"
 
   if (( $# == 0 )); then
@@ -95,6 +96,8 @@ function main {
         is_compile=true
       elif [ "$arg" == "lex" ]; then
         is_lex=true
+      elif [ "$arg" == "upgrade" ]; then
+        is_upgrade=true
       else
         throw "Error: Unknown action '$arg'"
       fi
@@ -126,7 +129,14 @@ function main {
     fi
   done
 
-  if [ -z "$file_path" ]; then
+  if [ "$is_upgrade" == true ]; then
+    curl -o /usr/local/bin/the@latest -s https://cdn.thelang.io/the@latest
+    chmod +x /usr/local/bin/the@latest
+
+    nohup bash -c "sleep 1 && \
+      rm -f /usr/local/bin/the && \
+      mv /usr/local/bin/the@latest /usr/local/bin/the" > /dev/null 2>&1 &
+  elif [ -z "$file_path" ]; then
     throw "Error: File path is not set"
   elif [ -z "$AUTH_TOKEN" ]; then
     throw "Error: Authentication token is not set"
