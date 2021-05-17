@@ -13,5 +13,5 @@ $ AUTH_TOKEN=<auth-token> the [action]
 
 ## Usage
 ```sh
-$ the lex file
+$ the -h
 ```
