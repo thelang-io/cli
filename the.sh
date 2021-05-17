@@ -59,6 +59,7 @@ function main {
     echo
     echo "    compile           Compile file (soon)"
     echo "    lex               Lex file"
+    echo "    upgrade           Self-upgrade CLI to newest version"
     echo
     echo "  Action Options:"
     echo
@@ -77,6 +78,7 @@ function main {
     echo "    $ the lex /path/to/file"
     echo "    $ the compile /path/to/file --the=1.0"
     echo "    $ the lex /path/to/file --the=1.0.0"
+    echo "    $ the upgrade"
     echo
 
     exit
