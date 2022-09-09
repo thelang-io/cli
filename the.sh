@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Copyright (c) 2021-present Aaron Delasy
+# Copyright (c) 2018 Aaron Delasy
 # Licensed under the MIT License
 #
 
@@ -84,8 +84,8 @@ function main {
     exit
   elif [[ $# -eq 1 && ("$1" == "-v" || "$1" == "--version") ]]; then
     echo "The Programming Language"
-    echo "Version 0.2.0 (Nematode)"
-    echo "Copyright (c) Aaron Delasy"
+    echo "Version 0.11.0 (Open Source)"
+    echo "Copyright (c) 2018 Aaron Delasy"
 
     exit
   fi
@@ -132,12 +132,12 @@ function main {
   done
 
   if [ "$is_upgrade" == true ]; then
-    curl -o /usr/local/bin/the@latest -s https://cdn.thelang.io/the@latest
-    chmod +x /usr/local/bin/the@latest
+    curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/the
+    chmod +x /usr/local/bin/the_latest
 
     nohup bash -c "sleep 1 && \
       rm -f /usr/local/bin/the && \
-      mv /usr/local/bin/the@latest /usr/local/bin/the" > /dev/null 2>&1 &
+      mv /usr/local/bin/the_latest /usr/local/bin/the" > /dev/null 2>&1 &
   elif [ -z "$file_path" ]; then
     throw "Error: File path is not set"
   elif [ -z "$AUTH_TOKEN" ]; then
