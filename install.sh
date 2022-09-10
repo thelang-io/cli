@@ -7,5 +7,8 @@
 
 set -e
 
-curl -o /usr/local/bin/the -s https://cdn.thelang.io/the
+cat << 'EOF' > /usr/local/bin/the
+{{ CLI_CONTENT }}
+EOF
+
 chmod +x /usr/local/bin/the

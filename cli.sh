@@ -38,8 +38,8 @@ function main {
   file_path=""
   is_compile=false
   is_lex=false
-  is_upgrade=false
-  the="latest"
+  is_parse=false
+  the="lts"
 
   if (( $# == 0 )); then
     throw "Error: Action is not set"
@@ -57,17 +57,20 @@ function main {
     echo
     echo "  Actions:"
     echo
-    echo "    compile           Compile file (soon)"
+    echo "    compile           Compile file"
     echo "    lex               Lex file"
+    echo "    parse             Parse file"
     echo "    upgrade           Self-upgrade CLI to newest version"
     echo
     echo "  Action Options:"
     echo
     echo "    --the=x.x.x       Specify The Programming Language version," \
       "valid values:"
+    echo "                        lts"
     echo "                        latest"
-    echo "                        0.2"
-    echo "                        0.2.0"
+    echo "                        1"
+    echo "                        1.1"
+    echo "                        1.1.1"
     echo
     echo "  Examples:"
     echo
@@ -84,7 +87,7 @@ function main {
     exit
   elif [[ $# -eq 1 && ("$1" == "-v" || "$1" == "--version") ]]; then
     echo "The Programming Language"
-    echo "Version 0.11.0 (Open Source)"
+    echo "Version {{ VERSION_NUM }} ({{ VERSION_NAME }})"
     echo "Copyright (c) 2018 Aaron Delasy"
 
     exit
@@ -98,8 +101,17 @@ function main {
         is_compile=true
       elif [ "$arg" == "lex" ]; then
         is_lex=true
+      elif [ "$arg" == "parse" ]; then
+        is_parse=true
       elif [ "$arg" == "upgrade" ]; then
-        is_upgrade=true
+        curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/the@lts
+        chmod +x /usr/local/bin/the_latest
+
+        nohup bash -c "sleep 1 && \
+          rm -f /usr/local/bin/the && \
+          mv /usr/local/bin/the_latest /usr/local/bin/the" > /dev/null 2>&1 &
+
+        exit
       else
         throw "Error: Unknown action '$arg'"
       fi
@@ -131,23 +143,18 @@ function main {
     fi
   done
 
-  if [ "$is_upgrade" == true ]; then
-    curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/the
-    chmod +x /usr/local/bin/the_latest
-
-    nohup bash -c "sleep 1 && \
-      rm -f /usr/local/bin/the && \
-      mv /usr/local/bin/the_latest /usr/local/bin/the" > /dev/null 2>&1 &
-  elif [ -z "$file_path" ]; then
+  if [ -z "$file_path" ]; then
     throw "Error: File path is not set"
   elif [ -z "$AUTH_TOKEN" ]; then
     throw "Error: Authentication token is not set"
   fi
 
   if [ "$is_compile" == true ]; then
-    throw "Error: Compiling is not supported yet"
+    request "$endpoint_url/compile?v=$the" "$file_path"
   elif [ "$is_lex" == true ]; then
     request "$endpoint_url/lex?v=$the" "$file_path"
+  elif [ "$is_parse" == true ]; then
+    request "$endpoint_url/parse?v=$the" "$file_path"
   fi
 }
 
