@@ -7,6 +7,7 @@
 
 set -e
 
+AUTH_TOKEN="pELerETRaVeYHEne"
 base_path="$(pwd -P)"
 endpoint_url="https://api.thelang.io"
 
