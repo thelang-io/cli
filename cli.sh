@@ -16,6 +16,20 @@ function throw {
   exit 1
 }
 
+function download {
+  req_params=(
+    "-S" "-f" "-s"
+    "-H" "Authorization: $AUTH_TOKEN"
+    "-H" "Content-Type: application/octet-stream"
+    "-X" "POST"
+    "--data-binary" "@$2"
+    "$1"
+  )
+
+  curl "${req_params[@]}" -o "$base_path/a.out"
+  chmod +x "$base_path/a.out"
+}
+
 function request {
   req_params=(
     "-S" "-f" "-s"
@@ -40,6 +54,7 @@ function main {
   is_compile=false
   is_lex=false
   is_parse=false
+  is_run=false
   the="lts"
 
   if (( $# == 0 )); then
@@ -61,6 +76,7 @@ function main {
     echo "    compile           Compile file"
     echo "    lex               Lex file"
     echo "    parse             Parse file"
+    echo "    run               Run file"
     echo "    upgrade           Self-upgrade CLI to newest version"
     echo
     echo "  Action Options:"
@@ -104,6 +120,8 @@ function main {
         is_lex=true
       elif [ "$arg" == "parse" ]; then
         is_parse=true
+      elif [ "$arg" == "run" ]; then
+        is_run=true
       elif [ "$arg" == "upgrade" ]; then
         curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/the@lts
         chmod +x /usr/local/bin/the_latest
@@ -151,11 +169,15 @@ function main {
   fi
 
   if [ "$is_compile" == true ]; then
-    request "$endpoint_url/compile?v=$the" "$file_path"
+    download "$endpoint_url/compile?v=$the" "$file_path"
   elif [ "$is_lex" == true ]; then
     request "$endpoint_url/lex?v=$the" "$file_path"
   elif [ "$is_parse" == true ]; then
     request "$endpoint_url/parse?v=$the" "$file_path"
+  elif [ "$is_run" == true ]; then
+    download "$endpoint_url/compile?v=$the" "$file_path"
+    "$base_path/a.out"
+    rm "$base_path/a.out"
   fi
 }
 
