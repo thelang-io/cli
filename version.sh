@@ -5,5 +5,5 @@
 # Licensed under the MIT License
 #
 
-VERSION_NUM="0.11.0"
-VERSION_NAME="Open Source"
+VERSION_NUM="0.2.0"
+VERSION_NAME="Nematode"
