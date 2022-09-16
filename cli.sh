@@ -55,7 +55,7 @@ function main {
   is_lex=false
   is_parse=false
   is_run=false
-  the="lts"
+  the="latest"
 
   if (( $# == 0 )); then
     throw "Error: Action is not set"
@@ -83,7 +83,6 @@ function main {
     echo
     echo "    --the=x.x.x       Specify The Programming Language version," \
       "valid values:"
-    echo "                        lts"
     echo "                        latest"
     echo "                        1"
     echo "                        1.1"
@@ -123,7 +122,7 @@ function main {
       elif [ "$arg" == "run" ]; then
         is_run=true
       elif [ "$arg" == "upgrade" ]; then
-        curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/the@lts
+        curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/cli
         chmod +x /usr/local/bin/the_latest
 
         nohup bash -c "sleep 1 && \
