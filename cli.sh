@@ -30,6 +30,18 @@ function download {
   chmod +x "$base_path/a.out"
 }
 
+function platform {
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    printf "linux"
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    printf "macos"
+  elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    printf "windows"
+  else
+    printf "linux"
+  fi
+}
+
 function request {
   req_params=(
     "-S" "-f" "-s"
@@ -55,6 +67,7 @@ function main {
   is_lex=false
   is_parse=false
   is_run=false
+  platform="$(platform)"
   the="latest"
 
   if (( $# == 0 )); then
@@ -155,6 +168,8 @@ function main {
     else
       if [ "${arg:0:6}" == "--the=" ]; then
         the="${arg:6}"
+      elif [ "${arg:0:11}" == "--platform=" ]; then
+        platform="${arg:11}"
       else
         throw "Error: Unknown option '$arg'"
       fi
@@ -168,13 +183,13 @@ function main {
   fi
 
   if [ "$is_compile" == true ]; then
-    download "$endpoint_url/compile?v=$the" "$file_path"
+    download "$endpoint_url/compile?v=$the&p=$platform" "$file_path"
   elif [ "$is_lex" == true ]; then
-    request "$endpoint_url/lex?v=$the" "$file_path"
+    request "$endpoint_url/lex?v=$the&p=$platform" "$file_path"
   elif [ "$is_parse" == true ]; then
-    request "$endpoint_url/parse?v=$the" "$file_path"
+    request "$endpoint_url/parse?v=$the&p=$platform" "$file_path"
   elif [ "$is_run" == true ]; then
-    download "$endpoint_url/compile?v=$the" "$file_path"
+    download "$endpoint_url/compile?v=$the&p=$platform" "$file_path"
     "$base_path/a.out"
     rm "$base_path/a.out"
   fi
