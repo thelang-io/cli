@@ -16,6 +16,52 @@ function throw {
   exit 1
 }
 
+function read_file {
+  printf "%s" "$(<"$dir_name$1")"
+}
+
+function build {
+  dir_name="$(pwd)/"
+  build_dir="$(pwd)/build"
+  files=()
+
+  for file in "$dir_name"*; do
+    file_name="${file:${#dir_name}}"
+    if [ ! -f "$file" ] || [[ "$file_name" == *"."* ]]; then continue; fi
+    files+=("$file_name")
+  done
+
+  definitions=""
+  content=""
+
+  for file in "${files[@]}"; do
+    file_content="$(read_file "$file")"
+
+    while [[ "$file_content" =~ (^|[[:space:]])((obj|enum) [[:alnum:]_]+[[:space:]]*{[^}]*}) ]]; do
+      match="${BASH_REMATCH[2]}"
+      prefix=${file_content%%"$match"*}
+      file_content="${file_content:0:${#prefix}}${file_content:$((${#prefix} + ${#match}))}"
+      definitions+="$match\n"
+    done
+
+    content+="$file_content\n"
+  done
+
+  mkdir -p "$build_dir"
+
+  if [ -z "$definitions" ]; then
+    printf "%s" "$content" > "$build_dir/result"
+  else
+    printf "%s" "$definitions$content" > "$build_dir/result"
+  fi
+
+  if [ -t 1 ]; then
+    echo "$build_dir/result"
+  else
+    printf "%s" "$build_dir/result"
+  fi
+}
+
 function download {
   req_params=(
     "-S" "-f" "-s"
@@ -63,6 +109,7 @@ function request {
 
 function main {
   file_path=""
+  is_build=false
   is_compile=false
   is_lex=false
   is_parse=false
@@ -86,6 +133,7 @@ function main {
     echo
     echo "  Actions:"
     echo
+    echo "    build             Build source directory into single file"
     echo "    compile           Compile file"
     echo "    lex               Lex file"
     echo "    parse             Parse file"
@@ -94,16 +142,17 @@ function main {
     echo
     echo "  Options:"
     echo
+    echo "    --platform=...    Specify target platform, one of: linux, macos,"
+    echo "                      windows. Applies to actions: compile, run."
     echo "    --the=...         Specify The Programming Language version, valid"
     echo "                      formats: latest, 1, 1.1, 1.1.1"
-    echo "    --platform=...    Specify target platform, one of: linux, macos,"
-    echo "                      windows"
     echo
     echo "  Examples:"
     echo
     echo "    $ the -h"
     echo "    $ the --version"
     echo
+    echo "    $ the build"
     echo "    $ the compile /path/to/file"
     echo "    $ the lex /path/to/file"
     echo "    $ the compile /path/to/file --the=1.0"
@@ -125,7 +174,9 @@ function main {
     arg="${!i}"
 
     if (( i == 1 )); then
-      if [ "$arg" == "compile" ]; then
+      if [ "$arg" == "build" ]; then
+        is_build=true
+      elif [ "$arg" == "compile" ]; then
         is_compile=true
       elif [ "$arg" == "lex" ]; then
         is_lex=true
@@ -175,13 +226,15 @@ function main {
     fi
   done
 
-  if [ -z "$file_path" ]; then
+  if [ "$is_build" != true ] && [ -z "$file_path" ]; then
     throw "Error: File path is not set"
   elif [ -z "$AUTH_TOKEN" ]; then
     throw "Error: Authentication token is not set"
   fi
 
-  if [ "$is_compile" == true ]; then
+  if [ "$is_build" == true ]; then
+    build
+  elif [ "$is_compile" == true ]; then
     download "$endpoint_url/compile?v=$the&p=$platform" "$file_path"
   elif [ "$is_lex" == true ]; then
     request "$endpoint_url/lex?v=$the&p=$platform" "$file_path"
