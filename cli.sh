@@ -77,7 +77,7 @@ function main {
     echo "  Usage:"
     echo
     echo "     the [option]"
-    echo "     the [action] file [action-options]"
+    echo "     the [action] file [options]"
     echo
     echo "  Options:"
     echo
@@ -92,14 +92,12 @@ function main {
     echo "    run               Run file"
     echo "    upgrade           Self-upgrade CLI to newest version"
     echo
-    echo "  Action Options:"
+    echo "  Options:"
     echo
-    echo "    --the=x.x.x       Specify The Programming Language version," \
-      "valid values:"
-    echo "                        latest"
-    echo "                        1"
-    echo "                        1.1"
-    echo "                        1.1.1"
+    echo "    --the=...         Specify The Programming Language version, valid"
+    echo "                      formats: latest, 1, 1.1, 1.1.1"
+    echo "    --platform=...    Specify target platform, one of: linux, macos,"
+    echo "                      windows"
     echo
     echo "  Examples:"
     echo
@@ -110,6 +108,7 @@ function main {
     echo "    $ the lex /path/to/file"
     echo "    $ the compile /path/to/file --the=1.0"
     echo "    $ the lex /path/to/file --the=1.0.0"
+    echo "    $ the run /path/to/file --platform=macos"
     echo "    $ the upgrade"
     echo
 
