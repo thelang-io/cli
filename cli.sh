@@ -187,10 +187,7 @@ function main {
       elif [ "$arg" == "upgrade" ]; then
         curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/cli
         chmod +x /usr/local/bin/the_latest
-
-        nohup bash -c "sleep 1 && \
-          rm -f /usr/local/bin/the && \
-          mv /usr/local/bin/the_latest /usr/local/bin/the" > /dev/null 2>&1 &
+        nohup bash -c "sleep 1 && rm -f /usr/local/bin/the && /usr/local/bin/the_latest" > /dev/null 2>&1 &
 
         exit
       else
