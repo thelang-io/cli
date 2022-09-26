@@ -72,7 +72,7 @@ function download {
     "$1"
   )
 
-  curl "${req_params[@]}" -o "$base_path/a.out"
+  curl "${req_params[@]}" -o "$base_path/a.out" --max-time 100
   chmod +x "$base_path/a.out"
 }
 
@@ -98,7 +98,7 @@ function request {
     "$1"
   )
 
-  if res_body="$(curl "${req_params[@]}" 2>&1)"; then
+  if res_body="$(curl "${req_params[@]}" --max-time 100 2>&1)"; then
     if [ -n "$res_body" ]; then
       echo "$res_body"
     fi
