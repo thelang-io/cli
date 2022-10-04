@@ -9,19 +9,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: ./build.sh
       - run: |
           msg="${{ github.event.release.tag_name }}"
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
+      - run: curl -o- https://cdn.thelang.io/cli | bash
+      - run: the compile cli --output=cli-core-linux --platform=linux
+      - run: sleep 1
+      - run: the compile cli --output=cli-core-macos --platform=macos
+      - run: sleep 1
+      - run: the compile cli --output=cli-core-windows --platform=windows
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - run: aws s3 cp dist/cli.sh s3://${{ secrets.AWS_S3_BUCKET }}/cli --content-type application/octet-stream
-      - run: aws s3 cp dist/cli.sh s3://${{ secrets.AWS_S3_BUCKET }}/cli@latest --content-type application/octet-stream
-      - run: aws s3 cp dist/cli.sh s3://${{ secrets.AWS_S3_BUCKET }}/cli@$VERSION --content-type application/octet-stream
+      - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli                       --content-type application/octet-stream
+      - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli@latest                --content-type application/octet-stream
+      - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli@$VERSION              --content-type application/octet-stream
+      - run: aws s3 cp install.bat      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win                   --content-type application/octet-stream
+      - run: aws s3 cp install.bat      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@latest            --content-type application/octet-stream
+      - run: aws s3 cp install.bat      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@$VERSION          --content-type application/octet-stream
+      - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux            --content-type application/octet-stream
+      - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux@latest     --content-type application/octet-stream
+      - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux@$VERSION   --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos            --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos@latest     --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos@$VERSION   --content-type application/octet-stream
+      - run: aws s3 cp cli-core-windows s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows          --content-type application/octet-stream
+      - run: aws s3 cp cli-core-windows s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows@latest   --content-type application/octet-stream
+      - run: aws s3 cp cli-core-windows s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows@$VERSION --content-type application/octet-stream
       - run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} \
-            --paths "/cli" "/cli@latest" "/cli@$VERSION"
+            --paths "/cli" "/cli@latest" \
+                    "/cli-win" "/cli-win@latest" \
+                    "/cli-core-linux" "/cli-core-linux@latest" \
+                    "/cli-core-macos" "/cli-core-macos@latest" \
+                    "/cli-core-windows" "/cli-core-windows@latest"

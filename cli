@@ -5,6 +5,10 @@
 
 AUTH_TOKEN := "pELerETRaVeYHEne"
 ENDPOINT_URL := "https://api.thelang.io"
+VERSION_NUM := "0.11.0"
+VERSION_NAME := "Open Source"
+
+// todo add output variable
 
 fn panic (message: str) {
   print("Error: " + message, to: "stderr")
@@ -146,15 +150,14 @@ main {
       "    $ the compile /path/to/file --the=1.0" + EOL +
       "    $ the lex /path/to/file --the=1.0.0" + EOL +
       "    $ the run /path/to/file --platform=macos" + EOL +
-      "    $ the upgrade" + EOL +
-      EOL
+      "    $ the upgrade" + EOL
     )
 
     exit(0)
   } elif args.len == 1 && (args[0] == "-v" || args[0] == "--version") {
     print(
-      "The Programming Language" +
-      "Version {{ VERSION_NUM }} ({{ VERSION_NAME }})" +
+      "The Programming Language" + EOL +
+      "Version " + VERSION_NUM + " (" + VERSION_NAME + ")" + EOL +
       "Copyright (c) 2018 Aaron Delasy"
     )
 

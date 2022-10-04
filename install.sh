@@ -8,7 +8,14 @@
 set -e
 echo "Installing The CLI..."
 
-# todo download latest core file from cdn
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  curl -o /usr/local/bin/the -s https://cdn.thelang.io/cli-core-macos
+elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+  curl -o /usr/local/bin/the -s https://cdn.thelang.io/cli-core-windows
+else
+  curl -o /usr/local/bin/the -s https://cdn.thelang.io/cli-core-linux
+fi
+
 chmod +x /usr/local/bin/the
 
 echo "Successfully installed The CLI!"
