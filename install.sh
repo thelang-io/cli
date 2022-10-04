@@ -8,10 +8,8 @@
 set -e
 echo "Installing The CLI..."
 
-cat << 'EOF' > /usr/local/bin/the
-{{ CLI_CONTENT }}
-EOF
-
+# todo download latest core file from cdn
 chmod +x /usr/local/bin/the
+
 echo "Successfully installed The CLI!"
 echo "  Type \`the -h\` to explore available options"

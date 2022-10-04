@@ -1,0 +1,236 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+AUTH_TOKEN := "pELerETRaVeYHEne"
+ENDPOINT_URL := "https://api.thelang.io"
+
+fn panic (message: str) {
+  print("Error: " + message, to: "stderr")
+  exit(1)
+}
+
+fn chmodAdd (path: str, mode: int) {
+  stat := fs_statSync(path)
+  fs_chmodSync(path, stat.mode | mode)
+}
+
+fn build () {
+  // dir_name="$(pwd)/"
+  // build_dir="$(pwd)/build"
+  // files=()
+
+  // for file in "$dir_name"*; do
+  //   file_name="${file:${#dir_name}}"
+  //   if [ ! -f "$file" ] || [[ "$file_name" == *"."* ]]; then continue; fi
+  //   files+=("$file_name")
+  // done
+
+  // definitions=""
+  // content=""
+
+  // for file in "${files[@]}"; do
+  //   file_content="$(fs_readFileSync(file, "utf8"))"
+
+  //   while [[ "$file_content" =~ (^|[[:space:]])((obj|enum) [[:alnum:]_]+[[:space:]]*{[^}]*}) ]]; do
+  //     match="${BASH_REMATCH[2]}"
+  //     prefix=${file_content%%"$match"*}
+  //     file_content="${file_content:0:${#prefix}}${file_content:$((${#prefix} + ${#match}))}"
+  //     definitions+="$match\n"
+  //   done
+
+  //   content+="$file_content\n"
+  // done
+
+  // mkdir -p "$build_dir"
+
+  // if [ -z "$definitions" ]; then
+  //   printf "%s" "$content" > "$build_dir/result"
+  // else
+  //   printf "%s" "$definitions$content" > "$build_dir/result"
+  // fi
+
+  // if [ -t 1 ]; then
+  //   echo "$build_dir/result"
+  // else
+  //   printf "%s" "$build_dir/result"
+  // fi
+}
+
+fn defaultPlatform (): str {
+  if OS == "macOS" {
+    return "macos"
+  } elif OS == "Windows" {
+    return "windows"
+  } else {
+    return "linux"
+  }
+}
+
+fn download () {
+  // req_params=(
+  //   "-S" "-f" "-s"
+  //   "-H" "Authorization: $AUTH_TOKEN"
+  //   "-H" "Content-Type: application/octet-stream"
+  //   "-X" "POST"
+  //   "--data-binary" "@$2"
+  //   "$1"
+  // )
+
+  // curl "${req_params[@]}" -o "$base_path/a.out" --max-time 100
+  chmodAdd(PWD + "/a.out", 0o100)
+}
+
+fn request (): str {
+  // req_params=(
+  //   "-S" "-f" "-s"
+  //   "-H" "Authorization: $AUTH_TOKEN"
+  //   "-H" "Content-Type: application/octet-stream"
+  //   "-X" "POST"
+  //   "--data-binary" "@$2"
+  //   "$1"
+  // )
+
+  // if res_body="$(curl "${req_params[@]}" --max-time 100 2>&1)"; then
+  //   if [ -n "$res_body" ]; then
+  //     print(res_body)
+  //   fi
+  // else
+  //   panic("Request failed with exit code $?")
+  // fi
+}
+
+main {
+  args := ARGS.slice(1)
+
+  if args.len == 0 {
+    panic("Action is not set")
+  } elif args.len == 1 && (args[0] == "-h" || args[0] == "--help") {
+    print(
+      EOL +
+      "  Usage:" + EOL +
+      EOL +
+      "     the [option]" + EOL +
+      "     the [action] file [options]" + EOL +
+      EOL +
+      "  Options:" + EOL +
+      EOL +
+      "    -h, --help        Print help information" + EOL +
+      "    -v, --version     Print version" + EOL +
+      EOL +
+      "  Actions:" + EOL +
+      EOL +
+      "    build             Build source directory into single file" + EOL +
+      "    compile           Compile file" + EOL +
+      "    lex               Lex file" + EOL +
+      "    parse             Parse file" + EOL +
+      "    run               Run file" + EOL +
+      "    upgrade           Self-upgrade CLI to newest version" + EOL +
+      EOL +
+      "  Options:" + EOL +
+      EOL +
+      "    --platform=...    Specify target platform, one of: linux, macos," + EOL +
+      "                      windows. Applies to actions: compile, run." + EOL +
+      "    --the=...         Specify The Programming Language version, valid" + EOL +
+      "                      formats: latest, 1, 1.1, 1.1.1" + EOL +
+      EOL +
+      "  Examples:" + EOL +
+      EOL +
+      "    $ the -h" + EOL +
+      "    $ the --version" + EOL +
+      EOL +
+      "    $ the build" + EOL +
+      "    $ the compile /path/to/file" + EOL +
+      "    $ the lex /path/to/file" + EOL +
+      "    $ the compile /path/to/file --the=1.0" + EOL +
+      "    $ the lex /path/to/file --the=1.0.0" + EOL +
+      "    $ the run /path/to/file --platform=macos" + EOL +
+      "    $ the upgrade" + EOL +
+      EOL
+    )
+
+    exit(0)
+  } elif args.len == 1 && (args[0] == "-v" || args[0] == "--version") {
+    print(
+      "The Programming Language" +
+      "Version {{ VERSION_NUM }} ({{ VERSION_NAME }})" +
+      "Copyright (c) 2018 Aaron Delasy"
+    )
+
+    exit(0)
+  }
+
+  mut filePath := ""
+  mut platform := defaultPlatform()
+  mut version := "latest"
+
+  mut isBuild := false
+  mut isCompile := false
+  mut isLex := false
+  mut isParse := false
+  mut isRun := false
+  mut isUpgrade := false
+
+  loop i = 0; i < args.len; i++ {
+    arg := args[i]
+
+    if i == 1 {
+      if arg == "build" {
+        isBuild = true
+      } elif arg == "compile" {
+        isCompile = true
+      } elif arg == "lex" {
+        isLex = true
+      } elif arg == "parse" {
+        isParse = true
+      } elif arg == "run" {
+        isRun = true
+      } elif arg == "upgrade" {
+        isUpgrade = true
+      } else {
+        panic("Unknown action '" + arg + "'")
+      }
+    } elif i == 2 {
+      fileRelativeDir := path_dirname(arg)
+      fileDir := fileRelativeDir.slice(0, 1) == "/"
+        ? fileRelativeDir
+        : fs_realpathSync(PWD + "/" + fileRelativeDir)
+      filePath = fileDir + "/" + path_basename(arg)
+
+      if !fs_existsSync(filePath) {
+        panic("File '" + filePath + "' does not exists")
+      } elif !fs_isDirectorySync(filePath) {
+        panic("Path '" + filePath + "' is not a file")
+      }
+    } elif arg.slice(0, 6) == "--the=" {
+      version = arg.slice(6)
+    } elif arg.slice(0, 11) == "--platform=" {
+      platform = arg.slice(11)
+    } else {
+      panic("Unknown option '" + arg + "'")
+    }
+  }
+
+  if !isBuild && filePath.len == 0 {
+    panic("File path is not set")
+  }
+
+  if isBuild {
+    build()
+  } elif isCompile {
+    download(ENDPOINT_URL + "/compile?v=" + version + "&p=" + platform, filePath)
+  } elif isLex {
+    request(ENDPOINT_URL + "/lex?v=" + version + "&p=" + platform, filePath)
+  } elif isParse {
+    request(ENDPOINT_URL + "/parse?v=" + version + "&p=" + platform, filePath)
+  } elif isRun {
+    download(ENDPOINT_URL + "/compile?v=" + version + "&p=" + platform, filePath)
+    process_run(PWD + "/a.out")
+    fs_unlinkSync(PWD + "/a.out")
+  } elif isUpgrade {
+    // curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/cli
+    chmodAdd("/usr/local/bin/the_latest", 0o100)
+    // nohup bash -c "sleep 1 && rm -f /usr/local/bin/the && /usr/local/bin/the_latest" > /dev/null 2>&1 &
+  }
+}

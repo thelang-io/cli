@@ -6,7 +6,6 @@
 #
 
 set -e
-
 source version.sh
 
 rm -rf dist
