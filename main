@@ -9,7 +9,11 @@ ENDPOINT_URL := "https://api.thelang.io"
 VERSION_NUM := "0.11.0"
 VERSION_NAME := "Open Source"
 
-// todo add output option
+obj ParsedFile {
+  headers: str
+  definitions: str
+  content: str
+}
 
 fn panic (message: str) {
   print("Error: " + message, to: "stderr")
@@ -21,46 +25,55 @@ fn chmodAdd (path: str, mode: int) {
   fs_chmodSync(path, stat.mode | mode)
 }
 
+fn parseFile (content: str) ParsedFile {
+  // todo
+}
+
 fn build () {
-  // dir_name="$(pwd)/"
-  // build_dir="$(pwd)/build"
-  // files=()
+  print("Starting build")
 
-  // for file in "$dir_name"*; do
-  //   file_name="${file:${#dir_name}}"
-  //   if [ ! -f "$file" ] || [[ "$file_name" == *"."* ]]; then continue; fi
-  //   files+=("$file_name")
-  // done
+  dirName := PWD + "/"
+  buildDir := PWD + "/build"
+  dirFiles := fs_readDirSync(dirName)
 
-  // definitions=""
-  // content=""
+  mut files: str[]
 
-  // for file in "${files[@]}"; do
-  //   file_content="$(fs_readFileSync(file, "utf8"))"
+  loop i := 0; i < dirFiles.len; i++ {
+    file := dirFiles[i]
+    fileName := file.slice(dirName.len)
 
-  //   while [[ "$file_content" =~ (^|[[:space:]])((obj|enum) [[:alnum:]_]+[[:space:]]*{[^}]*}) ]]; do
-  //     match="${BASH_REMATCH[2]}"
-  //     prefix=${file_content%%"$match"*}
-  //     file_content="${file_content:0:${#prefix}}${file_content:$((${#prefix} + ${#match}))}"
-  //     definitions+="$match\n"
-  //   done
+    if fs_isFileSync(file) && fileName.find(".") == -1 {
+      files.push(fileName)
+    }
+  }
 
-  //   content+="$file_content\n"
-  // done
+  mut headers := ""
+  mut definitions := ""
+  mut content := ""
 
-  // mkdir -p "$build_dir"
+  loop i := 0; i < files.len; i++ {
+    file := files[i]
+    print("Processing file: " + file)
 
-  // if [ -z "$definitions" ]; then
-  //   printf "%s" "$content" > "$build_dir/result"
-  // else
-  //   printf "%s" "$definitions$content" > "$build_dir/result"
-  // fi
+    fileContent := fs_readFileSync(file, "utf8")
+    parsedContent = parseFile(fileContent)
 
-  // if [ -t 1 ]; then
-  //   echo "$build_dir/result"
-  // else
-  //   printf "%s" "$build_dir/result"
-  // fi
+    headers += parsedContent.headers
+    definitions += parsedContent.definitions
+    content += parsedContent.content
+  }
+
+  print("Checking build directory: " + buildDir)
+
+  if !fs_existsSync(buildDir) {
+    print("Creating build directory: " + buildDir)
+    fs_mkdirSync(buildDir)
+  }
+
+  result := headers + definitions + content
+  fs_writeFileSync(buildDir + "/result", result.toBuffer())
+
+  print("Build finished: " + buildDir + "/result")
 }
 
 fn defaultPlatform (): str {
@@ -105,6 +118,8 @@ fn request (url: str, path: str) {
 
   if data.len > 0 {
     print(data)
+  } else {
+    print("Server didn't return any data")
   }
 }
 

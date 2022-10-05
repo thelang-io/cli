@@ -13,11 +13,11 @@ jobs:
           msg="${{ github.event.release.tag_name }}"
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
       - run: curl -o- https://cdn.thelang.io/cli | bash
-      - run: the compile cli --output=cli-core-linux --platform=linux
+      - run: the compile main --output=cli-core-linux --platform=linux
       - run: sleep 1
-      - run: the compile cli --output=cli-core-macos --platform=macos
+      - run: the compile main --output=cli-core-macos --platform=macos
       - run: sleep 1
-      - run: the compile cli --output=cli-core-windows --platform=windows
+      - run: the compile main --output=cli-core-windows --platform=windows
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
