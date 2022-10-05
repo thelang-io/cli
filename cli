@@ -5,10 +5,11 @@
 
 AUTH_TOKEN := "pELerETRaVeYHEne"
 ENDPOINT_URL := "https://api.thelang.io"
+
 VERSION_NUM := "0.11.0"
 VERSION_NAME := "Open Source"
 
-// todo add output variable
+// todo add output option
 
 fn panic (message: str) {
   print("Error: " + message, to: "stderr")
@@ -72,37 +73,39 @@ fn defaultPlatform (): str {
   }
 }
 
-fn download () {
-  // req_params=(
-  //   "-S" "-f" "-s"
-  //   "-H" "Authorization: $AUTH_TOKEN"
-  //   "-H" "Content-Type: application/octet-stream"
-  //   "-X" "POST"
-  //   "--data-binary" "@$2"
-  //   "$1"
-  // )
+fn download (url: str, path: str) {
+  req := request_post(url, RequestOptions{
+    headers: RequestHeaders{
+      authorization: AUTH_TOKEN,
+      content_type: "application/octet-stream"
+    },
+    data: fs_readFileSync(path, "utf8")
+  })
 
-  // curl "${req_params[@]}" -o "$base_path/a.out" --max-time 100
+  res := request_read(req)
+  request_close(req)
+
+  fs_writeFileSync(PWD + "/a.out", res)
   chmodAdd(PWD + "/a.out", 0o100)
 }
 
-fn request (): str {
-  // req_params=(
-  //   "-S" "-f" "-s"
-  //   "-H" "Authorization: $AUTH_TOKEN"
-  //   "-H" "Content-Type: application/octet-stream"
-  //   "-X" "POST"
-  //   "--data-binary" "@$2"
-  //   "$1"
-  // )
+fn request (url: str, path: str) {
+  req := request_post(url, RequestOptions{
+    headers: RequestHeaders{
+      authorization: AUTH_TOKEN,
+      content_type: "application/octet-stream"
+    },
+    data: fs_readFileSync(path, "utf8")
+  })
 
-  // if res_body="$(curl "${req_params[@]}" --max-time 100 2>&1)"; then
-  //   if [ -n "$res_body" ]; then
-  //     print(res_body)
-  //   fi
-  // else
-  //   panic("Request failed with exit code $?")
-  // fi
+  res := request_read(req)
+  request_close(req)
+
+  data := res.toStr()
+
+  if data.len > 0 {
+    print(data)
+  }
 }
 
 main {
@@ -232,7 +235,11 @@ main {
     process_run(PWD + "/a.out")
     fs_unlinkSync(PWD + "/a.out")
   } elif isUpgrade {
-    // curl -o /usr/local/bin/the_latest -s https://cdn.thelang.io/cli
+    req := request_get("https://cdn.thelang.io/cli-core-" + platform)
+    res := request_read(req)
+    request_close(req)
+
+    fs_writeFileSync("/usr/local/bin/the_latest", res)
     chmodAdd("/usr/local/bin/the_latest", 0o100)
     // nohup bash -c "sleep 1 && rm -f /usr/local/bin/the && /usr/local/bin/the_latest" > /dev/null 2>&1 &
   }
