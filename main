@@ -10,7 +10,7 @@ VERSION_NUM := "0.11.0"
 VERSION_NAME := "Open Source"
 
 obj ParsedFile {
-  headers: str
+  comments: str
   definitions: str
   content: str
 }
@@ -25,8 +25,73 @@ fn chmodAdd (path: str, mode: int) {
   fs_chmodSync(path, stat.mode | mode)
 }
 
-fn parseFile (content: str) ParsedFile {
-  // todo
+fn parseFile (fileContent: str) ParsedFile {
+  mut comments := ""
+  mut definitions := ""
+  mut content := ""
+
+  mut prevCh: char
+  mut isComment := false
+  mut isDefinition := false
+
+  loop i := 0; i < content.len; i++ {
+    ch := content[i]
+
+    if (
+      prevCh != '\\' && ch == '/' &&
+      i + 1 < conten.len && content[i + 1] == '*' &&
+      i + 2 < conten.len && content[i + 2] == '!'
+    ) {
+      comments += "/*!"
+      isComment = true
+      i += 2
+    } elif (
+      isComment && ch == '*' &&
+      i + 1 < conten.len && content[i + 1] == '/'
+    ) {
+      comments += "*/\n"
+      isComment = false
+      i += 1
+    } elif (
+      (prevCh == '\n' || prevCh == '\r' || prevCh == '\t' || prevCh == ' ') &&
+      ch == 'o' &&
+      i + 1 < conten.len && content[i + 1] == 'b' &&
+      i + 2 < conten.len && content[i + 2] == 'j' &&
+      i + 3 < conten.len && content[i + 3] == ' '
+    ) {
+      definitions += "obj "
+      isDefinition = true
+      i += 3
+    } elif (
+      (prevCh == '\n' || prevCh == '\r' || prevCh == '\t' || prevCh == ' ') &&
+      ch == 'e' &&
+      i + 1 < conten.len && content[i + 1] == 'n' &&
+      i + 2 < conten.len && content[i + 2] == 'u' &&
+      i + 3 < conten.len && content[i + 3] == 'm' &&
+      i + 4 < conten.len && content[i + 4] == ' '
+    ) {
+      definitions += "enum "
+      isDefinition = true
+      i += 4
+    } elif isDefinition && ch == '}' {
+      comments += "}\n"
+      isDefinition = false
+    } elif isComment {
+      comments += ch.str()
+    } elif isDefinition {
+      comments += ch.str()
+    } else {
+      content += ch.str()
+    }
+
+    prevCh = ch
+  }
+
+  return ParsedFile{
+    comments: comments,
+    definitions: definitions,
+    content: content.trim()
+  }
 }
 
 fn build () {
@@ -47,7 +112,7 @@ fn build () {
     }
   }
 
-  mut headers := ""
+  mut comments := ""
   mut definitions := ""
   mut content := ""
 
@@ -58,7 +123,7 @@ fn build () {
     fileContent := fs_readFileSync(file, "utf8")
     parsedContent = parseFile(fileContent)
 
-    headers += parsedContent.headers
+    comments += parsedContent.comments
     definitions += parsedContent.definitions
     content += parsedContent.content
   }
@@ -70,13 +135,13 @@ fn build () {
     fs_mkdirSync(buildDir)
   }
 
-  result := headers + definitions + content
+  result := comments + definitions + content
   fs_writeFileSync(buildDir + "/result", result.toBuffer())
 
   print("Build finished: " + buildDir + "/result")
 }
 
-fn defaultPlatform (): str {
+fn defaultPlatform () str {
   if OS == "macOS" {
     return "macos"
   } elif OS == "Windows" {
@@ -113,8 +178,7 @@ fn request (url: str, path: str) {
 
   res := request_read(req)
   request_close(req)
-
-  data := res.toStr()
+  data := res.str()
 
   if data.len > 0 {
     print(data)
@@ -254,8 +318,7 @@ main {
     res := request_read(req)
     request_close(req)
 
-    fs_writeFileSync("/usr/local/bin/the_latest", res)
-    chmodAdd("/usr/local/bin/the_latest", 0o100)
-    // nohup bash -c "sleep 1 && rm -f /usr/local/bin/the && /usr/local/bin/the_latest" > /dev/null 2>&1 &
+    fs_writeFileSync("/usr/local/bin/the", res)
+    chmodAdd("/usr/local/bin/the", 0o100)
   }
 }
