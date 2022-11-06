@@ -15,7 +15,7 @@ obj ParsedFile {
   content: str
 }
 
-fn panic (message: str) {
+fn RaiseError (message: str) {
   print("Error: " + message, to: "stderr")
   exit(1)
 }
@@ -39,15 +39,15 @@ fn parseFile (fileContent: str) ParsedFile {
 
     if (
       prevCh != '\\' && ch == '/' &&
-      i + 1 < conten.len && content[i + 1] == '*' &&
-      i + 2 < conten.len && content[i + 2] == '!'
+      i + 1 < content.len && content[i + 1] == '*' &&
+      i + 2 < content.len && content[i + 2] == '!'
     ) {
       comments += "/*!"
       isComment = true
       i += 2
     } elif (
       isComment && ch == '*' &&
-      i + 1 < conten.len && content[i + 1] == '/'
+      i + 1 < content.len && content[i + 1] == '/'
     ) {
       comments += "*/\n"
       isComment = false
@@ -55,9 +55,9 @@ fn parseFile (fileContent: str) ParsedFile {
     } elif (
       (prevCh == '\n' || prevCh == '\r' || prevCh == '\t' || prevCh == ' ') &&
       ch == 'o' &&
-      i + 1 < conten.len && content[i + 1] == 'b' &&
-      i + 2 < conten.len && content[i + 2] == 'j' &&
-      i + 3 < conten.len && content[i + 3] == ' '
+      i + 1 < content.len && content[i + 1] == 'b' &&
+      i + 2 < content.len && content[i + 2] == 'j' &&
+      i + 3 < content.len && content[i + 3] == ' '
     ) {
       definitions += "obj "
       isDefinition = true
@@ -65,10 +65,10 @@ fn parseFile (fileContent: str) ParsedFile {
     } elif (
       (prevCh == '\n' || prevCh == '\r' || prevCh == '\t' || prevCh == ' ') &&
       ch == 'e' &&
-      i + 1 < conten.len && content[i + 1] == 'n' &&
-      i + 2 < conten.len && content[i + 2] == 'u' &&
-      i + 3 < conten.len && content[i + 3] == 'm' &&
-      i + 4 < conten.len && content[i + 4] == ' '
+      i + 1 < content.len && content[i + 1] == 'n' &&
+      i + 2 < content.len && content[i + 2] == 'u' &&
+      i + 3 < content.len && content[i + 3] == 'm' &&
+      i + 4 < content.len && content[i + 4] == ' '
     ) {
       definitions += "enum "
       isDefinition = true
@@ -99,13 +99,12 @@ fn build () {
 
   dirName := process_cwd() + "/"
   buildDir := process_cwd() + "/build"
-  dirFiles := fs_readDirSync(dirName)
+  dirFiles := fs_scandirSync(dirName)
 
   mut files: str[]
 
   loop i := 0; i < dirFiles.len; i++ {
-    file := dirFiles[i]
-    fileName := file.slice(dirName.len)
+    fileName := dirFiles[i].slice(dirName.len)
 
     if fs_isFileSync(file) && fileName.find(".") == -1 {
       files.push(fileName)
@@ -120,8 +119,8 @@ fn build () {
     file := files[i]
     print("Processing file: " + file)
 
-    fileContent := fs_readFileSync(file, "utf8")
-    parsedContent = parseFile(fileContent)
+    fileContent := fs_readFileSync(file).str()
+    parsedContent := parseFile(fileContent)
 
     comments += parsedContent.comments
     definitions += parsedContent.definitions
@@ -152,46 +151,42 @@ fn defaultPlatform () str {
 }
 
 fn download (url: str, path: str) {
-  req := request_post(url, RequestOptions{
-    headers: RequestHeaders{
-      authorization: AUTH_TOKEN,
-      content_type: "application/octet-stream"
-    },
-    data: fs_readFileSync(path, "utf8")
-  })
+  reqHeaders := [
+    request_Header{name: "authorization", value: AUTH_TOKEN},
+    request_Header{name: "content-type", value: "application/octet-stream"}
+  ]
 
+  req := request_open("POST", url, headers: reqHeaders, data: fs_readFileSync(path))
   res := request_read(req)
   request_close(req)
 
-  fs_writeFileSync(process_cwd() + "/a.out", res)
+  fs_writeFileSync(process_cwd() + "/a.out", res.data)
   chmodAddSync(process_cwd() + "/a.out", 0o100)
 }
 
 fn request (url: str, path: str) {
-  req := request_post(url, RequestOptions{
-    headers: RequestHeaders{
-      authorization: AUTH_TOKEN,
-      content_type: "application/octet-stream"
-    },
-    data: fs_readFileSync(path, "utf8")
-  })
+  reqHeaders := [
+    request_Header{name: "authorization", value: AUTH_TOKEN},
+    request_Header{name: "content-type", value: "application/octet-stream"}
+  ]
 
+  req := request_open("POST", url, headers: reqHeaders, data: fs_readFileSync(path))
   res := request_read(req)
   request_close(req)
-  data := res.str()
+  data := res.data.str()
 
-  if data.len > 0 {
-    print(data)
-  } else {
-    print("Server didn't return any data")
+  if data.len == 0 {
+    RaiseError("Server didn't return any data")
   }
+
+  print(data)
 }
 
 main {
   args := process_args.slice(1)
 
   if args.len == 0 {
-    panic("Action is not set")
+    RaiseError("Action is not set")
   } elif args.len == 1 && (args[0] == "-h" || args[0] == "--help") {
     print(
       os_EOL +
@@ -235,7 +230,7 @@ main {
       "    $ the upgrade" + os_EOL
     )
 
-    exit(0)
+    exit()
   } elif args.len == 1 && (args[0] == "-v" || args[0] == "--version") {
     print(
       "The Programming Language" + os_EOL +
@@ -243,7 +238,7 @@ main {
       "Copyright (c) 2018 Aaron Delasy"
     )
 
-    exit(0)
+    exit()
   }
 
   mut filePath := ""
@@ -257,7 +252,7 @@ main {
   mut isRun := false
   mut isUpgrade := false
 
-  loop i = 0; i < args.len; i++ {
+  loop i := 0; i < args.len; i++ {
     arg := args[i]
 
     if i == 1 {
@@ -274,7 +269,7 @@ main {
       } elif arg == "upgrade" {
         isUpgrade = true
       } else {
-        panic("Unknown action '" + arg + "'")
+        RaiseError("Unknown action '" + arg + "'")
       }
     } elif i == 2 {
       fileRelativeDir := path_dirname(arg)
@@ -284,21 +279,21 @@ main {
       filePath = fileDir + "/" + path_basename(arg)
 
       if !fs_existsSync(filePath) {
-        panic("File '" + filePath + "' does not exists")
+        RaiseError("File '" + filePath + "' does not exists")
       } elif !fs_isDirectorySync(filePath) {
-        panic("Path '" + filePath + "' is not a file")
+        RaiseError("Path '" + filePath + "' is not a file")
       }
     } elif arg.slice(0, 6) == "--the=" {
       version = arg.slice(6)
     } elif arg.slice(0, 11) == "--platform=" {
       platform = arg.slice(11)
     } else {
-      panic("Unknown option '" + arg + "'")
+      RaiseError("Unknown option '" + arg + "'")
     }
   }
 
   if !isBuild && filePath.len == 0 {
-    panic("File path is not set")
+    RaiseError("File path is not set")
   }
 
   if isBuild {
@@ -314,11 +309,11 @@ main {
     process_runSync(process_cwd() + "/a.out")
     fs_unlinkSync(process_cwd() + "/a.out")
   } elif isUpgrade {
-    req := request_get("https://cdn.thelang.io/cli-core-" + platform)
+    req := request_open("GET", "https://cdn.thelang.io/cli-core-" + platform)
     res := request_read(req)
     request_close(req)
 
-    fs_writeFileSync("/usr/local/bin/the", res)
+    fs_writeFileSync("/usr/local/bin/the", res.data)
     chmodAddSync("/usr/local/bin/the", 0o100)
   }
 }
