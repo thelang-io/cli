@@ -175,7 +175,7 @@ fn request (url: str, path: str) {
   request_close(req)
   data := res.data.str()
 
-  if data.len == 0 {
+  if data.empty() {
     RaiseError("Server didn't return any data")
   }
 
@@ -185,7 +185,7 @@ fn request (url: str, path: str) {
 main {
   args := process_args.slice(1)
 
-  if args.len == 0 {
+  if args.empty() {
     RaiseError("Action is not set")
   } elif args.len == 1 && (args[0] == "-h" || args[0] == "--help") {
     print(
@@ -292,7 +292,7 @@ main {
     }
   }
 
-  if !isBuild && filePath.len == 0 {
+  if !isBuild && filePath.empty() {
     RaiseError("File path is not set")
   }
 
