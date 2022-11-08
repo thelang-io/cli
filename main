@@ -156,7 +156,13 @@ fn download (url: str, path: str) {
     request_Header{name: "content-type", value: "application/octet-stream"}
   ]
 
-  req := request_open("POST", url, headers: reqHeaders, data: fs_readFileSync(path))
+  req := request_open(
+    "POST",
+    url,
+    headers: reqHeaders,
+    data: fs_readFileSync(path)
+  )
+
   res := request_read(req)
   request_close(req)
 
@@ -170,7 +176,13 @@ fn request (url: str, path: str) {
     request_Header{name: "content-type", value: "application/octet-stream"}
   ]
 
-  req := request_open("POST", url, headers: reqHeaders, data: fs_readFileSync(path))
+  req := request_open(
+    "POST",
+    url,
+    headers: reqHeaders,
+    data: fs_readFileSync(path)
+  )
+
   res := request_read(req)
   request_close(req)
   data := res.data.str()
@@ -202,7 +214,8 @@ main {
       os_EOL +
       "  Actions:" + os_EOL +
       os_EOL +
-      "    build             Build source directory into single file" + os_EOL +
+      "    build             " +
+      "Build source directory into single file" + os_EOL +
       "    compile           Compile file" + os_EOL +
       "    lex               Lex file" + os_EOL +
       "    parse             Parse file" + os_EOL +
@@ -211,9 +224,12 @@ main {
       os_EOL +
       "  Options:" + os_EOL +
       os_EOL +
-      "    --platform=...    Specify target platform, one of: linux, macos," + os_EOL +
-      "                      windows. Applies to actions: compile, run." + os_EOL +
-      "    --the=...         Specify The Programming Language version, valid" + os_EOL +
+      "    --platform=...    " +
+      "Specify target platform, one of: linux, macos," + os_EOL +
+      "                      " +
+      "windows. Applies to actions: compile, run." + os_EOL +
+      "    --the=...         " +
+      "Specify The Programming Language version, valid" + os_EOL +
       "                      formats: latest, 1, 1.1, 1.1.1" + os_EOL +
       os_EOL +
       "  Examples:" + os_EOL +
@@ -296,16 +312,18 @@ main {
     RaiseError("File path is not set")
   }
 
+  qs := "?v=" + version + "&p=" + platform
+
   if isBuild {
     build()
   } elif isCompile {
-    download(ENDPOINT_URL + "/compile?v=" + version + "&p=" + platform, filePath)
+    download(ENDPOINT_URL + "/compile" + qs, filePath)
   } elif isLex {
-    request(ENDPOINT_URL + "/lex?v=" + version + "&p=" + platform, filePath)
+    request(ENDPOINT_URL + "/lex" + qs, filePath)
   } elif isParse {
-    request(ENDPOINT_URL + "/parse?v=" + version + "&p=" + platform, filePath)
+    request(ENDPOINT_URL + "/parse" + qs, filePath)
   } elif isRun {
-    download(ENDPOINT_URL + "/compile?v=" + version + "&p=" + platform, filePath)
+    download(ENDPOINT_URL + "/compile" + qs, filePath)
     process_runSync(process_cwd() + "/a.out")
     fs_unlinkSync(process_cwd() + "/a.out")
   } elif isUpgrade {

@@ -10,7 +10,11 @@ echo "Installing The CLI..."
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   curl -o /usr/local/bin/the -s https://cdn.thelang.io/cli-core-macos
-elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+elif
+  [[ "$OSTYPE" == "cygwin" ]] ||
+  [[ "$OSTYPE" == "msys" ]] ||
+  [[ "$OSTYPE" == "win32" ]]
+then
   curl -o /usr/local/bin/the -s https://cdn.thelang.io/cli-core-windows
 else
   curl -o /usr/local/bin/the -s https://cdn.thelang.io/cli-core-linux
