@@ -34,30 +34,30 @@ fn parseFile (fileContent: str) ParsedFile {
   mut isComment := false
   mut isDefinition := false
 
-  loop i := 0; i < content.len; i++ {
-    ch := content[i]
+  loop i := 0; i < fileContent.len; i++ {
+    ch := fileContent[i]
 
     if (
       prevCh != '\\' && ch == '/' &&
-      i + 1 < content.len && content[i + 1] == '*' &&
-      i + 2 < content.len && content[i + 2] == '!'
+      i + 1 < fileContent.len && fileContent[i + 1] == '*' &&
+      i + 2 < fileContent.len && fileContent[i + 2] == '!'
     ) {
       comments += "/*!"
       isComment = true
       i += 2
     } elif (
       isComment && ch == '*' &&
-      i + 1 < content.len && content[i + 1] == '/'
+      i + 1 < fileContent.len && fileContent[i + 1] == '/'
     ) {
-      comments += "*/\n"
+      comments += "*/" + os_EOL
       isComment = false
       i += 1
     } elif (
       (prevCh == '\n' || prevCh == '\r' || prevCh == '\t' || prevCh == ' ') &&
       ch == 'o' &&
-      i + 1 < content.len && content[i + 1] == 'b' &&
-      i + 2 < content.len && content[i + 2] == 'j' &&
-      i + 3 < content.len && content[i + 3] == ' '
+      i + 1 < fileContent.len && fileContent[i + 1] == 'b' &&
+      i + 2 < fileContent.len && fileContent[i + 2] == 'j' &&
+      i + 3 < fileContent.len && fileContent[i + 3] == ' '
     ) {
       definitions += "obj "
       isDefinition = true
@@ -65,21 +65,21 @@ fn parseFile (fileContent: str) ParsedFile {
     } elif (
       (prevCh == '\n' || prevCh == '\r' || prevCh == '\t' || prevCh == ' ') &&
       ch == 'e' &&
-      i + 1 < content.len && content[i + 1] == 'n' &&
-      i + 2 < content.len && content[i + 2] == 'u' &&
-      i + 3 < content.len && content[i + 3] == 'm' &&
-      i + 4 < content.len && content[i + 4] == ' '
+      i + 1 < fileContent.len && fileContent[i + 1] == 'n' &&
+      i + 2 < fileContent.len && fileContent[i + 2] == 'u' &&
+      i + 3 < fileContent.len && fileContent[i + 3] == 'm' &&
+      i + 4 < fileContent.len && fileContent[i + 4] == ' '
     ) {
       definitions += "enum "
       isDefinition = true
       i += 4
     } elif isDefinition && ch == '}' {
-      comments += "}\n"
+      definitions += "}" + os_EOL
       isDefinition = false
     } elif isComment {
       comments += ch.str()
     } elif isDefinition {
-      comments += ch.str()
+      definitions += ch.str()
     } else {
       content += ch.str()
     }
@@ -90,27 +90,25 @@ fn parseFile (fileContent: str) ParsedFile {
   return ParsedFile{
     comments: comments,
     definitions: definitions,
-    content: content.trim()
+    content: content.trim() + os_EOL
   }
 }
 
 fn build () {
   print("Starting build")
 
-  dirName := process_cwd() + "/"
-  buildDir := process_cwd() + "/build"
-  dirFiles := fs_scandirSync(dirName)
-
+  allFiles := fs_scandirSync(".")
   mut files: str[]
 
-  loop i := 0; i < dirFiles.len; i++ {
-    fileName := dirFiles[i].slice(dirName.len)
+  loop i := 0; i < allFiles.len; i++ {
+    file := allFiles[i]
 
-    if fs_isFileSync(file) && fileName.find(".") == -1 {
-      files.push(fileName)
+    if fs_isFileSync(file) && file.find(".") == -1 {
+      files.push(file)
     }
   }
 
+  // todo handle "main" separately
   mut comments := ""
   mut definitions := ""
   mut content := ""
@@ -127,6 +125,7 @@ fn build () {
     content += parsedContent.content
   }
 
+  buildDir := process_cwd() + "/build"
   print("Checking build directory: " + buildDir)
 
   if !fs_existsSync(buildDir) {
@@ -156,15 +155,15 @@ fn download (url: str, path: str) {
     request_Header{name: "content-type", value: "application/octet-stream"}
   ]
 
-  req := request_open(
+  mut req := request_open(
     "POST",
     url,
     headers: reqHeaders,
     data: fs_readFileSync(path)
   )
 
-  res := request_read(req)
-  request_close(req)
+  res := request_read(ref req)
+  request_close(ref req)
 
   fs_writeFileSync(process_cwd() + "/a.out", res.data)
   chmodAddSync(process_cwd() + "/a.out", 0o100)
@@ -176,22 +175,22 @@ fn request (url: str, path: str) {
     request_Header{name: "content-type", value: "application/octet-stream"}
   ]
 
-  req := request_open(
+  mut req := request_open(
     "POST",
     url,
     headers: reqHeaders,
     data: fs_readFileSync(path)
   )
 
-  res := request_read(req)
-  request_close(req)
+  res := request_read(ref req)
+  request_close(ref req)
   data := res.data.str()
 
   if data.empty() {
     RaiseError("Server didn't return any data")
   }
 
-  print(data)
+  print(data, terminator: "")
 }
 
 main {
@@ -271,7 +270,7 @@ main {
   loop i := 0; i < args.len; i++ {
     arg := args[i]
 
-    if i == 1 {
+    if i == 0 {
       if arg == "build" {
         isBuild = true
       } elif arg == "compile" {
@@ -287,7 +286,7 @@ main {
       } else {
         RaiseError("Unknown action '" + arg + "'")
       }
-    } elif i == 2 {
+    } elif i == 1 {
       fileRelativeDir := path_dirname(arg)
       fileDir := fileRelativeDir.slice(0, 1) == "/"
         ? fileRelativeDir
@@ -296,7 +295,7 @@ main {
 
       if !fs_existsSync(filePath) {
         RaiseError("File '" + filePath + "' does not exists")
-      } elif !fs_isDirectorySync(filePath) {
+      } elif !fs_isFileSync(filePath) {
         RaiseError("Path '" + filePath + "' is not a file")
       }
     } elif arg.slice(0, 6) == "--the=" {
@@ -324,12 +323,14 @@ main {
     request(ENDPOINT_URL + "/parse" + qs, filePath)
   } elif isRun {
     download(ENDPOINT_URL + "/compile" + qs, filePath)
-    process_runSync(process_cwd() + "/a.out")
+    stdout := process_runSync(process_cwd() + "/a.out")
     fs_unlinkSync(process_cwd() + "/a.out")
+
+    print(stdout.str(), terminator: "")
   } elif isUpgrade {
-    req := request_open("GET", "https://cdn.thelang.io/cli-core-" + platform)
-    res := request_read(req)
-    request_close(req)
+    mut req := request_open("GET", "https://cdn.thelang.io/cli-core-" + platform)
+    res := request_read(ref req)
+    request_close(ref req)
 
     fs_writeFileSync("/usr/local/bin/the", res.data)
     chmodAddSync("/usr/local/bin/the", 0o100)
