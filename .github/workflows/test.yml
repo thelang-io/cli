@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+      - "**.yml"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "**.yml"
+
+concurrency:
+  cancel-in-progress: true
+  group: test-${{ github.event.pull_request.number || github.sha }}
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+    steps:
+      - uses: actions/checkout@v2
+      - if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install valgrind
+          curl -o- https://cdn.thelang.io/cli | sudo bash
+      - run: the build
+      - if: runner.os == 'Linux'
+        run: |
+          the compile main
+          mv a.out b.out
+      - if: runner.os == 'Linux'
+        run: |
+          valgrind b.out -h
+          valgrind b.out -v
+          valgrind b.out build
+          valgrind b.out lex build/result
+          valgrind b.out parse build/result
+          valgrind b.out compile build/result
+          valgrind b.out run build/result
