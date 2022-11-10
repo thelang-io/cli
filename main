@@ -13,6 +13,7 @@ obj ParsedFile {
   comments: str
   definitions: str
   content: str
+  mainContent: str
 }
 
 fn RaiseError (message: str) {
@@ -29,57 +30,55 @@ fn parseFile (fileContent: str) ParsedFile {
   mut comments := ""
   mut definitions := ""
   mut content := ""
+  mut mainContent := ""
 
   mut prevCh: char
   mut isComment := false
   mut isDefinition := false
+  mut isMainContent := false
+  mut blocks := 0
 
   loop i := 0; i < fileContent.len; i++ {
     ch := fileContent[i]
 
-    if (
-      prevCh != '\\' && ch == '/' &&
-      i + 1 < fileContent.len && fileContent[i + 1] == '*' &&
-      i + 2 < fileContent.len && fileContent[i + 2] == '!'
-    ) {
-      comments += "/*!"
+    if prevCh != '\\' && fileContent.slice(i, i + 3) == "/" + "*!" {
+      comments += "/" + "*!"
       isComment = true
       i += 2
-    } elif (
-      isComment && ch == '*' &&
-      i + 1 < fileContent.len && fileContent[i + 1] == '/'
-    ) {
+    } elif isComment && fileContent.slice(i, i + 2) == "*/" {
       comments += "*/" + os_EOL
       isComment = false
       i += 1
-    } elif (
-      (prevCh == '\n' || prevCh == '\r' || prevCh == '\t' || prevCh == ' ') &&
-      ch == 'o' &&
-      i + 1 < fileContent.len && fileContent[i + 1] == 'b' &&
-      i + 2 < fileContent.len && fileContent[i + 2] == 'j' &&
-      i + 3 < fileContent.len && fileContent[i + 3] == ' '
-    ) {
+    } elif prevCh.isSpace() && fileContent.slice(i, i + 4) == "obj " {
       definitions += "obj "
       isDefinition = true
       i += 3
-    } elif (
-      (prevCh == '\n' || prevCh == '\r' || prevCh == '\t' || prevCh == ' ') &&
-      ch == 'e' &&
-      i + 1 < fileContent.len && fileContent[i + 1] == 'n' &&
-      i + 2 < fileContent.len && fileContent[i + 2] == 'u' &&
-      i + 3 < fileContent.len && fileContent[i + 3] == 'm' &&
-      i + 4 < fileContent.len && fileContent[i + 4] == ' '
-    ) {
+    } elif prevCh.isSpace() && fileContent.slice(i, i + 5) == "enum " {
       definitions += "enum "
       isDefinition = true
       i += 4
     } elif isDefinition && ch == '}' {
       definitions += "}" + os_EOL
       isDefinition = false
+    } elif prevCh.isSpace() && fileContent.slice(i, i + 5) == "main " {
+      mainContent += "main "
+      isMainContent = true
+      i += 4
+    } elif isMainContent && ch == '{' {
+      mainContent += "{"
+      blocks++
+    } elif isMainContent && ch == '}' && blocks == 0 {
+      mainContent += "}" + os_EOL
+      isMainContent = false
+    } elif isMainContent && ch == '}' {
+      mainContent += "}"
+      blocks--
     } elif isComment {
       comments += ch.str()
     } elif isDefinition {
       definitions += ch.str()
+    } elif isMainContent {
+      mainContent += ch.str()
     } else {
       content += ch.str()
     }
@@ -90,7 +89,8 @@ fn parseFile (fileContent: str) ParsedFile {
   return ParsedFile{
     comments: comments,
     definitions: definitions,
-    content: content.trim() + os_EOL
+    content: content.trim() + os_EOL,
+    mainContent: mainContent
   }
 }
 
@@ -108,10 +108,10 @@ fn build () {
     }
   }
 
-  // todo handle "main" separately
   mut comments := ""
   mut definitions := ""
   mut content := ""
+  mut mainContent := ""
 
   loop i := 0; i < files.len; i++ {
     file := files[i]
@@ -123,6 +123,12 @@ fn build () {
     comments += parsedContent.comments
     definitions += parsedContent.definitions
     content += parsedContent.content
+
+    if !parsedContent.mainContent.empty() && !mainContent.empty() {
+      RaiseError("Found multiple blocks of main")
+    } elif !parsedContent.mainContent.empty() {
+      mainContent = parsedContent.mainContent
+    }
   }
 
   buildDir := process_cwd() + "/build"
@@ -133,7 +139,7 @@ fn build () {
     fs_mkdirSync(buildDir)
   }
 
-  result := comments + definitions + content
+  result := comments + definitions + content + mainContent
   fs_writeFileSync(buildDir + "/result", result.toBuffer())
 
   print("Build finished: " + buildDir + "/result")
