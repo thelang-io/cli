@@ -57,9 +57,17 @@ fn parseFile (fileContent: str) ParsedFile {
       definitions += "enum "
       isDefinition = true
       i += 4
+    } elif isDefinition && ch == '{' {
+      definitions += "{"
+      blocks++
     } elif isDefinition && ch == '}' {
-      definitions += "}" + os_EOL
-      isDefinition = false
+      definitions += "}"
+      blocks--
+
+      if blocks == 0 {
+        definitions += os_EOL
+        isDefinition = false
+      }
     } elif prevCh.isSpace() && fileContent.slice(i, i + 5) == "main " {
       mainContent += "main "
       isMainContent = true
@@ -67,12 +75,14 @@ fn parseFile (fileContent: str) ParsedFile {
     } elif isMainContent && ch == '{' {
       mainContent += "{"
       blocks++
-    } elif isMainContent && ch == '}' && blocks == 0 {
-      mainContent += "}" + os_EOL
-      isMainContent = false
     } elif isMainContent && ch == '}' {
       mainContent += "}"
       blocks--
+
+      if blocks == 0 {
+        mainContent += os_EOL
+        isMainContent = false
+      }
     } elif isComment {
       comments += ch.str()
     } elif isDefinition {
