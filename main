@@ -234,19 +234,15 @@ main {
       "    compile           Compile file" + os_EOL +
       "    lex               Lex file" + os_EOL +
       "    parse             Parse file" + os_EOL +
-      "    run               Run file" + os_EOL +
+      "    run               Compile and execute file" + os_EOL +
       "    upgrade           Self-upgrade CLI to newest version" + os_EOL +
       os_EOL +
       "  Options:" + os_EOL +
       os_EOL +
-      "    --output=...      " +
-      "Specify output path. The default is \"a.out\"." + os_EOL +
-      "    --platform=...    " +
-      "Specify target platform, one of: linux, macos," + os_EOL +
-      "                      " +
-      "windows. Applies to actions: compile, run." + os_EOL +
-      "    --the=...         " +
-      "Specify The Programming Language version, valid" + os_EOL +
+      "    --output=...      Executable output path. The default is \"a.out\"" + os_EOL +
+      "    --platform=...    Target platform, one of: linux, macos, windows" + os_EOL +
+      "    --run-args=...    Arguments to be passed when running executable" + os_EOL +
+      "    --the=...         The Programming Language version, valid" + os_EOL +
       "                      formats: latest, 1, 1.1, 1.1.1" + os_EOL +
       os_EOL +
       "  Examples:" + os_EOL +
@@ -278,6 +274,7 @@ main {
   mut platform := defaultPlatform()
   mut version := "latest"
   mut outputPath := process_cwd() + "/a.out"
+  mut runArgs := ""
 
   mut isBuild := false
   mut isCompile := false
@@ -321,6 +318,8 @@ main {
       outputPath = arg.slice(9)
     } elif arg.slice(0, 11) == "--platform=" {
       platform = arg.slice(11)
+    } elif arg.slice(0, 11) == "--run-args=" {
+      runArgs = " " + arg.slice(11)
     } elif arg.slice(0, 6) == "--the=" {
       version = arg.slice(6)
     } else {
@@ -344,7 +343,7 @@ main {
     request(ENDPOINT_URL + "/parse" + qs, filePath)
   } elif isRun {
     download(ENDPOINT_URL + "/compile" + qs, filePath, outputPath)
-    stdout := process_runSync(outputPath)
+    stdout := process_runSync(outputPath + runArgs)
     fs_unlinkSync(outputPath)
 
     print(stdout.str(), terminator: "")
