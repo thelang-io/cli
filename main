@@ -26,6 +26,11 @@ fn chmodAddSync (path: str, mode: int) {
   fs_chmodSync(path, stat.mode | mode)
 }
 
+fn copyFileSync (src: str, dest: str) {
+  data := fs_readFileSync(src)
+  fs_writeFileSync(dest, data)
+}
+
 fn parseFile (fileContent: str) ParsedFile {
   mut comments := ""
   mut definitions := ""
@@ -182,7 +187,6 @@ fn download (url: str, path: str, outputPath: str) {
   request_close(ref req)
 
   fs_writeFileSync(outputPath, res.data)
-  chmodAddSync(outputPath, 0o100)
 }
 
 fn request (url: str, path: str) {
@@ -207,6 +211,36 @@ fn request (url: str, path: str) {
   }
 
   print(data, terminator: "")
+}
+
+fn runCompiler (
+  compiler: str,
+  action: str,
+  filePath: str,
+  outputPath: str
+) buffer_Buffer {
+  isCompile := action == "compile"
+  buildDir := process_cwd() + "/build"
+  buildDirExisted := fs_existsSync(buildDir)
+
+  if isCompile && !buildDirExisted {
+    fs_mkdirSync(buildDir)
+  }
+
+  actionArg := isCompile ? "" : " " + action
+  stdout := process_runSync(compiler + actionArg + " " + filePath)
+
+  if isCompile {
+    copyFileSync(buildDir + "/a.out", outputPath)
+
+    if buildDirExisted {
+      fs_rmSync(buildDir + "/a.out")
+    } else {
+      fs_rmdirSync(buildDir)
+    }
+  }
+
+  return stdout
 }
 
 main {
@@ -239,10 +273,17 @@ main {
       os_EOL +
       "  Options:" + os_EOL +
       os_EOL +
-      "    --output=...      Executable output path. The default is \"a.out\"" + os_EOL +
-      "    --platform=...    Target platform, one of: linux, macos, windows" + os_EOL +
-      "    --run-args=...    Arguments to be passed when running executable" + os_EOL +
-      "    --the=...         The Programming Language version, valid" + os_EOL +
+      "    --compiler=...    " +
+      "Offline compiler to use instead of cloud " + os_EOL +
+      "                      servers" + os_EOL +
+      "    --output=...      " +
+      "Executable output path, by default \"a.out\"" + os_EOL +
+      "    --platform=...    " +
+      "Target platform, one of: linux, macos, windows" + os_EOL +
+      "    --run-args=...    " +
+      "Arguments to be passed when running executable" + os_EOL +
+      "    --the=...         " +
+      "The Programming Language version, valid" + os_EOL +
       "                      formats: latest, 1, 1.1, 1.1.1" + os_EOL +
       os_EOL +
       "  Examples:" + os_EOL +
@@ -270,6 +311,7 @@ main {
     exit()
   }
 
+  mut compiler := ""
   mut filePath := ""
   mut platform := defaultPlatform()
   mut version := "latest"
@@ -314,6 +356,8 @@ main {
       } elif !fs_isFileSync(filePath) {
         RaiseError("Path '" + filePath + "' is not a file")
       }
+    } elif arg.slice(0, 11) == "--compiler=" {
+      compiler = arg.slice(11)
     } elif arg.slice(0, 9) == "--output=" {
       outputPath = arg.slice(9)
     } elif arg.slice(0, 11) == "--platform=" {
@@ -335,20 +379,43 @@ main {
 
   if isBuild {
     build()
-  } elif isCompile {
-    download(ENDPOINT_URL + "/compile" + qs, filePath, outputPath)
+  } elif isLex && !compiler.empty() {
+    stdout := runCompiler(compiler, "lex", filePath, outputPath)
+    print(stdout.str(), terminator: "")
+  } elif isParse && !compiler.empty() {
+    stdout := runCompiler(compiler, "parse", filePath, outputPath)
+    print(stdout.str(), terminator: "")
+  } elif isCompile && !compiler.empty() {
+    runCompiler(compiler, "compile", filePath, outputPath)
+    chmodAddSync(outputPath, 0o100)
+  } elif isRun && !compiler.empty() {
+    runCompiler(compiler, "compile", filePath, outputPath)
+    chmodAddSync(outputPath, 0o100)
+
+    stdout := process_runSync(outputPath + runArgs)
+    fs_rmSync(outputPath)
+
+    print(stdout.str(), terminator: "")
   } elif isLex {
     request(ENDPOINT_URL + "/lex" + qs, filePath)
   } elif isParse {
     request(ENDPOINT_URL + "/parse" + qs, filePath)
+  } elif isCompile {
+    download(ENDPOINT_URL + "/compile" + qs, filePath, outputPath)
+    chmodAddSync(outputPath, 0o100)
   } elif isRun {
     download(ENDPOINT_URL + "/compile" + qs, filePath, outputPath)
+    chmodAddSync(outputPath, 0o100)
+
     stdout := process_runSync(outputPath + runArgs)
-    fs_unlinkSync(outputPath)
+    fs_rmSync(outputPath)
 
     print(stdout.str(), terminator: "")
   } elif isUpgrade {
-    mut req := request_open("GET", "https://cdn.thelang.io/cli-core-" + platform)
+    mut req := request_open(
+      "GET", "https://cdn.thelang.io/cli-core-" + platform
+    )
+
     res := request_read(ref req)
     request_close(ref req)
 
