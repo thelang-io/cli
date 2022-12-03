@@ -165,7 +165,7 @@ fn defaultPlatform () str {
   }
 }
 
-fn download (url: str, path: str) {
+fn download (url: str, path: str, outputPath: str) {
   reqHeaders := [
     request_Header{name: "authorization", value: AUTH_TOKEN},
     request_Header{name: "content-type", value: "application/octet-stream"}
@@ -181,8 +181,8 @@ fn download (url: str, path: str) {
   res := request_read(ref req)
   request_close(ref req)
 
-  fs_writeFileSync(process_cwd() + "/a.out", res.data)
-  chmodAddSync(process_cwd() + "/a.out", 0o100)
+  fs_writeFileSync(outputPath, res.data)
+  chmodAddSync(outputPath, 0o100)
 }
 
 fn request (url: str, path: str) {
@@ -239,6 +239,8 @@ main {
       os_EOL +
       "  Options:" + os_EOL +
       os_EOL +
+      "    --output=...      " +
+      "Specify output path. The default is \"a.out\"." + os_EOL +
       "    --platform=...    " +
       "Specify target platform, one of: linux, macos," + os_EOL +
       "                      " +
@@ -275,6 +277,7 @@ main {
   mut filePath := ""
   mut platform := defaultPlatform()
   mut version := "latest"
+  mut outputPath := process_cwd() + "/a.out"
 
   mut isBuild := false
   mut isCompile := false
@@ -314,10 +317,12 @@ main {
       } elif !fs_isFileSync(filePath) {
         RaiseError("Path '" + filePath + "' is not a file")
       }
-    } elif arg.slice(0, 6) == "--the=" {
-      version = arg.slice(6)
+    } elif arg.slice(0, 9) == "--output=" {
+      outputPath = arg.slice(9)
     } elif arg.slice(0, 11) == "--platform=" {
       platform = arg.slice(11)
+    } elif arg.slice(0, 6) == "--the=" {
+      version = arg.slice(6)
     } else {
       RaiseError("Unknown option '" + arg + "'")
     }
@@ -332,15 +337,15 @@ main {
   if isBuild {
     build()
   } elif isCompile {
-    download(ENDPOINT_URL + "/compile" + qs, filePath)
+    download(ENDPOINT_URL + "/compile" + qs, filePath, outputPath)
   } elif isLex {
     request(ENDPOINT_URL + "/lex" + qs, filePath)
   } elif isParse {
     request(ENDPOINT_URL + "/parse" + qs, filePath)
   } elif isRun {
-    download(ENDPOINT_URL + "/compile" + qs, filePath)
-    stdout := process_runSync(process_cwd() + "/a.out")
-    fs_unlinkSync(process_cwd() + "/a.out")
+    download(ENDPOINT_URL + "/compile" + qs, filePath, outputPath)
+    stdout := process_runSync(outputPath)
+    fs_unlinkSync(outputPath)
 
     print(stdout.str(), terminator: "")
   } elif isUpgrade {
