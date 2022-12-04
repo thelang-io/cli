@@ -2,6 +2,8 @@ name: Test
 
 on:
   push:
+    branches:
+      - "main"
     paths-ignore:
       - "**.md"
       - "**.yml"
@@ -23,22 +25,15 @@ jobs:
         os: [ubuntu-20.04, ubuntu-22.04]
     steps:
       - uses: actions/checkout@v2
-      - if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install valgrind
-          curl -o- https://cdn.thelang.io/cli | sudo bash
+      - run: sudo apt-get update
+      - run: sudo apt-get install valgrind
+      - run: curl -o- https://cdn.thelang.io/cli | bash
       - run: the build
-      - if: runner.os == 'Linux'
-        run: |
-          the compile main
-          mv a.out b.out
-      - if: runner.os == 'Linux'
-        run: |
-          valgrind b.out -h
-          valgrind b.out -v
-          valgrind b.out build
-          valgrind b.out lex build/result
-          valgrind b.out parse build/result
-          valgrind b.out compile build/result
-          valgrind b.out run build/result
+      - run: the compile main --output=b.out
+      - run: valgrind b.out -h
+      - run: valgrind b.out -v
+      - run: valgrind b.out build
+      - run: valgrind b.out lex build/result
+      - run: valgrind b.out parse build/result
+      - run: valgrind b.out compile build/result
+      - run: valgrind b.out run build/result
