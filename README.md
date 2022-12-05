@@ -8,8 +8,14 @@ $ curl -o- https://cdn.thelang.io/cli | bash
 ```
 
 **Windows**
-```sh
-$ powershell -exec bypass -c "(New-Object Net.WebClient).Proxy.Credentials=[Net.CredentialCache]::DefaultNetworkCredentials;iwr('https://cdn.thelang.io/cli-win')|iex"
+Batch file
+```batch
+$ powershell -exec bypass -c "(iwr 'https://raw.githubusercontent.com/thelang-io/cli/main/install.bat').Content | cmd"
+```
+
+PowerShell
+```powershell
+$ (iwr 'https://raw.githubusercontent.com/thelang-io/cli/main/install.bat').Content | cmd
 ```
 
 ## Usage
