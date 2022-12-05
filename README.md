@@ -7,13 +7,12 @@ CLI for The Programming Language
 $ curl -o- https://cdn.thelang.io/cli | bash
 ```
 
-**Windows**
-Batch file
+**Windows Batch file**
 ```batch
 $ powershell -exec bypass -c "(iwr 'https://raw.githubusercontent.com/thelang-io/cli/main/install.bat').Content | cmd"
 ```
 
-PowerShell
+**Windows PowerShell**
 ```powershell
 $ (iwr 'https://raw.githubusercontent.com/thelang-io/cli/main/install.bat').Content | cmd
 ```
