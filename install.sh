@@ -21,7 +21,7 @@ elif
   [[ "$OSTYPE" == "win32" ]]
 then
   cdn_url="https://cdn.thelang.io/cli-core-windows"
-  install_path="C:\Program Files (x86)\The\the.exe"
+  install_path="C:\Program Files\The\the.exe"
 elif
   [[ "$OSTYPE" == "linux"* ]]
 then
