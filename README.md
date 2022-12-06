@@ -2,7 +2,7 @@
 CLI for The Programming Language
 
 ## Installation
-**UNIX**
+**POSIX**
 ```sh
 curl -o- https://cdn.thelang.io/cli | bash
 ```
