@@ -14,12 +14,16 @@ jobs:
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
       - run: curl -o- https://cdn.thelang.io/cli | bash
       - run: |
-          the compile main --output=cli-core-linux --platform=linux
+          the compile main --platform=linux
+          mv a.out cli-core-linux
           sleep 1
       - run: |
-          the compile main --output=cli-core-macos --platform=macos
+          the compile main --platform=macos
+          mv a.out cli-core-macos
           sleep 1
-      - run: the compile main --output=cli-core-windows --platform=windows
+      - run: |
+          the compile main --platform=windows
+          mv a.out cli-core-windows
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
