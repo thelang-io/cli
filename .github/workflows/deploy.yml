@@ -12,15 +12,13 @@ jobs:
       - run: |
           msg="${{ github.event.release.tag_name }}"
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
-      - run: curl -o- https://cdn.thelang.io/cli | bash
+      - run: curl -fsSL https://cdn.thelang.io/cli | sh
       - run: |
-          the compile main --platform=linux
+          the compile main --platform=linux && sleep 1
           mv a.out cli-core-linux
-          sleep 1
       - run: |
-          the compile main --platform=macos
+          the compile main --platform=macos && sleep 1
           mv a.out cli-core-macos
-          sleep 1
       - run: |
           the compile main --platform=windows
           mv a.out cli-core-windows

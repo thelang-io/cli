@@ -4,7 +4,7 @@ CLI for The Programming Language
 ## Installation
 **POSIX**
 ```sh
-curl -o- https://cdn.thelang.io/cli | bash
+curl -fsSL https://cdn.thelang.io/cli | sh
 ```
 
 **Windows Batch file**
