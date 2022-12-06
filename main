@@ -6,8 +6,8 @@
 AUTH_TOKEN := "pELerETRaVeYHEne"
 ENDPOINT_URL := "https://api.thelang.io"
 
-VERSION_NUM := "0.11.0"
-VERSION_NAME := "Open Source"
+VERSION_NUM := "0.12.0"
+VERSION_NAME := "Submarine Ocean"
 
 obj ParsedFile {
   comments: str
