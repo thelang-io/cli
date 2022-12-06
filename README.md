@@ -4,17 +4,17 @@ CLI for The Programming Language
 ## Installation
 **UNIX**
 ```sh
-$ curl -o- https://cdn.thelang.io/cli | bash
+curl -o- https://cdn.thelang.io/cli | bash
 ```
 
 **Windows Batch file**
 ```batch
-$ powershell -exec bypass -c "(iwr 'https://raw.githubusercontent.com/thelang-io/cli/main/install.bat').Content | cmd"
+powershell -exec bypass -c "(iwr 'https://cdn.thelang.io/cli-win').Content | cmd /Q"
 ```
 
 **Windows PowerShell**
 ```powershell
-$ (iwr 'https://raw.githubusercontent.com/thelang-io/cli/main/install.bat').Content | cmd
+(iwr 'https://cdn.thelang.io/cli-win').Content | cmd /Q
 ```
 
 ## Usage
