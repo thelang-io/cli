@@ -33,6 +33,6 @@ fi
 
 echo "Installing The CLI..."
 curl -o "$install_path" -s "$cdn_url"
-chmod +x "$install_path"
+chmod a+x "$install_path"
 echo "Successfully installed The CLI!"
 echo "  Type \`the -h\` to explore available options"

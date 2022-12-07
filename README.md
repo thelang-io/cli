@@ -7,14 +7,9 @@ CLI for The Programming Language
 curl -fsSL https://cdn.thelang.io/cli | sh
 ```
 
-**Windows Batch file**
-```batch
-powershell -exec bypass -c "(iwr 'https://cdn.thelang.io/cli-win').Content | cmd /Q"
-```
-
 **Windows PowerShell**
 ```powershell
-(iwr 'https://cdn.thelang.io/cli-win').Content | cmd /Q
+(New-Object System.Net.WebClient).DownloadString('https://cdn.thelang.io/cli-win') | iex
 ```
 
 ## Usage
