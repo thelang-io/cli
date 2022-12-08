@@ -387,10 +387,10 @@ main {
     print(stdout.str(), terminator: "")
   } elif isCompile && !compiler.empty() {
     runCompiler(compiler, "compile", filePath, outputPath)
-    chmodAddSync(outputPath, 0o100)
+    chmodAddSync(outputPath, 0o111)
   } elif isRun && !compiler.empty() {
     runCompiler(compiler, "compile", filePath, outputPath)
-    chmodAddSync(outputPath, 0o100)
+    chmodAddSync(outputPath, 0o111)
 
     stdout := process_runSync(outputPath + runArgs)
     fs_rmSync(outputPath)
@@ -402,10 +402,10 @@ main {
     request(ENDPOINT_URL + "/parse" + qs, filePath)
   } elif isCompile {
     download(ENDPOINT_URL + "/compile" + qs, filePath, outputPath)
-    chmodAddSync(outputPath, 0o100)
+    chmodAddSync(outputPath, 0o111)
   } elif isRun {
     download(ENDPOINT_URL + "/compile" + qs, filePath, outputPath)
-    chmodAddSync(outputPath, 0o100)
+    chmodAddSync(outputPath, 0o111)
 
     stdout := process_runSync(outputPath + runArgs)
     fs_rmSync(outputPath)
@@ -420,6 +420,6 @@ main {
     request_close(ref req)
 
     fs_writeFileSync("/usr/local/bin/the", res.data)
-    chmodAddSync("/usr/local/bin/the", 0o100)
+    chmodAddSync("/usr/local/bin/the", 0o111)
   }
 }
