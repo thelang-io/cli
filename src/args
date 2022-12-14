@@ -1,0 +1,126 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+ArgType_Command := 0
+ArgType_Option := 1
+
+obj Args {
+  config: ArgConfig[]
+  data: Arg[]
+  examples: str[]
+  lineLength: int
+  usage: str[]
+
+  fn add (
+    mut self: ref Self,
+    type: int,
+    name: str,
+    description: str,
+    alias: str,
+    default: str,
+    hasValue: bool
+  ) ref Self {
+    self.config.push(ArgConfig{
+      type: type,
+      name: name,
+      description: description,
+      alias: alias,
+      default: default,
+      hasValue: hasValue
+    })
+
+    return self
+  }
+
+  fn command (
+    mut self: ref Self,
+    name: str,
+    description: str,
+    alias := "",
+    default := "",
+    hasValue := true
+  ) ref Self {
+    self.add(ArgType_Command, name, description, alias, default, hasValue)
+    return self
+  }
+
+  fn example (mut self: ref Self, example: str) ref Self {
+    self.examples.push(example)
+    return self
+  }
+
+  fn help (self: Self) str {
+    // Usage:
+    //    the [options]
+    //    the [action] file [options]
+    //
+    // Actions:
+    //   build             Build source directory into single file
+    //   compile           Compile file
+    //   lex               Lex file
+    //   parse             Parse file
+    //   run               Run file
+    //   upgrade           Self-upgrade CLI to newest version
+    //
+    // Options:
+    //   --platform=...    Specify target platform, one of: linux, macos,
+    //                     windows. Applies to actions: compile, run.
+    //   -h, --help        Print help information
+    //   --the=...         Specify The Programming Language version, valid
+    //                     formats: latest, 1, 1.1, 1.1.1
+    //   -v, --version     Print version
+    //
+    // Examples:
+    //   $ the -h
+    //   $ the --version
+    //   $ the build
+    //   $ the compile /path/to/file
+    //   $ the lex /path/to/file
+    //   $ the compile /path/to/file --the=1.0
+    //   $ the lex /path/to/file --the=1.0.0
+    //   $ the run /path/to/file --platform=macos
+    //   $ the upgrade
+
+    // TODO left column max length 40% of overall line length
+    return ""
+  }
+
+  fn option (
+    mut self: ref Self,
+    name: str,
+    description: str,
+    alias := "",
+    default := "",
+    hasValue := true
+  ) ref Self {
+    self.add(ArgType_Option, name, description, alias, default, hasValue)
+    return self
+  }
+
+  fn parse (mut self: ref Self) ref Self {
+    // todo
+    return self
+  }
+
+  fn usage (mut self: ref Self, usage: str) ref Self {
+    self.usage.push(usage)
+    return self
+  }
+}
+
+obj Arg {
+  command: str
+  option: str
+  value: str
+}
+
+obj ArgConfig {
+  type: int
+  name: str
+  description: str
+  alias: str
+  default: str
+  hasValue: bool
+}

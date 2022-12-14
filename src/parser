@@ -1,0 +1,135 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+obj ParsedFile {
+  comments: str
+  definitions: str
+  content: str
+  mainContent: str
+}
+
+fn parseFile (fileContent: str) ParsedFile {
+  mut comments := ""
+  mut definitions := ""
+  mut content := ""
+  mut mainContent := ""
+
+  mut prevCh: char
+  mut isComment := false
+  mut isDefinition := false
+  mut isMainContent := false
+  mut blocks := 0
+
+  fn parseIsComment (i: int) int {
+    return isComment ||
+      (prevCh != '\\' && fileContent.slice(i, i + 3) == "/" + "*!")
+  }
+
+  fn parseComment (i: int) int {
+    ch := fileContent[i]
+
+    if prevCh != '\\' && fileContent.slice(i, i + 3) == "/" + "*!" {
+      comments += fileContent.slice(i, i + 3)
+      isComment = true
+      i += 2
+    } elif isComment && fileContent.slice(i, i + 2) == "*/" {
+      comments += fileContent.slice(i, i + 2) + os_EOL
+      isComment = false
+      i += 1
+    } elif isComment {
+      comments += ch.str()
+    }
+
+    return i
+  }
+
+  fn parseIsDefinition (i: int) int {
+    return isDefinition ||
+      (prevCh.isSpace() && fileContent.slice(i, i + 4) == "obj ") ||
+      (prevCh.isSpace() && fileContent.slice(i, i + 5) == "enum ")
+  }
+
+  fn parseDefinition (i: int) int {
+    ch := fileContent[i]
+
+    if prevCh.isSpace() && fileContent.slice(i, i + 4) == "obj " {
+      definitions += fileContent.slice(i, i + 4)
+      isDefinition = true
+      i += 3
+    } elif prevCh.isSpace() && fileContent.slice(i, i + 5) == "enum " {
+      definitions += fileContent.slice(i, i + 5)
+      isDefinition = true
+      i += 4
+    } elif isDefinition && ch == '{' {
+      definitions += ch.str()
+      blocks++
+    } elif isDefinition && ch == '}' && blocks == 0 {
+      definitions += ch.str()
+      blocks--
+      definitions += os_EOL
+      isDefinition = false
+    } elif isDefinition && ch == '}' {
+      definitions += ch.str()
+      blocks--
+    } elif isDefinition {
+      definitions += ch.str()
+    }
+
+    return i
+  }
+
+  fn parseIsMain (i: int) int {
+    return isMainContent ||
+      (prevCh.isSpace() && fileContent.slice(i, i + 5) == "main ")
+  }
+
+  fn parseMain (i: int) int {
+    ch := fileContent[i]
+
+    if prevCh.isSpace() && fileContent.slice(i, i + 5) == "main " {
+      mainContent += fileContent.slice(i, i + 5)
+      isMainContent = true
+      i += 4
+    } elif isMainContent && ch == '{' {
+      mainContent += ch.str()
+      blocks++
+    } elif isMainContent && ch == '}' && blocks == 0 {
+      mainContent += ch.str()
+      blocks--
+      mainContent += os_EOL
+      isMainContent = false
+    } elif isMainContent && ch == '}' {
+      mainContent += ch.str()
+      blocks--
+    } elif isMainContent {
+      mainContent += ch.str()
+    }
+
+    return i
+  }
+
+  loop i := 0; i < fileContent.len; i++ {
+    ch := fileContent[i]
+
+    if parseIsComment(i) {
+      i = parseComment(i)
+    } elif parseIsDefinition(i) {
+      i = parseDefinition(i)
+    } elif parseIsMain(i) {
+      i = parseMain(i)
+    } else {
+      content += ch.str()
+    }
+
+    prevCh = ch
+  }
+
+  return ParsedFile{
+    comments: comments,
+    definitions: definitions,
+    content: content.trim() + os_EOL,
+    mainContent: mainContent
+  }
+}

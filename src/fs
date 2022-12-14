@@ -1,0 +1,14 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+fn chmodAddSync (path: str, mode: int) {
+  stat := fs_statSync(path)
+  fs_chmodSync(path, stat.mode | mode)
+}
+
+fn copyFileSync (src: str, dest: str) {
+  data := fs_readFileSync(src)
+  fs_writeFileSync(dest, data)
+}

@@ -28,10 +28,9 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install valgrind
       - run: curl -fsSL https://cdn.thelang.io/cli | sh
-      - run: the build
-      - run: |
-          the compile main
-          mv a.out b.out
+      - run: the build src
+      - run: (mkdir -p build && cd src && the build && mv build/result && ../build)
+      - run: the compile build/result && mv a.out b.out
       - run: valgrind b.out -h
       - run: valgrind b.out -v
       - run: valgrind b.out build

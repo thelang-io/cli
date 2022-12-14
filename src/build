@@ -1,0 +1,59 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+fn build (targetPath: str, buildDir: str) {
+  path := fs_realpathSync(targetPath)
+
+  if !fs_existsSync(path) {
+    RaiseError("File '" + path + "' does not exists")
+  } elif !fs_isDirectorySync(path) {
+    RaiseError("Path '" + path + "' is not a directory")
+  }
+
+  print("Starting build")
+
+  allFiles := fs_scandirSync(path)
+  mut files: str[]
+
+  loop i := 0; i < allFiles.len; i++ {
+    file := allFiles[i]
+
+    if fs_isFileSync(file) && file.find(".") == -1 {
+      files.push(file)
+    }
+  }
+
+  mut comments := ""
+  mut definitions := ""
+  mut content := ""
+  mut mainContent := ""
+
+  loop i := 0; i < files.len; i++ {
+    file := files[i]
+    print("Processing file: " + file)
+
+    fileContent := fs_readFileSync(file).str()
+    parsedContent := parseFile(fileContent)
+
+    comments += parsedContent.comments
+    definitions += parsedContent.definitions
+    content += parsedContent.content
+
+    if !parsedContent.mainContent.empty() && !mainContent.empty() {
+      RaiseError("Found multiple blocks of main")
+    } elif !parsedContent.mainContent.empty() {
+      mainContent = parsedContent.mainContent
+    }
+  }
+
+  if !fs_existsSync(buildDir) {
+    fs_mkdirSync(buildDir)
+  }
+
+  result := comments + definitions + content + mainContent
+  fs_writeFileSync(buildDir + "/result", result.toBuffer())
+
+  print("Build finished: " + buildDir + "/result")
+}

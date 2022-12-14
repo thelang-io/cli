@@ -1,0 +1,149 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+VERSION_NUM := "0.12.0"
+VERSION_NAME := "Submarine Ocean"
+
+main {
+  mut args := Args{lineLength: 70}
+
+  args
+    .usage("the [options]")
+    .usage("the <command> file [options]")
+
+    .command(
+      "build",
+      "Build source directory into single file",
+      default: "."
+    )
+    .command("compile", "Compile file")
+    .command("lex", "Lex file")
+    .command("parse", "Parse file")
+    .command("run", "Compile and execute file")
+    .command(
+      "upgrade",
+      "Self-upgrade CLI to newest version",
+      hasValue: false
+    )
+
+    .option(
+      "build-dir",
+      "Build output directory, by default \"build\"",
+      default: process_cwd() + "/build"
+    )
+    .option("compiler", "Offline compiler to use instead of cloud servers")
+    .option("help", "Print help information", alias: "h", hasValue: false)
+    .option(
+      "output",
+      "Executable output path, by default \"a.out\"",
+      alias: "o",
+      default: process_cwd() + "/a.out"
+    )
+    .option(
+      "platform",
+      "Target platform, one of: linux, macos, windows",
+      default: os_name().lower()
+    )
+    .option("run-args", "Arguments to be passed when running executable")
+    .option(
+      "the",
+      "The Programming Language version, valid formats: latest, 1, 1.1, 1.1.1"
+    )
+    .option(
+      "version",
+      "Print version",
+      alias: "v",
+      default: "latest",
+      hasValue: false
+    )
+
+    .example("the -h")
+    .example("the --version")
+    .example("the build")
+    .example("the compile /path/to/file")
+    .example("the lex /path/to/file")
+    .example("the compile /path/to/file --the=1.0")
+    .example("the lex /path/to/file --the=1.0.0")
+    .example("the run /path/to/file --platform=macos")
+    .example("the upgrade")
+
+  args.parse()
+
+  mut action := ""
+  mut buildDir := ""
+  mut compiler := ""
+  mut platform := ""
+  mut version := ""
+  mut outputPath := ""
+  mut runArgs := ""
+  mut targetPath := ""
+
+  loop i := 0; i < args.data.len; i++ {
+    arg := args.data[i]
+
+    if (
+      arg.command == "build" ||
+      arg.command == "compile" ||
+      arg.command == "lex" ||
+      arg.command == "parse" ||
+      arg.command == "run"
+    ) {
+      action = arg.command
+      targetPath = arg.value
+    } elif arg.command == "upgrade" {
+      action = arg.command
+    } elif arg.option == "help" || arg.option == "version" {
+      action = arg.option
+    } elif arg.option == "build-dir" {
+      buildDir = arg.value
+    } elif arg.option == "compiler" {
+      compiler = arg.value
+    } elif arg.option == "output" {
+      outputPath = arg.value
+    } elif arg.option == "platform" {
+      platform = arg.value
+    } elif arg.option == "run-args" {
+      runArgs = arg.value
+    } elif arg.option == "the" {
+      version = arg.value
+    } else {
+      RaiseError("Unexpected argument '" + arg + "'")
+    }
+  }
+
+  qs := "?v=" + version + "&p=" + platform
+
+  if action == "build" {
+    build(targetPath, buildDir)
+  } elif action == "compile" || action == "lex" || action == "parse" {
+    command(compiler, action, filePath, outputPath, qs)
+  } elif action == "help" {
+    args.help()
+  } elif action == "run" {
+    command(compiler, "compile", filePath, outputPath, qs)
+    stdout := process_runSync(outputPath + runArgs)
+    fs_rmSync(outputPath)
+    print(stdout.str(), terminator: "")
+  } elif action == "upgrade" {
+    mut req := request_open(
+      "GET",
+      "https://cdn.thelang.io/cli-core-" + os_name().lower()
+    )
+
+    res := request_read(ref req)
+    request_close(ref req)
+
+    executablePath := os_name() == "Windows"
+      ? "C:/Program Files/The/the.exe"
+      : "/usr/local/bin/the"
+
+    fs_writeFileSync(executablePath, res.data)
+    chmodAddSync(executablePath, 0o111)
+  } elif action == "version" {
+    print("The Programming Language")
+    print("Version " + VERSION_NUM + " (" + VERSION_NAME + ")")
+    print("Copyright (c) 2018 Aaron Delasy")
+  }
+}

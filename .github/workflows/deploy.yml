@@ -13,14 +13,15 @@ jobs:
           msg="${{ github.event.release.tag_name }}"
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
       - run: curl -fsSL https://cdn.thelang.io/cli | sh
+      - run: (mkdir -p build && cd src && the build && mv build/result && ../build)
       - run: |
-          the compile main --platform=linux && sleep 1
+          the compile build/result --platform=linux && sleep 1
           mv a.out cli-core-linux
       - run: |
-          the compile main --platform=macos && sleep 1
+          the compile build/result --platform=macos && sleep 1
           mv a.out cli-core-macos
       - run: |
-          the compile main --platform=windows
+          the compile build/result --platform=windows
           mv a.out cli-core-windows
       - uses: aws-actions/configure-aws-credentials@v1
         with:

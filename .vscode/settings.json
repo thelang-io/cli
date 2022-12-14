@@ -1,5 +1,6 @@
 {
   "files.associations": {
-    "main": "the"
+    "**/src/**/*": "the",
+    "**/test/**/*": "the"
   }
 }
