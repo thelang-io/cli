@@ -19,21 +19,21 @@ jobs:
       - run: echo "INSTALL_DIR=$PWD/the/linux" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && ./Configure no-tests --libdir=lib --openssldir=/usr/local/ssl-linux --prefix=$INSTALL_DIR)
+          (cd $INSTALL_DIR/openssl-src && ./Configure no-modules no-shared no-tests no-threads --libdir=lib --openssldir=/usr/local/ssl-linux --prefix=$INSTALL_DIR)
           make -C $INSTALL_DIR/openssl-src -j4
           make install_sw -C $INSTALL_DIR/openssl-src
           rm -rf $INSTALL_DIR/openssl-src
       - run: echo "INSTALL_DIR=$PWD/the/macos" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && CC=clang ./Configure darwin64-x86_64 no-tests --cross-compile-prefix=x86_64-apple-darwin21.4- --libdir=lib --openssldir=/usr/local/ssl-macos --prefix=$INSTALL_DIR)
+          (cd $INSTALL_DIR/openssl-src && CC=clang ./Configure darwin64-x86_64 no-modules no-shared no-tests no-threads --cross-compile-prefix=x86_64-apple-darwin21.4- --libdir=lib --openssldir=/usr/local/ssl-macos --prefix=$INSTALL_DIR)
           make -C $INSTALL_DIR/openssl-src -j4
           make install_sw -C $INSTALL_DIR/openssl-src
           rm -rf $INSTALL_DIR/openssl-src
       - run: echo "INSTALL_DIR=$PWD/the/windows" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && ./Configure mingw64 no-tests --cross-compile-prefix=x86_64-w64-mingw32- --libdir=lib --openssldir=/usr/local/ssl-windows --prefix=$INSTALL_DIR)
+          (cd $INSTALL_DIR/openssl-src && ./Configure mingw64 no-modules no-shared no-tests no-threads --cross-compile-prefix=x86_64-w64-mingw32- --libdir=lib --openssldir=/usr/local/ssl-windows --prefix=$INSTALL_DIR)
           make -C $INSTALL_DIR/openssl-src -j4
           make install_sw -C $INSTALL_DIR/openssl-src
           rm -rf $INSTALL_DIR/openssl-src
