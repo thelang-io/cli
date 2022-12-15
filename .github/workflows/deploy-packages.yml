@@ -16,7 +16,7 @@ jobs:
           TARGET_DIR=$INSTALL_DIR UNATTENDED=1 $INSTALL_DIR/osxcross-src/build.sh
           rm -rf $INSTALL_DIR/osxcross-src
       - run: echo "$INSTALL_DIR/bin" >> $GITHUB_PATH
-      - run: echo "OPENSSL_ARGS=no-engine no-module no-shared no-stdio no-tests no-threads --libdir=lib" >> $GITHUB_ENV
+      - run: echo "OPENSSL_ARGS=no-async no-dso no-engine no-module no-shared no-stdio no-tests no-threads --libdir=lib" >> $GITHUB_ENV
       - run: echo "INSTALL_DIR=$PWD/the/linux" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
