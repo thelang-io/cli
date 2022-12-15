@@ -109,7 +109,7 @@ main {
     } elif arg.option == "the" {
       version = arg.value
     } else {
-      RaiseError("Unexpected argument '" + arg + "'")
+      RaiseError("Unexpected argument '" + arg.option + "'")
     }
   }
 
@@ -118,11 +118,11 @@ main {
   if action == "build" {
     build(targetPath, buildDir)
   } elif action == "compile" || action == "lex" || action == "parse" {
-    command(compiler, action, filePath, outputPath, qs)
+    command(compiler, action, targetPath, outputPath, qs)
   } elif action == "help" {
     args.help()
   } elif action == "run" {
-    command(compiler, "compile", filePath, outputPath, qs)
+    command(compiler, "compile", targetPath, outputPath, qs)
     stdout := process_runSync(outputPath + runArgs)
     fs_rmSync(outputPath)
     print(stdout.str(), terminator: "")

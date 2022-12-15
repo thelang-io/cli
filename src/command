@@ -17,7 +17,7 @@ fn request (url: str, path: str) buffer_Buffer {
   res := request_read(ref req)
   request_close(ref req)
 
-  return res.data()
+  return res.data
 }
 
 fn customCompile (
