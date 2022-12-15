@@ -3,133 +3,158 @@
  * Licensed under the MIT License
  */
 
-obj ParsedFile {
-  comments: str
-  definitions: str
-  content: str
-  mainContent: str
+obj ParserResult {
+  mut comments: str
+  mut definitions: str
+  mut content: str
+  mut mainContent: str
 }
 
-fn parseFile (fileContent: str) ParsedFile {
-  mut comments := ""
-  mut definitions := ""
-  mut content := ""
-  mut mainContent := ""
-
+obj ParserState {
   mut prevCh: char
-  mut isComment := false
-  mut isDefinition := false
-  mut isMainContent := false
-  mut blocks := 0
+  mut isComment: bool
+  mut isDefinition: bool
+  mut isMain: bool
+  mut blocks: int
+}
 
-  fn parseIsComment (i: int) int {
-    return isComment ||
-      (prevCh != '\\' && fileContent.slice(i, i + 3) == "/" + "*!")
+obj Parser {
+  mut _fileContent: str
+  mut _result: ParserResult
+  mut _state: ParserState
+
+  fn parse (mut self: ref Self, filePath: str) ParserResult {
+    self._fileContent = fs_readFileSync(filePath).str()
+    self._result = ParserResult{}
+    self._state = ParserState{}
+
+    loop i := 0; i < self._fileContent.len; i++ {
+      ch := self._fileContent[i]
+
+      if self._isComment(i) {
+        i = self._comment(i)
+      } elif self._isDefinition(i) {
+        i = self._definition(i)
+      } elif self._isMain(i) {
+        i = self._main(i)
+      } else {
+        self._result.content += ch.str()
+      }
+
+      self._state.prevCh = ch
+    }
+
+    self._result.content = self._result.content.trim() + os_EOL
+    return self._result
   }
 
-  fn parseComment (i: int) int {
-    ch := fileContent[i]
+  fn _isComment (self: ref Self, i: int) int {
+    if self._state.isComment {
+      return true
+    }
 
-    if prevCh != '\\' && fileContent.slice(i, i + 3) == "/" + "*!" {
-      comments += fileContent.slice(i, i + 3)
-      isComment = true
+    hasEscapeInFront := i != 0 && self._state.prevCh == '\\'
+    nextIsComment := self._fileContent.slice(i, i + 3) == "/" + "*!"
+
+    return !hasEscapeInFront && nextIsComment
+  }
+
+  fn _isDefinition (self: ref Self, i: int) int {
+    if self._state.isDefinition {
+      return true
+    }
+
+    hasSpaceInFront := i == 0 || self._state.prevCh.isSpace()
+    nextIsEnum := self._fileContent.slice(i, i + 5) == "enum "
+    nextIsObj := self._fileContent.slice(i, i + 4) == "obj "
+
+    return hasSpaceInFront && (nextIsEnum || nextIsObj)
+  }
+
+  fn _isMain (self: ref Self, i: int) int {
+    if self._state.isMain {
+      return true
+    }
+
+    hasSpaceInFront := i == 0 || self._state.prevCh.isSpace()
+    nextIsMain := self._fileContent.slice(i, i + 5) == "main "
+
+    return hasSpaceInFront && nextIsMain
+  }
+
+  fn _comment (mut self: ref Self, mut i: int) int {
+    ch := self._fileContent[i]
+    nextIsComment := self._fileContent.slice(i, i + 3) == "/" + "*!"
+
+    if self._state.prevCh != '\\' && nextIsComment {
+      self._result.comments += self._fileContent.slice(i, i + 3)
+      self._state.isComment = true
       i += 2
-    } elif isComment && fileContent.slice(i, i + 2) == "*/" {
-      comments += fileContent.slice(i, i + 2) + os_EOL
-      isComment = false
+    } elif self._state.isComment && self._fileContent.slice(i, i + 2) == "*/" {
+      self._result.comments += self._fileContent.slice(i, i + 2) + os_EOL
+      self._state.isComment = false
       i += 1
-    } elif isComment {
-      comments += ch.str()
+    } elif self._state.isComment {
+      self._result.comments += ch.str()
     }
 
     return i
   }
 
-  fn parseIsDefinition (i: int) int {
-    return isDefinition ||
-      (prevCh.isSpace() && fileContent.slice(i, i + 4) == "obj ") ||
-      (prevCh.isSpace() && fileContent.slice(i, i + 5) == "enum ")
-  }
+  fn _definition (mut self: ref Self, mut i: int) int {
+    ch := self._fileContent[i]
+    nextIsEnum := self._fileContent.slice(i, i + 5) == "enum "
+    nextIsObj := self._fileContent.slice(i, i + 4) == "obj "
 
-  fn parseDefinition (i: int) int {
-    ch := fileContent[i]
-
-    if prevCh.isSpace() && fileContent.slice(i, i + 4) == "obj " {
-      definitions += fileContent.slice(i, i + 4)
-      isDefinition = true
+    if self._state.prevCh.isSpace() && nextIsEnum {
+      self._result.definitions += self._fileContent.slice(i, i + 5)
+      self._state.isDefinition = true
       i += 3
-    } elif prevCh.isSpace() && fileContent.slice(i, i + 5) == "enum " {
-      definitions += fileContent.slice(i, i + 5)
-      isDefinition = true
+    } elif self._state.prevCh.isSpace() && nextIsObj {
+      self._result.definitions += self._fileContent.slice(i, i + 4)
+      self._state.isDefinition = true
       i += 4
-    } elif isDefinition && ch == '{' {
-      definitions += ch.str()
-      blocks++
-    } elif isDefinition && ch == '}' && blocks == 0 {
-      definitions += ch.str()
-      blocks--
-      definitions += os_EOL
-      isDefinition = false
-    } elif isDefinition && ch == '}' {
-      definitions += ch.str()
-      blocks--
-    } elif isDefinition {
-      definitions += ch.str()
+    } elif self._state.isDefinition && ch == '{' {
+      self._result.definitions += ch.str()
+      self._state.blocks++
+    } elif self._state.isDefinition && ch == '}' && self._state.blocks == 0 {
+      self._result.definitions += ch.str()
+      self._state.blocks--
+      self._result.definitions += os_EOL
+      self._state.isDefinition = false
+    } elif self._state.isDefinition && ch == '}' {
+      self._result.definitions += ch.str()
+      self._state.blocks--
+    } elif self._state.isDefinition {
+      self._result.definitions += ch.str()
     }
 
     return i
   }
 
-  fn parseIsMain (i: int) int {
-    return isMainContent ||
-      (prevCh.isSpace() && fileContent.slice(i, i + 5) == "main ")
-  }
+  fn _main (mut self: ref Self, mut i: int) int {
+    ch := self._fileContent[i]
+    nextIsMain := self._fileContent.slice(i, i + 5) == "main "
 
-  fn parseMain (i: int) int {
-    ch := fileContent[i]
-
-    if prevCh.isSpace() && fileContent.slice(i, i + 5) == "main " {
-      mainContent += fileContent.slice(i, i + 5)
-      isMainContent = true
+    if self._state.prevCh.isSpace() && nextIsMain {
+      self._result.mainContent += self._fileContent.slice(i, i + 5)
+      self._state.isMain = true
       i += 4
-    } elif isMainContent && ch == '{' {
-      mainContent += ch.str()
-      blocks++
-    } elif isMainContent && ch == '}' && blocks == 0 {
-      mainContent += ch.str()
-      blocks--
-      mainContent += os_EOL
-      isMainContent = false
-    } elif isMainContent && ch == '}' {
-      mainContent += ch.str()
-      blocks--
-    } elif isMainContent {
-      mainContent += ch.str()
+    } elif self._state.isMain && ch == '{' {
+      self._result.mainContent += ch.str()
+      self._state.blocks++
+    } elif self._state.isMain && ch == '}' && self._state.blocks == 0 {
+      self._result.mainContent += ch.str()
+      self._state.blocks--
+      self._result.mainContent += os_EOL
+      self._state.isMain = false
+    } elif self._state.isMain && ch == '}' {
+      self._result.mainContent += ch.str()
+      self._state.blocks--
+    } elif self._state.isMain {
+      self._result.mainContent += ch.str()
     }
 
     return i
-  }
-
-  loop i := 0; i < fileContent.len; i++ {
-    ch := fileContent[i]
-
-    if parseIsComment(i) {
-      i = parseComment(i)
-    } elif parseIsDefinition(i) {
-      i = parseDefinition(i)
-    } elif parseIsMain(i) {
-      i = parseMain(i)
-    } else {
-      content += ch.str()
-    }
-
-    prevCh = ch
-  }
-
-  return ParsedFile{
-    comments: comments,
-    definitions: definitions,
-    content: content.trim() + os_EOL,
-    mainContent: mainContent
   }
 }

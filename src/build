@@ -25,6 +25,7 @@ fn build (targetPath: str, buildDir: str) {
     }
   }
 
+  mut parser := Parser{}
   mut comments := ""
   mut definitions := ""
   mut content := ""
@@ -32,19 +33,18 @@ fn build (targetPath: str, buildDir: str) {
 
   loop i := 0; i < files.len; i++ {
     file := files[i]
+
     print("Processing file: " + file)
+    parserResult := parser.parse(file)
 
-    fileContent := fs_readFileSync(file).str()
-    parsedContent := parseFile(fileContent)
+    comments += parserResult.comments
+    definitions += parserResult.definitions
+    content += parserResult.content
 
-    comments += parsedContent.comments
-    definitions += parsedContent.definitions
-    content += parsedContent.content
-
-    if !parsedContent.mainContent.empty() && !mainContent.empty() {
+    if !parserResult.mainContent.empty() && !mainContent.empty() {
       RaiseError("Found multiple blocks of main")
-    } elif !parsedContent.mainContent.empty() {
-      mainContent = parsedContent.mainContent
+    } elif !parserResult.mainContent.empty() {
+      mainContent = parserResult.mainContent
     }
   }
 
