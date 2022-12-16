@@ -24,4 +24,5 @@ content+="${src_command_content:151}"
 content+="${src_parser_content:76}"
 content+="${src_main_content:135}"
 
-printf '%s\n' "$content" > _main
+mkdir -p build
+printf '%s\n' "$content" > build/result
