@@ -1,0 +1,23 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+fn str_split (self: str, delimiter: str) str[] {
+  delimiterLen := delimiter.len
+  mut result: str[]
+  mut text := ""
+
+  loop i := 0; i < self.len; i++ {
+    if self.slice(i, i + delimiterLen) == delimiter {
+      i += delimiterLen - 1
+      result.push(text)
+      text = ""
+    } else {
+      text += self[i].str()
+    }
+  }
+
+  result.push(text)
+  return result
+}

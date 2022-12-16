@@ -6,110 +6,6 @@
 ArgType_Command := 0
 ArgType_Option := 1
 
-obj Args {
-  config: ArgConfig[]
-  data: Arg[]
-  examples: str[]
-  lineLength: int
-  usage: str[]
-
-  fn add (
-    mut self: ref Self,
-    type: int,
-    name: str,
-    description: str,
-    alias: str,
-    default: str,
-    hasValue: bool
-  ) ref Self {
-    self.config.push(ArgConfig{
-      type: type,
-      name: name,
-      description: description,
-      alias: alias,
-      default: default,
-      hasValue: hasValue
-    })
-
-    return self
-  }
-
-  fn command (
-    mut self: ref Self,
-    name: str,
-    description: str,
-    alias := "",
-    default := "",
-    hasValue := true
-  ) ref Self {
-    self.add(ArgType_Command, name, description, alias, default, hasValue)
-    return self
-  }
-
-  fn example (mut self: ref Self, example: str) ref Self {
-    self.examples.push(example)
-    return self
-  }
-
-  fn help (self: Self) str {
-    // Usage:
-    //    the [options]
-    //    the [action] file [options]
-    //
-    // Actions:
-    //   build             Build source directory into single file
-    //   compile           Compile file
-    //   lex               Lex file
-    //   parse             Parse file
-    //   run               Run file
-    //   upgrade           Self-upgrade CLI to newest version
-    //
-    // Options:
-    //   --platform=...    Specify target platform, one of: linux, macos,
-    //                     windows. Applies to actions: compile, run.
-    //   -h, --help        Print help information
-    //   --the=...         Specify The Programming Language version, valid
-    //                     formats: latest, 1, 1.1, 1.1.1
-    //   -v, --version     Print version
-    //
-    // Examples:
-    //   $ the -h
-    //   $ the --version
-    //   $ the build
-    //   $ the compile /path/to/file
-    //   $ the lex /path/to/file
-    //   $ the compile /path/to/file --the=1.0
-    //   $ the lex /path/to/file --the=1.0.0
-    //   $ the run /path/to/file --platform=macos
-    //   $ the upgrade
-
-    // TODO left column max length 40% of overall line length
-    return ""
-  }
-
-  fn option (
-    mut self: ref Self,
-    name: str,
-    description: str,
-    alias := "",
-    default := "",
-    hasValue := true
-  ) ref Self {
-    self.add(ArgType_Option, name, description, alias, default, hasValue)
-    return self
-  }
-
-  fn parse (mut self: ref Self) ref Self {
-    // todo
-    return self
-  }
-
-  fn usage (mut self: ref Self, usage: str) ref Self {
-    self.usage.push(usage)
-    return self
-  }
-}
-
 obj Arg {
   command: str
   option: str
@@ -123,4 +19,220 @@ obj ArgConfig {
   alias: str
   default: str
   hasValue: bool
+
+  fn leftCol (self: ref Self) str {
+    if self.type == ArgType_Command {
+      return self.name + " "
+    }
+
+    mut result := ""
+
+    if self.alias.len > 0 {
+      result += self.alias.len == 1 ? "-" : "--"
+      result += self.alias
+    }
+
+    if self.name.len > 0 {
+      result += result.len == 0 ? "" : ", "
+      result += self.name.len == 1 ? "-" : "--"
+      result += self.name
+      result += self.hasValue ? "=..." : ""
+    }
+
+    return result + (result.len == 0 ? "" : " ")
+  }
+
+  fn rightCol (self: ref Self, leftColLen: u32, maxLineLen: int) str {
+    descrSplit := str_split(self.description, " ")
+    mut result := ""
+    mut lineLen := 0
+
+    loop i := 0; i < descrSplit.len; i++ {
+      item := descrSplit[i]
+
+      if leftColLen + lineLen + item.len > maxLineLen {
+        result += os_EOL + ' '.repeat(leftColLen) + item
+        lineLen = item.len
+      } else {
+        lineLen += (result.len == 0 ? 0 : 1) + item.len
+        result += (result.len == 0 ? "" : " ") + item
+      }
+    }
+
+    return result
+  }
+}
+
+obj Args {
+  data: Arg[]
+  lineLength: int
+  _config: ArgConfig[]
+  _examples: str[]
+  _usage: str[]
+
+  fn command (
+    mut self: ref Self,
+    name: str,
+    description: str,
+    alias := "",
+    default := "",
+    hasValue := true
+  ) ref Self {
+    self._config.push(ArgConfig{
+      type: ArgType_Command,
+      name: name,
+      description: description,
+      alias: alias,
+      default: default,
+      hasValue: hasValue
+    })
+
+    return self
+  }
+
+  fn example (mut self: ref Self, text: str) ref Self {
+    self._examples.push(text)
+    return self
+  }
+
+  fn help (self: ref Self) str {
+    mut message: str
+
+    if self._usage.len > 0 {
+      message += message.empty() ? os_EOL : ""
+      message += "  Usage:" + os_EOL
+      message += os_EOL
+
+      loop i := 0; i < self._usage.len; i++ {
+        message += "    $ " + self._usage[i] + os_EOL
+      }
+
+      message += os_EOL
+    }
+
+    leftColMaxLen: u32 = self.lineLength * 0.4
+    mut leftColLen: u32 = 0
+    mut hasCommands := false
+    mut hasOptions := false
+
+    loop i := 0; i < self._config.len; i++ {
+      item := self._config[i]
+
+      if item.type == ArgType_Command {
+        hasCommands = true
+      } elif item.type == ArgType_Option {
+        hasOptions = true
+      }
+
+      newLeftColLen := item.leftCol().len + 4
+
+      if newLeftColLen > leftColLen {
+        leftColLen = newLeftColLen
+      }
+    }
+
+    if leftColLen > leftColMaxLen {
+      leftColLen = leftColMaxLen
+    }
+
+    if hasCommands {
+      message += message.empty() ? os_EOL : ""
+      message += "  Commands:" + os_EOL
+      message += os_EOL
+
+      loop i := 0; i < self._config.len; i++ {
+        item := self._config[i]
+
+        if item.type != ArgType_Command {
+          continue
+        }
+
+        leftCol := item.leftCol()
+
+        if 4 + leftCol.len > leftColMaxLen {
+          message += "    " + leftCol + os_EOL + ' '.repeat(leftColMaxLen)
+          message += item.rightCol(leftColLen, self.lineLength) + os_EOL
+        } else {
+          offset: u32 = leftColLen - leftCol.len - 4
+
+          message += "    " + leftCol + ' '.repeat(offset)
+          message += item.rightCol(leftColLen, self.lineLength) + os_EOL
+        }
+      }
+
+      message += os_EOL
+    }
+
+    if hasOptions {
+      message += message.empty() ? os_EOL : ""
+      message += "  Options:" + os_EOL
+      message += os_EOL
+
+      loop i := 0; i < self._config.len; i++ {
+        item := self._config[i]
+
+        if item.type != ArgType_Option {
+          continue
+        }
+
+        leftCol := item.leftCol()
+
+        if 4 + leftCol.len > leftColMaxLen {
+          message += "    " + leftCol + os_EOL + ' '.repeat(leftColMaxLen)
+          message += item.rightCol(leftColLen, self.lineLength) + os_EOL
+        } else {
+          offset: u32 = leftColLen - leftCol.len - 4
+
+          message += "    " + leftCol + ' '.repeat(offset)
+          message += item.rightCol(leftColLen, self.lineLength) + os_EOL
+        }
+      }
+
+      message += os_EOL
+    }
+
+    if self._examples.len > 0 {
+      message += message.empty() ? os_EOL : ""
+      message += "  Examples:" + os_EOL
+      message += os_EOL
+
+      loop i := 0; i < self._examples.len; i++ {
+        message += "    $ " + self._examples[i] + os_EOL
+      }
+
+      message += os_EOL
+    }
+
+    return message
+  }
+
+  fn option (
+    mut self: ref Self,
+    name: str,
+    description: str,
+    alias := "",
+    default := "",
+    hasValue := true
+  ) ref Self {
+    self._config.push(ArgConfig{
+      type: ArgType_Option,
+      name: name,
+      description: description,
+      alias: alias,
+      default: default,
+      hasValue: hasValue
+    })
+
+    return self
+  }
+
+  fn parse (mut self: ref Self) ref Self {
+    // todo
+    return self
+  }
+
+  fn usage (mut self: ref Self, text: str) ref Self {
+    self._usage.push(text)
+    return self
+  }
 }

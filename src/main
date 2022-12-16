@@ -120,7 +120,7 @@ main {
   } elif action == "compile" || action == "lex" || action == "parse" {
     command(compiler, action, targetPath, outputPath, qs)
   } elif action == "help" {
-    args.help()
+    print(args.help(), terminator: "")
   } elif action == "run" {
     command(compiler, "compile", targetPath, outputPath, qs)
     stdout := process_runSync(outputPath + runArgs)
