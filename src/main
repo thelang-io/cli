@@ -74,11 +74,11 @@ main {
   mut action := ""
   mut buildDir := ""
   mut compiler := ""
-  mut platform := ""
-  mut version := ""
   mut outputPath := ""
+  mut platform := ""
   mut runArgs := ""
   mut targetPath := ""
+  mut version := ""
 
   loop i := 0; i < args.data.len; i++ {
     arg := args.data[i]
@@ -108,8 +108,6 @@ main {
       runArgs = arg.value
     } elif arg.option == "the" {
       version = arg.value
-    } else {
-      RaiseError("Unexpected argument '" + arg.option + "'")
     }
   }
 

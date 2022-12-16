@@ -3,9 +3,18 @@
  * Licensed under the MIT License
  */
 
-fn str_split (self: str, delimiter: str) str[] {
+fn str_split (self: str, delimiter := "") str[] {
   delimiterLen := delimiter.len
   mut result: str[]
+
+  if delimiterLen == 0 {
+    loop i := 0; i < self.len; i++ {
+      result.push(self[i].str())
+    }
+
+    return result
+  }
+
   mut text := ""
 
   loop i := 0; i < self.len; i++ {
