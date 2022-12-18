@@ -233,7 +233,6 @@ obj Args {
       self._parseArg(arg)
     }
 
-    print(self.data)
     return self
   }
 
@@ -343,7 +342,6 @@ obj Args {
       }
 
       if !item.hasValue && !value.empty() {
-        print("`" + name + "` option's value \"" + value + "\" is ignored")
         value = ""
       } elif item.hasValue && value.empty() {
         self._state.nextArgIsValue = true
