@@ -40,7 +40,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install tree && tree
 
       - run: echo "$HOME/build-osxcross/bin" >> $GITHUB_PATH
-      - run: CC=clang perl Configure darwin64-x86_64 ${{ env.openssl_args }} --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix=build
+      - run: CC=clang perl Configure darwin64-x86_64 --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix="$HOME/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
@@ -57,7 +57,7 @@ jobs:
           ref: openssl-3.0.7
       - run: sudo apt-get update
       - run: sudo apt-get install build-essential mingw-w64
-      - run: perl Configure mingw64 ${{ env.openssl_args }} --cross-compile-prefix=x86_64-w64-mingw32- --prefix=build
+      - run: perl Configure mingw64 --cross-compile-prefix=x86_64-w64-mingw32- --prefix="$HOME/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
@@ -72,7 +72,7 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.0.7
-      - run: CC=clang perl Configure ${{ env.openssl_args }} --prefix=build
+      - run: CC=clang perl Configure --prefix="$HOME/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
@@ -89,7 +89,7 @@ jobs:
           ref: openssl-3.0.7
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: ilammy/setup-nasm@v1
-      - run: perl Configure VC-WIN64A ${{ env.openssl_args }} --prefix=build
+      - run: perl Configure VC-WIN64A --prefix="$HOME/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: nmake
       - run: nmake install_sw
