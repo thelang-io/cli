@@ -18,7 +18,7 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install libxml2-dev llvm-dev lzma-dev
       - run: curl -fsSL https://cdn.thelang.io/MacOSX12.3.sdk.tar.xz -o tarballs/MacOSX12.3.sdk.tar.xz
-      - run: TARGET_DIR="$HOME/build" UNATTENDED=1 ./build.sh
+      - run: TARGET_DIR="$PWD/build" UNATTENDED=1 ./build.sh
       - run: tar -czf build-osxcross.tar.gz build
       - uses: actions/upload-artifact@v3
         with:
@@ -42,7 +42,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install tree && tree
 
       - run: echo "$HOME/build-osxcross/bin" >> $GITHUB_PATH
-      - run: CC=clang perl Configure darwin64-x86_64 --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix="$HOME/build" ${{ env.openssl_args }}
+      - run: CC=clang perl Configure darwin64-x86_64 --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix="$PWD/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
@@ -60,7 +60,7 @@ jobs:
           ref: openssl-3.0.7
       - run: sudo apt-get update
       - run: sudo apt-get install build-essential mingw-w64
-      - run: perl Configure mingw64 --cross-compile-prefix=x86_64-w64-mingw32- --prefix="$HOME/build" ${{ env.openssl_args }}
+      - run: perl Configure mingw64 --cross-compile-prefix=x86_64-w64-mingw32- --prefix="$PWD/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
@@ -76,7 +76,7 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.0.7
-      - run: CC=clang perl Configure --prefix="$HOME/build" ${{ env.openssl_args }}
+      - run: CC=clang perl Configure --prefix="$PWD/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
@@ -94,7 +94,7 @@ jobs:
           ref: openssl-3.0.7
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: ilammy/setup-nasm@v1
-      - run: perl Configure VC-WIN64A --prefix="$HOME/build" ${{ env.openssl_args }}
+      - run: perl Configure VC-WIN64A --prefix="$PWD/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: nmake
       - run: nmake install_sw
