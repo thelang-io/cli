@@ -9,8 +9,8 @@ jobs:
   deploy-msvc-packages:
     runs-on: windows-2022
     steps:
-      - run: choco install nasm
-      - run: echo "C:/Program Files/NASM" | Out-File -FilePath $env:GITHUB_PATH -Append
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: ilammy/setup-nasm@v1
       - run: echo "INSTALL_DIR=$PWD/the/windows/x86_64-msvc" | Out-File -FilePath $env:GITHUB_ENV -Append
       - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $env:INSTALL_DIR/openssl-src
       - run: (cd $env:INSTALL_DIR/openssl-src && perl Configure VC-WIN64A no-dso no-shared no-tests no-threads --libdir=lib --prefix=$env:INSTALL_DIR)
@@ -18,21 +18,17 @@ jobs:
       - run: (cd $env:INSTALL_DIR/openssl-src && nmake)
       - run: (cd $env:INSTALL_DIR/openssl-src && nmake install_sw)
       - run: rm -rf $env:INSTALL_DIR/openssl-src
-      - run: tar -czf packages-msvc.tar.gz the
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: actions/upload-artifact@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - run: aws s3 cp packages-msvc.tar.gz s3://${{ secrets.AWS_S3_BUCKET }}/packages-msvc.tar.gz --content-type application/x-gzip --content-disposition "attachment; filename=packages-msvc.tar.gz"
-      - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} --paths "/packages-msvc.tar.gz"
+          name: the-msvc
+          path: the
   deploy-packages:
     needs: deploy-msvc-packages
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/download-artifact@v3
       - run: sudo apt-get update
       - run: sudo apt-get install build-essential clang cmake libssl-dev libxml2-dev llvm-dev lzma-dev mingw-w64
-      - run: curl -fsSL https://cdn.thelang.io/packages-msvc.tar.gz | tar -xz
       - run: echo "INSTALL_DIR=$PWD/the/osxcross" >> $GITHUB_ENV
       - run: |
           git clone https://github.com/tpoechtrager/osxcross.git $INSTALL_DIR/osxcross-src
