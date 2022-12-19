@@ -3,7 +3,7 @@ name: Deploy Packages
 on:
   workflow_dispatch:
   push:
-    paths: [".github/workflows/deploy-packages.yml"]
+    paths: ['.github/workflows/deploy-packages.yml']
 
 env:
   openssl_args: no-dso no-shared no-tests no-threads --libdir=lib
@@ -12,12 +12,11 @@ jobs:
   build-osxcross:
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: tpoechtrager/osxcross
       - run: sudo apt-get update
       - run: sudo apt-get install libxml2-dev llvm-dev lzma-dev
-      - run: git clone https://github.com/tpoechtrager/osxcross.git
-      - run: pwd
-      - run: cd osxcross
-      - run: pwd
       - run: curl -fsSL https://cdn.thelang.io/MacOSX12.3.sdk.tar.xz -o tarballs/MacOSX12.3.sdk.tar.xz
       - run: TARGET_DIR=build UNATTENDED=1 ./build.sh
       - uses: actions/upload-artifact@v3
@@ -28,16 +27,19 @@ jobs:
     needs: build-osxcross
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: tpoechtrager/osxcross
+          ref: openssl-3.0.7
       - uses: actions/download-artifact@v3
         with:
           name: build-osxcross
+          path: build-osxcross
 
       - name: TODO Delete
         run: sudo apt-get update && sudo apt-get install tree && tree
 
-      - run: echo "build/bin" >> $GITHUB_PATH
-      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git
-      - run: cd openssl
+      - run: echo "$HOME/build-osxcross/bin" >> $GITHUB_PATH
       - run: CC=clang perl Configure darwin64-x86_64 ${{ env.openssl_args }} --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix=build
       - run: perl configdata.pm --dump
       - run: make -j4
@@ -49,10 +51,12 @@ jobs:
   build-cross-windows:
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: tpoechtrager/osxcross
+          ref: openssl-3.0.7
       - run: sudo apt-get update
       - run: sudo apt-get install build-essential mingw-w64
-      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git
-      - run: cd openssl
       - run: perl Configure mingw64 ${{ env.openssl_args }} --cross-compile-prefix=x86_64-w64-mingw32- --prefix=build
       - run: perl configdata.pm --dump
       - run: make -j4
@@ -64,8 +68,10 @@ jobs:
   build-linux:
     runs-on: ubuntu-22.04
     steps:
-      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git
-      - run: cd openssl
+      - uses: actions/checkout@v3
+        with:
+          repository: tpoechtrager/osxcross
+          ref: openssl-3.0.7
       - run: CC=clang perl Configure ${{ env.openssl_args }} --prefix=build
       - run: perl configdata.pm --dump
       - run: make -j4
@@ -77,10 +83,12 @@ jobs:
   build-windows:
     runs-on: windows-2022
     steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: tpoechtrager/osxcross
+          ref: openssl-3.0.7
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: ilammy/setup-nasm@v1
-      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git
-      - run: cd openssl
       - run: perl Configure VC-WIN64A ${{ env.openssl_args }} --prefix=build
       - run: perl configdata.pm --dump
       - run: nmake
@@ -104,5 +112,5 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - run: aws s3 cp packages.tar.gz s3://${{ secrets.AWS_S3_BUCKET }}/packages.tar.gz --content-type application/x-gzip --content-disposition "attachment; filename=packages.tar.gz"
-      - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} --paths "/packages.tar.gz"
+      - run: aws s3 cp packages.tar.gz s3://${{ secrets.AWS_S3_BUCKET }}/packages.tar.gz --content-type application/x-gzip --content-disposition 'attachment; filename=packages.tar.gz'
+      - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} --paths '/packages.tar.gz'
