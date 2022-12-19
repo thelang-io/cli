@@ -24,7 +24,7 @@ jobs:
         with:
           name: build-osxcross
           path: build-osxcross.tar.gz
-  build-cross-macos:
+  build-cross-compile-macos:
     needs: build-osxcross
     runs-on: ubuntu-latest
     steps:
@@ -32,10 +32,14 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.0.7
+
+      - name: TODO Delete
+        run: sudo apt-get update && sudo apt-get install tree && tree
+
       - uses: actions/download-artifact@v3
         with:
           name: build-osxcross
-      - run: tar -xzf build-osxcross.tar.gz build-osxcross
+      - run: tar -xzf build-osxcross.tar.gz -C build-osxcross --strip-components=1
 
       - name: TODO Delete
         run: sudo apt-get update && sudo apt-get install tree && tree
@@ -45,12 +49,12 @@ jobs:
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
-      - run: tar -czf build-cross-macos.tar.gz build
+      - run: tar -czf build-cross-compile-macos.tar.gz build
       - uses: actions/upload-artifact@v3
         with:
-          name: build-cross-macos
-          path: build-cross-macos.tar.gz
-  build-cross-windows:
+          name: build-cross-compile-macos
+          path: build-cross-compile-macos.tar.gz
+  build-cross-compile-windows:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -63,11 +67,11 @@ jobs:
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
-      - run: tar -czf build-cross-windows.tar.gz build
+      - run: tar -czf build-cross-compile-windows.tar.gz build
       - uses: actions/upload-artifact@v3
         with:
-          name: build-cross-windows
-          path: build-cross-windows.tar.gz
+          name: build-cross-compile-windows
+          path: build-cross-compile-windows.tar.gz
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -119,7 +123,7 @@ jobs:
           name: build-windows
           path: build-windows.tar.gz
   deploy:
-    needs: [build-osxcross, build-cross-macos, build-cross-windows, build-linux, build-macos, build-windows]
+    needs: [build-osxcross, build-cross-compile-macos, build-cross-compile-windows, build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
@@ -127,7 +131,18 @@ jobs:
       - name: TODO Delete
         run: sudo apt-get update && sudo apt-get install tree && tree
 
-      - run: tar -czf packages.tar.gz build
+      - run: tar -xzf build-osxcross.tar.gz -C the/osxcross --strip-components=1
+      - run: tar -xzf build-cross-compile-macos.tar.gz -C the/cross-compile/macos --strip-components=1
+      - run: tar -xzf build-linux.tar.gz -C the/cross-compile/linux --strip-components=1
+      - run: tar -xzf build-cross-compile-windows.tar.gz -C the/cross-compile/windows --strip-components=1
+      - run: tar -xzf build-macos.tar.gz -C the/native/macos --strip-components=1
+      - run: tar -xzf build-linux.tar.gz -C the/native/linux --strip-components=1
+      - run: tar -xzf build-windows.tar.gz -C the/native/windows --strip-components=1
+
+      - name: TODO Delete
+        run: sudo apt-get update && sudo apt-get install tree && tree
+
+      - run: tar -czf packages.tar.gz the
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
