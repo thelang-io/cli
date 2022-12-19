@@ -32,18 +32,11 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.0.7
-
-      - name: TODO Delete
-        run: sudo apt-get update && sudo apt-get install tree && tree
-
       - uses: actions/download-artifact@v3
         with:
           name: build-osxcross
+      - run: mkdir -p build-osxcross
       - run: tar -xzf build-osxcross.tar.gz -C build-osxcross --strip-components=1
-
-      - name: TODO Delete
-        run: sudo apt-get update && sudo apt-get install tree && tree
-
       - run: echo "$PWD/build-osxcross/bin" >> $GITHUB_PATH
       - run: CC=clang perl Configure darwin64-x86_64 --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix="$PWD/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
