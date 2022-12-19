@@ -16,7 +16,7 @@ jobs:
           TARGET_DIR=$INSTALL_DIR UNATTENDED=1 $INSTALL_DIR/osxcross-src/build.sh
           rm -rf $INSTALL_DIR/osxcross-src
       - run: echo "$INSTALL_DIR/bin" >> $GITHUB_PATH
-      - run: echo "OPENSSL_ARGS=no-shared no-tests no-threads --libdir=lib" >> $GITHUB_ENV
+      - run: echo "OPENSSL_ARGS=no-tests --libdir=lib" >> $GITHUB_ENV
       - run: echo "INSTALL_DIR=$PWD/the/linux" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
@@ -36,7 +36,7 @@ jobs:
       - run: echo "INSTALL_DIR=$PWD/the/windows" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && ./Configure mingw64 $OPENSSL_ARGS --cross-compile-prefix=x86_64-w64-mingw32- --openssldir=/usr/local/ssl-windows --prefix=$INSTALL_DIR -static -static-libgcc)
+          (cd $INSTALL_DIR/openssl-src && ./Configure mingw64 $OPENSSL_ARGS --cross-compile-prefix=x86_64-w64-mingw32- --openssldir=/usr/local/ssl-windows --prefix=$INSTALL_DIR)
           $INSTALL_DIR/openssl-src/configdata.pm --dump
           make -C $INSTALL_DIR/openssl-src -j4
           make install_sw -C $INSTALL_DIR/openssl-src
