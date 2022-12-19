@@ -3,11 +3,34 @@ name: Deploy Packages
 on: [workflow_dispatch]
 
 jobs:
+  deploy-msvc-packages:
+    runs-on: windows-2022
+    steps:
+      - run: choco install nasm
+      - run: echo "C:/Program Files/NASM" | Out-File -FilePath $env:GITHUB_PATH -Append
+      - run: echo "OPENSSL_ARGS=no-dso no-shared no-tests no-threads --libdir=lib" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - run: echo "INSTALL_DIR=$PWD/the/windows/x86_64-msvc" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $env:INSTALL_DIR/openssl-src
+      - run: (cd $env:INSTALL_DIR/openssl-src && perl Configure VC-WIN64A $env:OPENSSL_ARGS --prefix=$env:INSTALL_DIR)
+      - run: perl $env:INSTALL_DIR/openssl-src/configdata.pm --dump
+      - run: (cd $env:INSTALL_DIR/openssl-src && nmake)
+      - run: (cd $env:INSTALL_DIR/openssl-src && nmake install_sw)
+      - run: rm -rf $env:INSTALL_DIR/openssl-src
+      - run: tar -czf packages-msvc.tar.gz the
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - run: aws s3 cp packages-msvc.tar.gz s3://${{ secrets.AWS_S3_BUCKET }}/packages-msvc.tar.gz --content-type application/x-gzip --content-disposition "attachment; filename=packages-msvc.tar.gz"
+      - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} --paths "/packages-msvc.tar.gz"
   deploy-packages:
-    runs-on: ubuntu-latest
+    needs: deploy-msvc-packages
+    runs-on: ubuntu-22.04
     steps:
       - run: sudo apt-get update
       - run: sudo apt-get install build-essential clang cmake libssl-dev libxml2-dev llvm-dev lzma-dev mingw-w64
+      - run: curl -fsSL https://cdn.thelang.io/packages-msvc.tar.gz | tar -xz
       - run: echo "INSTALL_DIR=$PWD/the/osxcross" >> $GITHUB_ENV
       - run: |
           git clone https://github.com/tpoechtrager/osxcross.git $INSTALL_DIR/osxcross-src
@@ -16,28 +39,28 @@ jobs:
           TARGET_DIR=$INSTALL_DIR UNATTENDED=1 $INSTALL_DIR/osxcross-src/build.sh
           rm -rf $INSTALL_DIR/osxcross-src
       - run: echo "$INSTALL_DIR/bin" >> $GITHUB_PATH
-      - run: echo "OPENSSL_ARGS=no-dso no-tests no-threads --libdir=lib" >> $GITHUB_ENV
+      - run: echo "OPENSSL_ARGS=no-dso no-shared no-tests no-threads --libdir=lib" >> $GITHUB_ENV
       - run: echo "INSTALL_DIR=$PWD/the/linux" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && CC=clang ./Configure $OPENSSL_ARGS --openssldir=/usr/local/ssl-linux --prefix=$INSTALL_DIR)
-          $INSTALL_DIR/openssl-src/configdata.pm --dump
+          (cd $INSTALL_DIR/openssl-src && CC=clang perl Configure $OPENSSL_ARGS --prefix=$INSTALL_DIR)
+          perl $INSTALL_DIR/openssl-src/configdata.pm --dump
           make -C $INSTALL_DIR/openssl-src -j4
           make install_sw -C $INSTALL_DIR/openssl-src
           rm -rf $INSTALL_DIR/openssl-src
       - run: echo "INSTALL_DIR=$PWD/the/macos" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && CC=clang ./Configure darwin64-x86_64 $OPENSSL_ARGS --cross-compile-prefix=x86_64-apple-darwin21.4- --openssldir=/usr/local/ssl-macos --prefix=$INSTALL_DIR)
-          $INSTALL_DIR/openssl-src/configdata.pm --dump
+          (cd $INSTALL_DIR/openssl-src && CC=clang perl Configure darwin64-x86_64 $OPENSSL_ARGS --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix=$INSTALL_DIR)
+          perl $INSTALL_DIR/openssl-src/configdata.pm --dump
           make -C $INSTALL_DIR/openssl-src -j4
           make install_sw -C $INSTALL_DIR/openssl-src
           rm -rf $INSTALL_DIR/openssl-src
-      - run: echo "INSTALL_DIR=$PWD/the/windows" >> $GITHUB_ENV
+      - run: echo "INSTALL_DIR=$PWD/the/windows/x86_64-mingw" >> $GITHUB_ENV
       - run: |
           git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && ./Configure mingw64 $OPENSSL_ARGS --cross-compile-prefix=x86_64-w64-mingw32- --openssldir=/usr/local/ssl-windows --prefix=$INSTALL_DIR -Wl,--output-def,libssl.def)
-          $INSTALL_DIR/openssl-src/configdata.pm --dump
+          (cd $INSTALL_DIR/openssl-src && perl Configure mingw64 $OPENSSL_ARGS --cross-compile-prefix=x86_64-w64-mingw32- --prefix=$INSTALL_DIR)
+          perl $INSTALL_DIR/openssl-src/configdata.pm --dump
           make -C $INSTALL_DIR/openssl-src -j4
           make install_sw -C $INSTALL_DIR/openssl-src
           rm -rf $INSTALL_DIR/openssl-src
