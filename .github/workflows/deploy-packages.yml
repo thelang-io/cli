@@ -1,6 +1,9 @@
 name: Deploy Packages
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/deploy-packages.yml"]
 
 jobs:
   deploy-msvc-packages:
@@ -8,10 +11,9 @@ jobs:
     steps:
       - run: choco install nasm
       - run: echo "C:/Program Files/NASM" | Out-File -FilePath $env:GITHUB_PATH -Append
-      - run: echo "OPENSSL_ARGS=no-dso no-shared no-tests no-threads --libdir=lib" | Out-File -FilePath $env:GITHUB_ENV -Append
       - run: echo "INSTALL_DIR=$PWD/the/windows/x86_64-msvc" | Out-File -FilePath $env:GITHUB_ENV -Append
       - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $env:INSTALL_DIR/openssl-src
-      - run: (cd $env:INSTALL_DIR/openssl-src && perl Configure VC-WIN64A $env:OPENSSL_ARGS --prefix=$env:INSTALL_DIR)
+      - run: (cd $env:INSTALL_DIR/openssl-src && perl Configure VC-WIN64A no-dso no-shared no-tests no-threads --libdir=lib --prefix=$env:INSTALL_DIR)
       - run: perl $env:INSTALL_DIR/openssl-src/configdata.pm --dump
       - run: (cd $env:INSTALL_DIR/openssl-src && nmake)
       - run: (cd $env:INSTALL_DIR/openssl-src && nmake install_sw)
