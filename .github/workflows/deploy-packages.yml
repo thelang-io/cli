@@ -5,64 +5,98 @@ on:
   push:
     paths: [".github/workflows/deploy-packages.yml"]
 
+env:
+  openssl_args: no-dso no-shared no-tests no-threads --libdir=lib
+
 jobs:
-  deploy-msvc-packages:
+  build-osxcross:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: sudo apt-get update
+      - run: sudo apt-get install libxml2-dev llvm-dev lzma-dev
+      - run: git clone https://github.com/tpoechtrager/osxcross.git
+      - run: cd osxcross
+      - run: curl -fsSL https://cdn.thelang.io/MacOSX12.3.sdk.tar.xz -o tarballs/MacOSX12.3.sdk.tar.xz
+      - run: TARGET_DIR=build UNATTENDED=1 ./build.sh
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-osxcross
+          path: build
+  build-cross-macos:
+    needs: build-osxcross
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: build-osxcross
+
+      - name: TODO Delete
+        run: sudo apt-get update && sudo apt-get install tree && tree
+
+      - run: echo "build/bin" >> $GITHUB_PATH
+      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git
+      - run: cd openssl
+      - run: CC=clang perl Configure darwin64-x86_64 ${{ env.openssl_args }} --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix=build
+      - run: perl configdata.pm --dump
+      - run: make -j4
+      - run: make install_sw
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-cross-macos
+          path: build
+  build-cross-windows:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: sudo apt-get update
+      - run: sudo apt-get install build-essential mingw-w64
+      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git
+      - run: cd openssl
+      - run: perl Configure mingw64 ${{ env.openssl_args }} --cross-compile-prefix=x86_64-w64-mingw32- --prefix=build
+      - run: perl configdata.pm --dump
+      - run: make -j4
+      - run: make install_sw
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-cross-windows
+          path: build
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git
+      - run: cd openssl
+      - run: CC=clang perl Configure ${{ env.openssl_args }} --prefix=build
+      - run: perl configdata.pm --dump
+      - run: make -j4
+      - run: make install_sw
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-linux
+          path: build
+  build-windows:
     runs-on: windows-2022
     steps:
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: ilammy/setup-nasm@v1
-      - run: echo "INSTALL_DIR=$PWD/the/windows/x86_64-msvc" | Out-File -FilePath $env:GITHUB_ENV -Append
-      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $env:INSTALL_DIR/openssl-src
-      - run: (cd $env:INSTALL_DIR/openssl-src && perl Configure VC-WIN64A no-dso no-shared no-tests no-threads --libdir=lib --prefix=$env:INSTALL_DIR)
-      - run: perl $env:INSTALL_DIR/openssl-src/configdata.pm --dump
-      - run: (cd $env:INSTALL_DIR/openssl-src && nmake)
-      - run: (cd $env:INSTALL_DIR/openssl-src && nmake install_sw)
-      - run: rm -rf $env:INSTALL_DIR/openssl-src
+      - run: git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git
+      - run: cd openssl
+      - run: perl Configure VC-WIN64A ${{ env.openssl_args }} --prefix=build
+      - run: perl configdata.pm --dump
+      - run: nmake
+      - run: nmake install_sw
       - uses: actions/upload-artifact@v3
         with:
-          name: the-msvc
-          path: the
-  deploy-packages:
-    needs: deploy-msvc-packages
+          name: build-windows
+          path: build
+  deploy:
+    needs: [build-osxcross, build-cross-macos, build-cross-windows, build-linux, build-windows]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/download-artifact@v3
-      - run: sudo apt-get update
-      - run: sudo apt-get install build-essential clang cmake libssl-dev libxml2-dev llvm-dev lzma-dev mingw-w64
-      - run: echo "INSTALL_DIR=$PWD/the/osxcross" >> $GITHUB_ENV
-      - run: |
-          git clone https://github.com/tpoechtrager/osxcross.git $INSTALL_DIR/osxcross-src
-          (cd $INSTALL_DIR/osxcross-src && git reset --hard 50e86ebca7d14372febd0af8cd098705049161b9)
-          curl -fsSL https://cdn.thelang.io/MacOSX12.3.sdk.tar.xz -o $INSTALL_DIR/osxcross-src/tarballs/MacOSX12.3.sdk.tar.xz
-          TARGET_DIR=$INSTALL_DIR UNATTENDED=1 $INSTALL_DIR/osxcross-src/build.sh
-          rm -rf $INSTALL_DIR/osxcross-src
-      - run: echo "$INSTALL_DIR/bin" >> $GITHUB_PATH
-      - run: echo "OPENSSL_ARGS=no-dso no-shared no-tests no-threads --libdir=lib" >> $GITHUB_ENV
-      - run: echo "INSTALL_DIR=$PWD/the/linux" >> $GITHUB_ENV
-      - run: |
-          git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && CC=clang perl Configure $OPENSSL_ARGS --prefix=$INSTALL_DIR)
-          perl $INSTALL_DIR/openssl-src/configdata.pm --dump
-          make -C $INSTALL_DIR/openssl-src -j4
-          make install_sw -C $INSTALL_DIR/openssl-src
-          rm -rf $INSTALL_DIR/openssl-src
-      - run: echo "INSTALL_DIR=$PWD/the/macos" >> $GITHUB_ENV
-      - run: |
-          git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && CC=clang perl Configure darwin64-x86_64 $OPENSSL_ARGS --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix=$INSTALL_DIR)
-          perl $INSTALL_DIR/openssl-src/configdata.pm --dump
-          make -C $INSTALL_DIR/openssl-src -j4
-          make install_sw -C $INSTALL_DIR/openssl-src
-          rm -rf $INSTALL_DIR/openssl-src
-      - run: echo "INSTALL_DIR=$PWD/the/windows/x86_64-mingw" >> $GITHUB_ENV
-      - run: |
-          git clone --depth 1 --branch openssl-3.0.7 https://github.com/openssl/openssl.git $INSTALL_DIR/openssl-src
-          (cd $INSTALL_DIR/openssl-src && perl Configure mingw64 $OPENSSL_ARGS --cross-compile-prefix=x86_64-w64-mingw32- --prefix=$INSTALL_DIR)
-          perl $INSTALL_DIR/openssl-src/configdata.pm --dump
-          make -C $INSTALL_DIR/openssl-src -j4
-          make install_sw -C $INSTALL_DIR/openssl-src
-          rm -rf $INSTALL_DIR/openssl-src
-      - run: tar -czf packages.tar.gz the
+
+      - name: TODO Delete
+        run: sudo apt-get update && sudo apt-get install tree && tree
+
+      - run: tar -czf packages.tar.gz build
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
