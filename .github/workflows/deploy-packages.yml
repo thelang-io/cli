@@ -32,6 +32,8 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.0.7
+      - run: sudo apt-get update
+      - run: sudo apt-get install libxml2-dev llvm-dev lzma-dev
       - uses: actions/download-artifact@v3
         with:
           name: build-osxcross
@@ -120,10 +122,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
-
-      - name: TODO Delete
-        run: sudo apt-get update && sudo apt-get install tree && tree
-
       - run: tar -xzf build-osxcross.tar.gz -C the/osxcross --strip-components=1
       - run: tar -xzf build-cross-compile-macos.tar.gz -C the/cross-compile/macos --strip-components=1
       - run: tar -xzf build-linux.tar.gz -C the/cross-compile/linux --strip-components=1
@@ -131,10 +129,6 @@ jobs:
       - run: tar -xzf build-macos.tar.gz -C the/native/macos --strip-components=1
       - run: tar -xzf build-linux.tar.gz -C the/native/linux --strip-components=1
       - run: tar -xzf build-windows.tar.gz -C the/native/windows --strip-components=1
-
-      - name: TODO Delete
-        run: sudo apt-get update && sudo apt-get install tree && tree
-
       - run: tar -czf packages.tar.gz the
       - uses: aws-actions/configure-aws-credentials@v1
         with:
