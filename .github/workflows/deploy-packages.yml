@@ -20,7 +20,7 @@ jobs:
       - run: sudo apt-get install libxml2-dev llvm-dev lzma-dev
       - run: curl -fsSL https://cdn.thelang.io/MacOSX12.3.sdk.tar.xz -o tarballs/MacOSX12.3.sdk.tar.xz
       - run: TARGET_DIR="$PWD/the/osxcross" UNATTENDED=1 ./build.sh
-      - run: tar -czf build-osxcross.tar.gz "$PWD/the/osxcross"
+      - run: tar -czf build-osxcross.tar.gz osxcross -C the
       - uses: actions/upload-artifact@v3
         with:
           name: build-osxcross
@@ -36,8 +36,8 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build-osxcross
-      - run: mkdir -p "$PWD/the/osxcross"
-      - run: tar -xzf build-osxcross.tar.gz -C "$PWD/the"
+      - run: mkdir -p the
+      - run: tar -xzf build-osxcross.tar.gz -C the
       - run: echo "$PWD/the/osxcross/bin" >> $GITHUB_PATH
       - run: CC=clang perl Configure darwin64-x86_64 --cross-compile-prefix=x86_64-apple-darwin21.4- --prefix="$PWD/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
