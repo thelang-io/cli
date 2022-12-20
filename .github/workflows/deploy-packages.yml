@@ -111,6 +111,8 @@ jobs:
       - run: perl configdata.pm --dump
       - run: nmake
       - run: nmake install_sw
+      - run: cp build/lib/libssl.lib build/lib/ssl.lib
+      - run: cp build/lib/libcrypto.lib build/lib/crypto.lib
       - run: tar -czf build-windows.tar.gz build
       - uses: actions/upload-artifact@v3
         with:
