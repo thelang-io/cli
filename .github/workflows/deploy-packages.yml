@@ -15,7 +15,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: tpoechtrager/osxcross
-          path:
       - run: sudo apt-get update
       - run: sudo apt-get install libxml2-dev llvm-dev lzma-dev
       - run: curl -fsSL https://cdn.thelang.io/MacOSX12.3.sdk.tar.xz -o tarballs/MacOSX12.3.sdk.tar.xz
@@ -122,13 +121,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
-      - run: tar -xzf build-osxcross.tar.gz -C the
-      - run: tar -xzf build-cross-compile-macos.tar.gz -C the/cross-compile/macos --strip-components=1
-      - run: tar -xzf build-linux.tar.gz -C the/cross-compile/linux --strip-components=1
-      - run: tar -xzf build-cross-compile-windows.tar.gz -C the/cross-compile/windows --strip-components=1
-      - run: tar -xzf build-macos.tar.gz -C the/native/macos --strip-components=1
-      - run: tar -xzf build-linux.tar.gz -C the/native/linux --strip-components=1
-      - run: tar -xzf build-windows.tar.gz -C the/native/windows --strip-components=1
+      - run: mkdir -p the && tar -xzf build-osxcross.tar.gz -C the
+      - run: mkdir -p the/cross-compile/linux && tar -xzf build-linux.tar.gz -C the/cross-compile/linux --strip-components=1
+      - run: mkdir -p the/cross-compile/macos && tar -xzf build-cross-compile-macos.tar.gz -C the/cross-compile/macos --strip-components=1
+      - run: mkdir -p the/cross-compile/windows && tar -xzf build-cross-compile-windows.tar.gz -C the/cross-compile/windows --strip-components=1
+      - run: mkdir -p the/native/linux && tar -xzf build-linux.tar.gz -C the/native/linux --strip-components=1
+      - run: mkdir -p the/native/macos && tar -xzf build-macos.tar.gz -C the/native/macos --strip-components=1
+      - run: mkdir -p the/native/windows && tar -xzf build-windows.tar.gz -C the/native/windows --strip-components=1
       - run: tar -czf packages.tar.gz the
       - uses: aws-actions/configure-aws-credentials@v1
         with:
