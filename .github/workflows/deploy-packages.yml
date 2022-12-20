@@ -121,13 +121,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
-      - run: mkdir -p the && tar -xzf build-osxcross.tar.gz -C the
-      - run: mkdir -p the/cross-compile/linux && tar -xzf build-linux.tar.gz -C the/cross-compile/linux --strip-components=1
-      - run: mkdir -p the/cross-compile/macos && tar -xzf build-cross-compile-macos.tar.gz -C the/cross-compile/macos --strip-components=1
-      - run: mkdir -p the/cross-compile/windows && tar -xzf build-cross-compile-windows.tar.gz -C the/cross-compile/windows --strip-components=1
-      - run: mkdir -p the/native/linux && tar -xzf build-linux.tar.gz -C the/native/linux --strip-components=1
-      - run: mkdir -p the/native/macos && tar -xzf build-macos.tar.gz -C the/native/macos --strip-components=1
-      - run: mkdir -p the/native/windows && tar -xzf build-windows.tar.gz -C the/native/windows --strip-components=1
+      - run: |
+          config=(
+            build-linux:the/cross-compile/linux
+            build-cross-compile-macos:the/cross-compile/macos
+            build-cross-compile-windows:the/cross-compile/windows
+            build-linux:the/native/linux
+            build-macos:the/native/macos
+            build-windows:the/native/windows
+            build-osxcross:the/osxcross
+          )
+
+          for item in "${config[@]}"; do
+            artifact="${item%%:*}"
+            location="${item#*:}"
+            tarball_location="$artifact/$artifact.tar.gz"
+
+            echo Creating directory "$location"
+            mkdir -p "$location"
+            echo Unpacking tarball "$tarball_location"
+            tar -xzf "$tarball_location" -C "$location" --strip-components=1
+          done
       - run: tar -czf packages.tar.gz the
       - uses: aws-actions/configure-aws-credentials@v1
         with:
