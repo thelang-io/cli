@@ -18,10 +18,9 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install libxml2-dev llvm-dev lzma-dev
       - run: curl -fsSL https://cdn.thelang.io/MacOSX12.3.sdk.tar.xz -o tarballs/MacOSX12.3.sdk.tar.xz
-      - run: TARGET_DIR="$PWD/the/osxcross" UNATTENDED=1 ./build.sh
-      - name: Output linker libraries information
-        run: ldd -v "$PWD/the/osxcross/bin/x86_64-apple-darwin21.4-ld"
-      - run: mv the/osxcross .
+      - run: mkdir -p /usr/local/the
+      - run: TARGET_DIR="/usr/local/the/osxcross" UNATTENDED=1 ./build.sh
+      - run: mv /usr/local/the/osxcross .
       - run: tar -czf build-osxcross.tar.gz osxcross
       - uses: actions/upload-artifact@v3
         with:
