@@ -14,9 +14,9 @@ jobs:
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
       - run: curl -fsSL https://cdn.thelang.io/cli | sh
       - run: ./build.sh
-      - run: the compile build/result --platform=linux && mv a.out cli-core-linux && sleep 1
-      - run: the compile build/result --platform=macos && mv a.out cli-core-macos && sleep 1
-      - run: the compile build/result --platform=windows && mv a.out cli-core-windows
+      - run: the compile build/result --platform=linux && mv build/a.out cli-core-linux && sleep 1
+      - run: the compile build/result --platform=macos && mv build/a.out cli-core-macos && sleep 1
+      - run: the compile build/result --platform=windows && mv build/a.out cli-core-windows
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
