@@ -6,8 +6,6 @@
 VERSION_NUM := "0.12.0"
 VERSION_NAME := "Submarine Ocean"
 
-// test
-
 main {
   mut args := Args{lineLength: 70}
 
