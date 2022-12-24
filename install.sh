@@ -36,7 +36,7 @@ main () {
   curl -fsSL "$cdn_url" -o "$install_path"
   chmod a+x "$install_path"
   echo "Successfully installed The CLI!"
-  echo "  Type `the -h` to explore available options"
+  echo "  Type \`the -h\` to explore available options"
 }
 
 main $@
