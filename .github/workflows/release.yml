@@ -25,9 +25,9 @@ jobs:
       - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli                       --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
       - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli@latest                --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
       - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli@$VERSION              --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
-      - run: aws s3 cp install.bat      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win                   --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
-      - run: aws s3 cp install.bat      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@latest            --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
-      - run: aws s3 cp install.bat      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@$VERSION          --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
+      - run: aws s3 cp install.ps1      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win                   --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
+      - run: aws s3 cp install.ps1      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@latest            --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
+      - run: aws s3 cp install.ps1      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@$VERSION          --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
       - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux            --content-type application/octet-stream
       - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux@latest     --content-type application/octet-stream
       - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux@$VERSION   --content-type application/octet-stream
