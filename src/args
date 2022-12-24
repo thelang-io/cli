@@ -219,7 +219,9 @@ obj Args {
     loop i := 1; i < args.len; i++ {
       arg := args[i]
 
-      if self._state.nextArgIsValue {
+      if self._state.nextArgIsValue && arg.slice(0, 1) == "-" {
+        self._state.nextArgIsValue = false
+      } elif self._state.nextArgIsValue {
         self._setDataValue(
           self._state.nextArgValueForType,
           self._state.nextArgValueFor,
@@ -335,7 +337,7 @@ obj Args {
         continue
       }
 
-      self._setDataValue(ArgType_Option, item.name, "")
+      self._setDataValue(ArgType_Command, item.name, item.default)
 
       if item.hasValue {
         self._state.nextArgIsValue = true
@@ -371,6 +373,7 @@ obj Args {
         self._state.nextArgIsValue = true
         self._state.nextArgValueFor = item.name
         self._state.nextArgValueForType = ArgType_Option
+        value = item.default
       }
 
       self._setDataValue(ArgType_Option, item.name, value)

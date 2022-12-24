@@ -31,7 +31,7 @@ main {
     .option(
       "build-dir",
       "Build output directory, by default \"build\"",
-      default: process_cwd() + "/build"
+      default: "build"
     )
     .option("compiler", "Offline compiler to use instead of cloud servers")
     .option("help", "Print help information", alias: "h", hasValue: false)
@@ -39,7 +39,7 @@ main {
       "output",
       "Executable output path, by default \"a.out\"",
       alias: "o",
-      default: process_cwd() + "/a.out"
+      default: "a.out"
     )
     .option(
       "platform",
@@ -96,7 +96,9 @@ main {
     } elif arg.option == "compiler" {
       compiler = arg.value
     } elif arg.option == "output" {
-      outputPath = arg.value
+      outputPath = fs_isAbsoluteSync(arg.value)
+        ? arg.value
+        : process_cwd() + "/" + arg.value
     } elif arg.option == "platform" {
       platform = arg.value
     } elif arg.option == "run-args" {
@@ -109,14 +111,17 @@ main {
   qs := "?v=" + version + "&p=" + platform
 
   if action == "build" {
-    build(targetPath, buildDir)
+    Builder_build(targetPath, buildDir)
   } elif action == "compile" || action == "lex" || action == "parse" {
     command(compiler, action, targetPath, outputPath, qs)
   } elif action == "help" {
     print(args.help(), terminator: "")
   } elif action == "run" {
     command(compiler, "compile", targetPath, outputPath, qs)
-    stdout := process_runSync(outputPath + runArgs)
+
+    cmd := outputPath + (runArgs.empty() ? "" : " ") + runArgs
+    stdout := process_runSync(cmd)
+
     fs_rmSync(outputPath)
     print(stdout.str(), terminator: "")
   } elif action == "upgrade" {

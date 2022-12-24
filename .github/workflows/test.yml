@@ -20,11 +20,11 @@ jobs:
       - run: sudo apt-get install valgrind
       - run: curl -fsSL https://cdn.thelang.io/cli | bash
       - run: ./build.sh
-      - run: the compile build/result && mv a.out b.out
+      - run: the compile build.out && mv a.out b.out
       - run: valgrind ./b.out -h
       - run: valgrind ./b.out -v
       - run: valgrind ./b.out build
-      - run: valgrind ./b.out lex build/result
-      - run: valgrind ./b.out parse build/result
-      - run: valgrind ./b.out compile build/result
-      - run: valgrind ./b.out run build/result
+      - run: valgrind ./b.out lex build.out
+      - run: valgrind ./b.out parse build.outlt
+      - run: valgrind ./b.out compile build.outsult
+      - run: valgrind ./b.out run build.out

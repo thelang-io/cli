@@ -1,0 +1,74 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+fn Builder_collectFiles (path: str) str[] {
+  entities := fs_scandirSync(path)
+  mut result: str[]
+
+  loop i := 0; i < entities.len; i++ {
+    entity := entities[i]
+    entityPath := path + "/" + entity
+
+    if entity.find(".") == -1 && fs_isFileSync(entityPath) {
+      result.push(entityPath)
+    } elif fs_isDirectorySync(entityPath) {
+      files := Builder_collectFiles(entityPath)
+
+      loop j := 0; j < files.len; j++ {
+        result.push(files[j])
+      }
+    }
+  }
+
+  return result
+}
+
+fn Builder_build (targetPath: str, buildDir: str) {
+  fullPath := (fs_isAbsoluteSync(targetPath) ? "" : process_cwd() + "/") +
+    targetPath
+  buildPath := fs_realpathSync(fullPath)
+
+  if !fs_existsSync(buildPath) {
+    RaiseError("File '" + buildPath + "' does not exists")
+  } elif !fs_isDirectorySync(buildPath) {
+    RaiseError("Path '" + buildPath + "' is not a directory")
+  }
+
+  print("Starting build")
+
+  files := Builder_collectFiles(buildPath)
+  mut parser := Parser{}
+  mut comments := ""
+  mut content := ""
+  mut definitions := ""
+  mut functions := ""
+  mut mainContent := ""
+
+  loop i := 0; i < files.len; i++ {
+    file := files[i]
+    print("Processing file: " + file)
+
+    parserResult := parser.parse(file)
+    comments += parserResult.comments
+    content += parserResult.content
+    definitions += parserResult.definitions
+    functions += parserResult.functions
+
+    if !parserResult.mainContent.empty() && !mainContent.empty() {
+      RaiseError("Found multiple blocks of main")
+    } elif !parserResult.mainContent.empty() {
+      mainContent = parserResult.mainContent
+    }
+  }
+
+  if !fs_existsSync(buildDir) {
+    fs_mkdirSync(buildDir)
+  }
+
+  result := comments + content + definitions + functions + mainContent
+  fs_writeFileSync(buildDir + "/result", result.toBuffer())
+
+  print("Build finished: " + buildDir + "/result")
+}
