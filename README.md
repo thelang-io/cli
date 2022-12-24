@@ -3,8 +3,8 @@ CLI for The Programming Language
 
 ## Installation
 **POSIX**
-```sh
-curl -fsSL https://cdn.thelang.io/cli | sh
+```bash
+curl -fsSL https://cdn.thelang.io/cli | bash
 ```
 
 **Windows PowerShell**
@@ -13,6 +13,6 @@ curl -fsSL https://cdn.thelang.io/cli | sh
 ```
 
 ## Usage
-```sh
+```bash
 $ the -h
 ```
