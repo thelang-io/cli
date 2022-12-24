@@ -220,7 +220,7 @@ obj Args {
       arg := args[i]
 
       if self._state.nextArgIsValue {
-        self._setValue(
+        self._setDataValue(
           self._state.nextArgValueForType,
           self._state.nextArgValueFor,
           arg
@@ -233,12 +233,37 @@ obj Args {
       self._parseArg(arg)
     }
 
+    loop i := 1; i < self._config.len; i++ {
+      item := self._config[i]
+
+      if item.default.empty() || self._existsDataValue(item.type, item.name) {
+        continue
+      }
+
+      self._setDataValue(item.type, item.name, item.default)
+    }
+
     return self
   }
 
   fn usage (mut self: ref Self, text: str) ref Self {
     self._usage.push(text)
     return self
+  }
+
+  fn _existsDataValue (mut self: ref Self, type: int, name: str) bool {
+    loop i := 0; i < self.data.len; i++ {
+      item := self.data[i]
+
+      if (
+        (type == ArgType_Command && item.command == name) ||
+        (type == ArgType_Option && item.option == name)
+      ) {
+        return true
+      }
+    }
+
+    return false
   }
 
   fn _helpInit (mut self: ref Self) {
@@ -278,7 +303,6 @@ obj Args {
       value := eqPos < 0 ? "" : arg.slice(eqPos + 1)
 
       self._parseArgOption(arg, name, value)
-      // todo problem here in codegen
       return
     } elif arg.len >= 2 && arg[1].isAlphaNum() && eqPos > 0 {
       name := eqPos > 0 ? arg.slice(1, eqPos) : arg.slice(1)
@@ -311,7 +335,7 @@ obj Args {
         continue
       }
 
-      self._setValue(ArgType_Option, item.name, "")
+      self._setDataValue(ArgType_Option, item.name, "")
 
       if item.hasValue {
         self._state.nextArgIsValue = true
@@ -349,14 +373,14 @@ obj Args {
         self._state.nextArgValueForType = ArgType_Option
       }
 
-      self._setValue(ArgType_Option, item.name, value)
+      self._setDataValue(ArgType_Option, item.name, value)
       return
     }
 
     RaiseError("Unexpected argument `" + arg + "`")
   }
 
-  fn _setValue (mut self: ref Self, type: int, name: str, value: str) {
+  fn _setDataValue (mut self: ref Self, type: int, name: str, value: str) {
     loop i := 0; i < self.data.len; i++ {
       mut item := self.data[i]
 

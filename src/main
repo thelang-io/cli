@@ -49,15 +49,10 @@ main {
     .option("run-args", "Arguments to be passed when running executable")
     .option(
       "the",
-      "The Programming Language version, valid formats: latest, 1, 1.1, 1.1.1"
+      "The Programming Language version, valid formats: latest, 1, 1.1, 1.1.1",
+      default: "latest"
     )
-    .option(
-      "version",
-      "Print version",
-      alias: "v",
-      default: "latest",
-      hasValue: false
-    )
+    .option("version", "Print version", alias: "v", hasValue: false)
 
     .example("the -h")
     .example("the --version")
