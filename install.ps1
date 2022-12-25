@@ -34,7 +34,7 @@ function main {
 
   if (Test-Path -Path $InstallDir) {
     Write-Host 'The CLI is already installed'
-    exit 1
+    return
   }
 
   Write-Host 'Installing The CLI...'
@@ -42,6 +42,7 @@ function main {
   Request-File -Url $DownloadUrl -Path $InstallPath
   Set-ExecuteAcl -Path $InstallPath
   Set-SystemEnv -Name Path -Value "$MachinePath;$InstallDir"
+  $env:Path += ";$InstallDir"
   Write-Host 'Successfully installed The CLI!'
   Write-Host '  Type `the -h` to explore available options'
 }
