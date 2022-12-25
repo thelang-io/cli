@@ -8,6 +8,7 @@ VERSION_NAME := "Submarine Ocean"
 
 main {
   mut args := Args{lineLength: 70}
+  defaultOutput := os_name() == "Windows" ? "a.exe" : "a.out"
 
   args
     .usage("the [options]")
@@ -37,9 +38,9 @@ main {
     .option("help", "Print help information", alias: "h", hasValue: false)
     .option(
       "output",
-      "Executable output path, by default \"a.out\"",
+      "Executable output path, by default \"" + defaultOutput + "\"",
       alias: "o",
-      default: "a.out"
+      default: defaultOutput
     )
     .option(
       "platform",
