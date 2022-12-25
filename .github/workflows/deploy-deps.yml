@@ -1,10 +1,10 @@
-name: Deploy Packages
+name: Deploy Dependencies
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['.github/workflows/deploy-packages.yml']
+    paths: ['.github/workflows/deploy-deps.yml']
 
 env:
   openssl_args: no-dso no-shared no-tests no-threads --libdir=lib
@@ -148,11 +148,11 @@ jobs:
             echo Unpacking tarball "$tarball_location"
             tar -xzf "$tarball_location" -C "$location" --strip-components=1
           done
-      - run: tar -czf packages.tar.gz the
+      - run: tar -czf deps.tar.gz the
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - run: aws s3 cp packages.tar.gz s3://${{ secrets.AWS_S3_BUCKET }}/packages.tar.gz --content-type application/x-gzip --content-disposition 'attachment; filename=packages.tar.gz'
-      - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} --paths '/packages.tar.gz'
+      - run: aws s3 cp deps.tar.gz s3://${{ secrets.AWS_S3_BUCKET }}/deps.tar.gz --content-type application/x-gzip
+      - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} --paths '/deps.tar.gz'
