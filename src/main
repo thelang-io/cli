@@ -3,7 +3,7 @@
  * Licensed under the MIT License
  */
 
-VERSION_NUM := "0.12.0"
+VERSION_NUM := "0.12.1"
 VERSION_NAME := "Submarine Ocean"
 
 main {
