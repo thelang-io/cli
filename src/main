@@ -126,17 +126,14 @@ main {
     fs_rmSync(outputPath)
     print(stdout.str(), terminator: "")
   } elif action == "upgrade" {
-    mut req := request_open(
-      "GET",
-      "https://cdn.thelang.io/cli-core-" + os_name().lower()
-    )
-
-    res := request_read(ref req)
-    request_close(ref req)
-
     executablePath := os_name() == "Windows"
       ? "C:/Program Files/The/the.exe"
       : "/usr/local/bin/the"
+    url := "https://cdn.thelang.io/cli-core-" + os_name().lower()
+
+    mut req := request_open("GET", url])
+    res := request_read(ref req)
+    request_close(ref req)
 
     fs_writeFileSync(executablePath, res.data)
     chmodAddSync(executablePath, 0o111)
