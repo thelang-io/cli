@@ -1,3 +1,15 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
 main {
-  print("No tests found")
+  mut tests := Test{}
+
+  tests.register("test_str_split_empty", test_str_split_empty)
+  tests.register("test_str_split_default_delimiter", test_str_split_default_delimiter)
+  tests.register("test_str_split_char_delimiter", test_str_split_char_delimiter)
+  tests.register("test_str_split_str_delimiter", test_str_split_str_delimiter)
+
+  tests.run(process_args)
 }

@@ -1,0 +1,51 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+fn test_str_split_empty () {
+  expect(str_split("")).toEqual([])
+  expect(str_split("", "a")).toEqual([])
+  expect(str_split("", "test")).toEqual([])
+}
+
+fn test_str_split_default_delimiter () {
+  expect(str_split("a")).toEqual(["a"])
+  expect(str_split("test")).toEqual(["t", "e", "s", "t"])
+}
+
+fn test_str_split_char_delimiter () {
+  expect(str_split("a", " ")).toEqual(["a"])
+  expect(str_split("a ", " ")).toEqual(["a", ""])
+  expect(str_split(" a", " ")).toEqual(["", "a"])
+  expect(str_split(" a ", " ")).toEqual(["", "a", ""])
+  expect(str_split(" a a", " ")).toEqual(["", "a", "", "a"])
+  expect(str_split("a a ", " ")).toEqual(["a", "", "a", ""])
+  expect(str_split(" a a ", " ")).toEqual(["", "a", "", "a", ""])
+
+  expect(str_split("test", " ")).toEqual(["test"])
+  expect(str_split("test ", " ")).toEqual(["test", ""])
+  expect(str_split(" test", " ")).toEqual(["", "test"])
+  expect(str_split(" test ", " ")).toEqual(["", "test", ""])
+  expect(str_split(" test test", " ")).toEqual(["", "test", "", "test"])
+  expect(str_split("test test ", " ")).toEqual(["test", "", "test", ""])
+  expect(str_split(" test test ", " ")).toEqual(["", "test", "", "test", ""])
+}
+
+fn test_str_split_str_delimiter () {
+  expect(str_split("a", "__")).toEqual(["a"])
+  expect(str_split("a__", "__")).toEqual(["a", ""])
+  expect(str_split("__a", "__")).toEqual(["", "a"])
+  expect(str_split("__a__", "__")).toEqual(["", "a", ""])
+  expect(str_split("__a__a", "__")).toEqual(["", "a", "", "a"])
+  expect(str_split("a__a__", "__")).toEqual(["a", "", "a", ""])
+  expect(str_split("__a__a__", "__")).toEqual(["", "a", "", "a", ""])
+
+  expect(str_split("test", "__")).toEqual(["test"])
+  expect(str_split("test__", "__")).toEqual(["test", ""])
+  expect(str_split("__test", "__")).toEqual(["", "test"])
+  expect(str_split("__test__", "__")).toEqual(["", "test", ""])
+  expect(str_split("__test__test", "__")).toEqual(["", "test", "", "test"])
+  expect(str_split("test__test__", "__")).toEqual(["test", "", "test", ""])
+  expect(str_split("__test__test__", "__")).toEqual(["", "test", "", "test", ""])
+}
