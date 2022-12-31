@@ -4,9 +4,10 @@
  */
 
 fn Packager_install (name: str, version: str) {
+  tmpPath := path_tempDirectory()
   gitUrl := "https://github.com/" + name + ".git"
 
-  process_runSync("git clone https://github.com/thelang-io/the.git ")
+  process_runSync("git clone --depth=1 https://github.com/thelang-io/the.git " + tmpPath)
 }
 
 fn Packager_installAll () {
@@ -14,9 +15,7 @@ fn Packager_installAll () {
 }
 
 fn Packager_update (name: str, version: str) {
-  gitUrl := "https://github.com/" + name + ".git"
-
-  process_runSync("git clone https://github.com/thelang-io/the.git ")
+  // todo
 }
 
 fn Packager_updateAll () {
