@@ -3,6 +3,7 @@
  * Licensed under the MIT License
  */
 
+// todo replace with str_split after 0.13
 fn str_split (self: str, delimiter := "") str[] {
   delimiterLen := delimiter.len
   mut result: str[]

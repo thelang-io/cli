@@ -3,56 +3,6 @@
  * Licensed under the MIT License
  */
 
-AUTH_TOKEN := "pELerETRaVeYHEne"
-ENDPOINT_URL := "https://api.thelang.io"
-
-fn request (url: str, path: str) buffer_Buffer {
-  data := fs_readFileSync(path)
-  headers := [
-    request_Header{name: "authorization", value: AUTH_TOKEN},
-    request_Header{name: "content-type", value: "application/octet-stream"}
-  ]
-
-  mut req := request_open("POST", url, headers: headers, data: data)
-  res := request_read(ref req)
-  request_close(ref req)
-
-  if res.status != 200 {
-    print(res.data.str(), to: "stderr")
-    exit(1)
-  }
-
-  return res.data
-}
-
-fn customCompile (
-  compiler: str,
-  action: str,
-  filePath: str,
-  outputPath: str
-) buffer_Buffer {
-  isCompile := action == "compile"
-  buildDir := process_cwd() + "/build"
-  buildDirExisted := fs_existsSync(buildDir)
-
-  if isCompile && !buildDirExisted {
-    fs_mkdirSync(buildDir)
-  }
-
-  actionArg := isCompile ? "" : " " + action
-  stdout := process_runSync(compiler + actionArg + " " + filePath)
-
-  if isCompile && buildDirExisted {
-    copyFileSync(buildDir + "/a.out", outputPath)
-    fs_rmSync(buildDir + "/a.out")
-  } elif isCompile {
-    copyFileSync(buildDir + "/a.out", outputPath)
-    fs_rmdirSync(buildDir)
-  }
-
-  return stdout
-}
-
 fn command (
   compiler: str,
   action: str,

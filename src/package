@@ -1,0 +1,24 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+fn Packager_install (name: str, version: str) {
+  gitUrl := "https://github.com/" + name + ".git"
+
+  process_runSync("git clone https://github.com/thelang-io/the.git ")
+}
+
+fn Packager_installAll () {
+  // todo
+}
+
+fn Packager_update (name: str, version: str) {
+  gitUrl := "https://github.com/" + name + ".git"
+
+  process_runSync("git clone https://github.com/thelang-io/the.git ")
+}
+
+fn Packager_updateAll () {
+  // todo
+}

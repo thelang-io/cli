@@ -1,9 +1,0 @@
-/*!
- * Copyright (c) 2018 Aaron Delasy
- * Licensed under the MIT License
- */
-
-fn RaiseError (message: str) {
-  print("Error: " + message, to: "stderr")
-  exit(1)
-}
