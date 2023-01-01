@@ -1,0 +1,21 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+fn Config_initHomeDirectory (package := "") {
+  homePath := process_home() + "/.the"
+  pkgsHomePath := homePath + "/packages"
+
+  if !fs_existsSync(homePath) {
+    fs_mkdirSync(homePath)
+  }
+
+  if !package.empty() && !fs_existsSync(pkgsHomePath) {
+    fs_mkdirSync(pkgsHomePath)
+  }
+
+  if !package.empty() && !fs_existsSync(pkgsHomePath + "/" + package) {
+    fs_mkdirSync(pkgsHomePath + "/" + package)
+  }
+}

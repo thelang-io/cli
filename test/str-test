@@ -47,5 +47,7 @@ fn test_str_split_str_delimiter () {
   expect(str_split("__test__", "__")).toEqual(["", "test", ""])
   expect(str_split("__test__test", "__")).toEqual(["", "test", "", "test"])
   expect(str_split("test__test__", "__")).toEqual(["test", "", "test", ""])
-  expect(str_split("__test__test__", "__")).toEqual(["", "test", "", "test", ""])
+  expect(
+    str_split("__test__test__", "__")).toEqual(["", "test", "", "test", ""]
+  )
 }
