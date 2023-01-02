@@ -60,7 +60,7 @@ obj Package {
     process_runSync("git reset --hard " + meta.getVersionHash(self.version))
     fs_rmdirSync(self._tempPath + "/.git")
     Config_initHome(packageAuthor: self.getAuthor())
-    fs_mvSync(self._tempPath + meta.repositoryPath, self._globalPath)
+    fs_renameSync(self._tempPath + meta.repositoryPath, self._globalPath)
 
     if !meta.repositoryPath.empty() {
       fs_rmdirSync(self._tempPath)

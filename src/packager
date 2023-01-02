@@ -28,7 +28,7 @@ obj Packager {
       PACKAGES_TEMP_PATH + "-tmp"
     )
 
-    fs_mvSync(PACKAGES_TEMP_PATH + "-tmp/packages", PACKAGES_TEMP_PATH)
+    fs_renameSync(PACKAGES_TEMP_PATH + "-tmp/packages", PACKAGES_TEMP_PATH)
     fs_rmdirSync(PACKAGES_TEMP_PATH + "-tmp")
 
     self._initialized = true
