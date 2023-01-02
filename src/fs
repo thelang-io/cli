@@ -3,13 +3,13 @@
  * Licensed under the MIT License
  */
 
-// todo replace with one-liner after 0.15
+// todo v0.15 - replace with one-liner
 fn chmodAddSync (path: str, mode: int) {
   stat := fs_statSync(path)
   fs_chmodSync(path, stat.mode | mode)
 }
 
-// todo replace with fs_copyFileSync after 0.13
+// todo v0.13 - replace with fs_copyFileSync
 fn copyFileSync (src: str, dest: str) {
   data := fs_readFileSync(src)
   fs_writeFileSync(dest, data)

@@ -1,0 +1,42 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+obj PackageMetadataVersion {
+  version: str
+  hash: str
+}
+
+obj PackageMetadata {
+  name: str
+  description: str
+  latestVersion: str
+  repository: str
+  repositoryPath: str
+  versions: PackageMetadataVersion[]
+
+  fn existsVersion (self: ref Self, version: str) bool {
+    return !self.getVersionHash(version).empty()
+  }
+
+  fn getVersionHash (self: ref Self, mut version: str) str {
+    if version == "latest" {
+      version = self.latestVersion
+    }
+
+    loop i := 0; i < self.versions.len; i++ {
+      item := self.versions[i]
+
+      if item.version == version {
+        return item.hash
+      }
+    }
+
+    return ""
+  }
+}
+
+fn PackageMetadata_parse (data: str) PackageMetadata {
+  // todo parse and repositoryPath defaults to ""
+}

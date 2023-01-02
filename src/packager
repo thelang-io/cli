@@ -1,0 +1,97 @@
+/*!
+ * Copyright (c) 2018 Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+PACKAGES_TEMP_PATH := path_tempDirectory() + "/packages"
+
+obj Packager {
+  cwd: str
+  mut _initialized: bool
+  mut _packages: Package[]
+
+  fn deinit (mut self: ref Self) {
+    self._checkInitialized("deinit")
+    fs_rmdirSync(PACKAGES_TEMP_PATH)
+    self._initialized = false
+  }
+
+  fn init (mut self: ref Self) ref Self {
+    if self._initialized {
+      RaiseError("tried packager init on initialized")
+    }
+
+    // todo parse package.yml packages section with self.cwd
+
+    process_runSync(
+      "git clone --depth=1 https://github.com/thelang-io/packages.git " +
+      PACKAGES_TEMP_PATH + "-tmp"
+    )
+
+    fs_mvSync(PACKAGES_TEMP_PATH + "-tmp/packages", PACKAGES_TEMP_PATH)
+    fs_rmdirSync(PACKAGES_TEMP_PATH + "-tmp")
+
+    self._initialized = true
+    return self
+  }
+
+  fn install (self: ref Self, argument: str) ref Self {
+    self._checkInitialized("install")
+
+    package := Package_fromArgument(argument, cwd: self.cwd)
+    package.install()
+    // todo add to package.yml
+
+    return self
+  }
+
+  fn installAll (self: ref Self) ref Self {
+    self._checkInitialized("installAll")
+
+    loop i := 0; i < self._packages.len; i++ {
+      self._packages[i].install()
+    }
+
+    return self
+  }
+
+  fn update (self: ref Self, argument: str) ref Self {
+    self._checkInitialized("update")
+
+    package := Package_fromArgument(argument, cwd: self.cwd)
+    package.update()
+
+    return self
+  }
+
+  fn updateAll (self: ref Self) ref Self {
+    self._checkInitialized("updateAll")
+
+    loop i := 0; i < self._packages.len; i++ {
+      self._packages[i].update()
+    }
+
+    return self
+  }
+
+  fn writeLock (self: ref Self) ref Self {
+    self._checkInitialized("writeLock")
+    // todo
+    return self
+  }
+
+  fn _checkInitialized (self: ref Self, callee: str) ref Self {
+    if !self._initialized {
+      RaiseError("tried packager " + callee + " on non-initialized")
+    }
+
+    return self
+  }
+}
+
+fn Packager_init (cwd := process_cwd()) Packager {
+  mut result := Packager{cwd: cwd}
+  result.init()
+
+  return result
+}

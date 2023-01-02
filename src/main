@@ -20,9 +20,11 @@ main {
       default: "."
     )
     .command("compile", "Compile file")
+    .command("install", "Add package to your project", alias: "i")
     .command("lex", "Lex file")
     .command("parse", "Parse file")
     .command("run", "Compile and execute file")
+    .command("update", "Update package")
     .command(
       "upgrade",
       "Self-upgrade CLI to newest version",
@@ -63,6 +65,8 @@ main {
     .example("the compile /path/to/file --the=1.0")
     .example("the lex /path/to/file --the=1.0.0")
     .example("the run /path/to/file --platform=macos")
+    .example("the update the/args")
+    .example("the install the/error@1.0.0")
     .example("the upgrade")
 
   args.parse()
@@ -71,6 +75,7 @@ main {
   mut buildDir := ""
   mut compiler := ""
   mut outputPath := ""
+  mut packageArgument := ""
   mut platform := ""
   mut runArgs := ""
   mut targetPath := ""
@@ -88,6 +93,9 @@ main {
     ) {
       action = arg.command
       targetPath = arg.value
+    } elif arg.command == "install" || arg.command == "update" {
+      action = arg.command
+      packageArgument = arg.value
     } elif arg.command == "upgrade" {
       action = arg.command
     } elif arg.option == "help" || arg.option == "version" {
@@ -117,6 +125,21 @@ main {
     command(compiler, action, targetPath, outputPath, qs)
   } elif action == "help" {
     print(args.help(), terminator: "")
+  } elif action == "install" || action == "update" {
+    mut packager := Packager_init()
+
+    if action == "install" && packageArgument.empty() {
+      packager.installAll()
+    } elif action == "install" {
+      packager.install(packageArgument)
+    } elif action == "update" && packageArgument.empty() {
+      packager.updateAll()
+    } elif action == "update" {
+      packager.update(packageArgument)
+    }
+
+    packager.writeLock()
+    packager.deinit()
   } elif action == "run" {
     command(compiler, "compile", targetPath, outputPath, qs)
 

@@ -3,19 +3,30 @@
  * Licensed under the MIT License
  */
 
-fn Config_initHomeDirectory (package := "") {
-  homePath := process_home() + "/.the"
-  pkgsHomePath := homePath + "/packages"
+fn Config_getHomePath () str {
+  return process_home() + "/.the"
+}
+
+fn Config_getPackagesPath () str {
+  return Config_getHomePath() + "/packages"
+}
+
+fn Config_initHome (packageAuthor := "") {
+  homePath := Config_getHomePath()
+  packagesPath := Config_getPackagesPath()
 
   if !fs_existsSync(homePath) {
     fs_mkdirSync(homePath)
   }
 
-  if !package.empty() && !fs_existsSync(pkgsHomePath) {
-    fs_mkdirSync(pkgsHomePath)
+  if !packageAuthor.empty() && !fs_existsSync(packagesPath) {
+    fs_mkdirSync(packagesPath)
   }
 
-  if !package.empty() && !fs_existsSync(pkgsHomePath + "/" + package) {
-    fs_mkdirSync(pkgsHomePath + "/" + package)
+  if (
+    !packageAuthor.empty() &&
+    !fs_existsSync(packagesPath + "/" + packageAuthor)
+  ) {
+    fs_mkdirSync(packagesPath + "/" + packageAuthor)
   }
 }
