@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Copyright (c) 2018 Aaron Delasy
+# Copyright (c) Aaron Delasy
 # Licensed under the MIT License
 #
 
