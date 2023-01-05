@@ -3,6 +3,9 @@
  * Licensed under the MIT License
  */
 
+// todo ignore list: .git, .svn, thumbs.db, .DS_Store, CVS
+// todo always include: packages/**/*
+
 fn Builder_collectFiles (path: str) str[] {
   entities := fs_scandirSync(path)
   mut result: str[]

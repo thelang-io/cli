@@ -118,7 +118,7 @@ obj Parser {
       self._result.definitions += self._fileContent.slice(i, i + 4)
       self._state.isDefinition = true
       i += 3
-    } elif ch == '{' { // {
+    } elif ch == '{' { // { // todo v0.15 - remove
       self._result.definitions += ch.str()
       self._state.blocks++
     } elif ch == '}' && self._state.blocks == 0 {
@@ -142,7 +142,7 @@ obj Parser {
       self._result.functions += self._fileContent.slice(i, i + 3)
       self._state.isFunction = true
       i += 2
-    } elif ch == '{' { // {
+    } elif ch == '{' { // { // todo v0.15 - remove
       self._result.functions += ch.str()
       self._state.blocks++
     } elif ch == '}' && self._state.blocks == 0 {
@@ -166,7 +166,7 @@ obj Parser {
       self._result.mainContent += self._fileContent.slice(i, i + 5)
       self._state.isMain = true
       i += 4
-    } elif ch == '{' { // {
+    } elif ch == '{' { // { // todo v0.15 - remove
       self._result.mainContent += ch.str()
       self._state.blocks++
     } elif ch == '}' && self._state.blocks == 0 {
