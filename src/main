@@ -154,7 +154,7 @@ main {
       : "/usr/local/bin/the"
     url := "https://cdn.thelang.io/cli-core-" + os_name().lower()
 
-    mut req := request_open("GET", url])
+    mut req := request_open("GET", url)
     res := request_read(ref req)
     request_close(ref req)
 
