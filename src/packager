@@ -10,12 +10,6 @@ obj Packager {
   mut _initialized: bool
   mut _packages: Package[]
 
-  fn deinit (mut self: ref Self) {
-    self._checkInitialized("deinit")
-    fs_rmdirSync(PACKAGES_TEMP_PATH)
-    self._initialized = false
-  }
-
   fn init (mut self: ref Self) ref Self {
     if self._initialized {
       RaiseError("tried packager init on initialized")
@@ -33,6 +27,12 @@ obj Packager {
 
     self._initialized = true
     return self
+  }
+
+  fn deinit (mut self: ref Self) {
+    self._checkInitialized("deinit")
+    fs_rmdirSync(PACKAGES_TEMP_PATH)
+    self._initialized = false
   }
 
   fn install (self: ref Self, argument: str) ref Self {
@@ -55,6 +55,12 @@ obj Packager {
     return self
   }
 
+  fn lock (self: ref Self) ref Self {
+    self._checkInitialized("lock")
+    // todo
+    return self
+  }
+
   fn update (self: ref Self, argument: str) ref Self {
     self._checkInitialized("update")
 
@@ -71,12 +77,6 @@ obj Packager {
       self._packages[i].update()
     }
 
-    return self
-  }
-
-  fn writeLock (self: ref Self) ref Self {
-    self._checkInitialized("writeLock")
-    // todo
     return self
   }
 

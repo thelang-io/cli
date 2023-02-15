@@ -117,14 +117,22 @@ main {
     }
   }
 
+  if action == "help" {
+    print(args.help(), terminator: "")
+    exit(0)
+  } elif action == "version" {
+    print("The Programming Language")
+    print("Version", VERSION_NUM, "(" + VERSION_NAME + ")")
+    print("Copyright (c) Aaron Delasy")
+    exit(0)
+  }
+
   qs := "?v=" + version + "&p=" + platform
 
   if action == "build" {
     Builder_build(targetPath, buildDir)
   } elif action == "compile" || action == "lex" || action == "parse" {
     command(compiler, action, targetPath, outputPath, qs)
-  } elif action == "help" {
-    print(args.help(), terminator: "")
   } elif action == "install" || action == "update" {
     mut packager := Packager_init()
 
@@ -138,7 +146,7 @@ main {
       packager.update(packageArgument)
     }
 
-    packager.writeLock()
+    packager.lock()
     packager.deinit()
   } elif action == "run" {
     command(compiler, "compile", targetPath, outputPath, qs)
@@ -160,9 +168,5 @@ main {
 
     fs_writeFileSync(executablePath, res.data)
     chmodAddSync(executablePath, 0o111)
-  } elif action == "version" {
-    print("The Programming Language")
-    print("Version " + VERSION_NUM + " (" + VERSION_NAME + ")")
-    print("Copyright (c) Aaron Delasy")
   }
 }

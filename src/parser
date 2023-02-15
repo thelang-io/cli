@@ -7,7 +7,6 @@ obj ParserResult {
   mut comments: str
   mut content: str
   mut definitions: str
-  mut functions: str
   mut mainContent: str
 }
 
@@ -15,7 +14,6 @@ obj ParserState {
   mut prevCh: char
   mut isComment: bool
   mut isDefinition: bool
-  mut isFunction: bool
   mut isMain: bool
   mut blocks: int
 }
@@ -37,8 +35,6 @@ obj Parser {
         i = self._comment(i)
       } elif self._state.isDefinition || self._isDefinition(i) {
         i = self._definition(i)
-      } elif self._state.isFunction || self._isFunction(i) {
-        i = self._function(i)
       } elif self._state.isMain || self._isMain(i) {
         i = self._main(i)
       } else {
@@ -67,16 +63,10 @@ obj Parser {
   fn _isDefinition (self: ref Self, i: int) int {
     hasSpaceInFront := i == 0 || self._state.prevCh.isSpace()
     nextIsEnum := self._fileContent.slice(i, i + 5) == "enum "
+    nextIsFn := self._fileContent.slice(i, i + 3) == "fn "
     nextIsObj := self._fileContent.slice(i, i + 4) == "obj "
 
-    return hasSpaceInFront && (nextIsEnum || nextIsObj)
-  }
-
-  fn _isFunction (self: ref Self, i: int) int {
-    hasSpaceInFront := i == 0 || self._state.prevCh.isSpace()
-    nextIsFunction := self._fileContent.slice(i, i + 3) == "fn "
-
-    return hasSpaceInFront && nextIsFunction
+    return hasSpaceInFront && (nextIsEnum || nextIsFn || nextIsObj)
   }
 
   fn _isMain (self: ref Self, i: int) int {
@@ -108,12 +98,17 @@ obj Parser {
   fn _definition (mut self: ref Self, mut i: int) int {
     ch := self._fileContent[i]
     nextIsEnum := self._fileContent.slice(i, i + 5) == "enum "
+    nextIsFn := self._fileContent.slice(i, i + 3) == "fn "
     nextIsObj := self._fileContent.slice(i, i + 4) == "obj "
 
     if !self._state.isDefinition && nextIsEnum {
       self._result.definitions += self._fileContent.slice(i, i + 5)
       self._state.isDefinition = true
       i += 4
+    } elif !self._state.isDefinition && nextIsFn {
+      self._result.definitions += self._fileContent.slice(i, i + 3)
+      self._state.isDefinition = true
+      i += 2
     } elif !self._state.isDefinition && nextIsObj {
       self._result.definitions += self._fileContent.slice(i, i + 4)
       self._state.isDefinition = true
@@ -129,30 +124,6 @@ obj Parser {
       self._state.blocks--
     } else {
       self._result.definitions += ch.str()
-    }
-
-    return i
-  }
-
-  fn _function (mut self: ref Self, mut i: int) int {
-    ch := self._fileContent[i]
-    nextIsFunction := self._fileContent.slice(i, i + 3) == "fn "
-
-    if !self._state.isFunction && nextIsFunction {
-      self._result.functions += self._fileContent.slice(i, i + 3)
-      self._state.isFunction = true
-      i += 2
-    } elif ch == '{' { // { // todo v0.15 - remove
-      self._result.functions += ch.str()
-      self._state.blocks++
-    } elif ch == '}' && self._state.blocks == 0 {
-      self._result.functions += ch.str() + os_EOL
-      self._state.isFunction = false
-    } elif ch == '}' {
-      self._result.functions += ch.str()
-      self._state.blocks--
-    } else {
-      self._result.functions += ch.str()
     }
 
     return i

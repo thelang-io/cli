@@ -14,11 +14,6 @@ obj Package {
   mut _projectPath: str
   mut _tempPath: str
 
-  fn deinit () {
-    self._checkInitialized("deinit")
-    self._initialized = false
-  }
-
   fn init (mut self: ref Self) ref Self {
     if self._initialized {
       RaiseError("tried package init on initialized")
@@ -41,6 +36,11 @@ obj Package {
 
     self._initialized = true
     return self
+  }
+
+  fn deinit () {
+    self._checkInitialized("deinit")
+    self._initialized = false
   }
 
   fn download (self: ref Self) ref Self {
