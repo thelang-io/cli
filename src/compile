@@ -3,8 +3,8 @@
  * Licensed under the MIT License
  */
 
-AUTH_TOKEN := "pELerETRaVeYHEne"
-ENDPOINT_URL := "https://api.thelang.io"
+const AUTH_TOKEN := "pELerETRaVeYHEne"
+const ENDPOINT_URL := "https://api.thelang.io"
 
 fn request (url: str, path: str) buffer_Buffer {
   data := fs_readFileSync(path)

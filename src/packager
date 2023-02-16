@@ -3,7 +3,7 @@
  * Licensed under the MIT License
  */
 
-PACKAGES_TEMP_PATH := path_tempDirectory() + "/packages"
+const PACKAGES_TEMP_PATH := path_tempDirectory() + "/packages"
 
 obj Packager {
   cwd: str
