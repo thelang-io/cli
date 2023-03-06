@@ -11,4 +11,4 @@ packages:
 
 scripts:
   - build: the build src
-  - test: the build --exclude src/main && the run build/result
+  - test: the test !src/main

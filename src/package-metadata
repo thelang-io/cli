@@ -39,4 +39,5 @@ obj PackageMetadata {
 
 fn PackageMetadata_parse (data: str) PackageMetadata {
   // todo parse and repositoryPath defaults to ""
+  // todo needs yaml parser here
 }

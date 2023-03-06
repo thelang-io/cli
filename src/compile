@@ -43,10 +43,10 @@ fn customCompile (
   stdout := process_runSync(compiler + actionArg + " " + filePath)
 
   if isCompile && buildDirExisted {
-    copyFileSync(buildDir + "/a.out", outputPath)
+    fs_copyFileSync(buildDir + "/a.out", outputPath)
     fs_rmSync(buildDir + "/a.out")
   } elif isCompile {
-    copyFileSync(buildDir + "/a.out", outputPath)
+    fs_copyFileSync(buildDir + "/a.out", outputPath)
     fs_rmdirSync(buildDir)
   }
 

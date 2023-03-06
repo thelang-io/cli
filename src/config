@@ -4,7 +4,7 @@
  */
 
 fn Config_getHomePath () str {
-  return process_home() + "/.the"
+  return process_home + "/.the"
 }
 
 fn Config_getPackagesPath () str {

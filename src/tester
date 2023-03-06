@@ -1,0 +1,59 @@
+/*!
+ * Copyright (c) Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+obj Tester {
+  cwd: str
+  includes: str[]
+  excludes: str[]
+
+  fn init (mut self: ref Self) {
+    files := self.collectFiles()
+    // todo pass all files to builder
+    // todo compile resulting file
+    // todo execute file
+    // todo delete resulted and compiled files
+  }
+
+  fn collectFiles (mut self: ref Self) str[] {
+    // todo go through all includes and collect files
+    // todo ignore files if exists in excludes array
+  }
+}
+
+fn Tester_normalizePath (cwd: str, path: str) bool {
+  return fs_isAbsoluteSync(path) ? path : cwd + "/" + path
+}
+
+fn Tester_init (cwd := process_cwd(), path: str) Tester {
+  mut includes: str[]
+  mut excludes: str[]
+  parts := path.split(",")
+  partsLen := parts.len
+
+  loop i := 0; i < partsLen; i++ {
+    part := parts[i]
+    isExclude := part.slice(0, 1) == "!"
+    partPath := Tester_normalizePath(isExclude ? part.slice(1) : part)
+
+    if isExclude {
+      excludes.push(partPath)
+    } else {
+      includes.push(partPath)
+    }
+  }
+
+  if includes.empty() {
+    includes.push(cwd)
+  }
+
+  mut result := Tester{
+    cwd: cwd,
+    includes: includes,
+    excludes: excludes
+  }
+
+  result.init()
+  return result
+}
