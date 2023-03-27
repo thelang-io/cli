@@ -14,12 +14,12 @@ fn request (url: str, path: str) buffer_Buffer {
   ]
 
   mut req := request_open("POST", url, headers: headers, data: data)
-  res := request_read(ref req)
-  request_close(ref req)
+  res := req.read()
+  req.close()
 
   if res.status != 200 {
     print(res.data.str(), to: "stderr")
-    exit(1)
+    process_exit(1)
   }
 
   return res.data
@@ -32,7 +32,7 @@ fn customCompile (
   outputPath: str
 ) buffer_Buffer {
   isCompile := action == "compile"
-  buildDir := process_cwd() + "/build"
+  buildDir := process_cwd() + path_SEP + "build"
   buildDirExisted := fs_existsSync(buildDir)
 
   if isCompile && !buildDirExisted {
@@ -43,10 +43,10 @@ fn customCompile (
   stdout := process_runSync(compiler + actionArg + " " + filePath)
 
   if isCompile && buildDirExisted {
-    fs_copyFileSync(buildDir + "/a.out", outputPath)
-    fs_rmSync(buildDir + "/a.out")
+    fs_copyFileSync(buildDir + path_SEP + "a.out", outputPath)
+    fs_rmSync(buildDir + path_SEP + "a.out")
   } elif isCompile {
-    fs_copyFileSync(buildDir + "/a.out", outputPath)
+    fs_copyFileSync(buildDir + path_SEP + "a.out", outputPath)
     fs_rmdirSync(buildDir)
   }
 

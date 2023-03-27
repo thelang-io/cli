@@ -3,30 +3,33 @@
  * Licensed under the MIT License
  */
 
-// todo ignore list: .git, .svn, thumbs.db, .DS_Store
-// todo always include: .packages/**/*
-
-fn Builder_collectFiles (path: str) str[] {
+fn Builder_collectFiles (path: str, excludePaths: str[], tree := "") str[] {
+  treePath := tree.empty ? path_basename(path) : tree
   entities := fs_scandirSync(path)
   mut result: str[]
 
   loop i := 0; i < entities.len; i++ {
     entity := entities[i]
-    entityPath := path + "/" + entity
+    entityPath := path + path_SEP + entity
+    entityTreePath := treePath + path_SEP + entity
 
-    if entity.find(".") == -1 && fs_isFileSync(entityPath) {
+    if (
+      entity.find(".") == -1 &&
+      fs_isFileSync(entityPath) &&
+      !excludePaths.contains(treePath + entity)
+    ) {
       result.push(entityPath)
-    } elif fs_isDirectorySync(entityPath) {
-      files := Builder_collectFiles(entityPath)
-      result.extend(files)
+    } elif fs_isDirectorySync(entityPath) && !excludePaths.contains(entity) {
+      files := Builder_collectFiles(entityPath, excludePaths, treePath + path_SEP + entity)
+      result.merge(files)
     }
   }
 
   return result
 }
 
-fn Builder_build (targetPath: str, buildDir: str) {
-  fullPath := (fs_isAbsoluteSync(targetPath) ? "" : process_cwd() + "/") +
+fn Builder_init (targetPath: str, buildDir: str, excludePaths: str[]) {
+  fullPath := (fs_isAbsoluteSync(targetPath) ? "" : process_cwd() + path_SEP) +
     targetPath
   buildPath := fs_realpathSync(fullPath)
 
@@ -38,25 +41,27 @@ fn Builder_build (targetPath: str, buildDir: str) {
 
   print("Starting build")
 
-  files := Builder_collectFiles(buildPath)
+  files := Builder_collectFiles(buildPath, excludePaths)
   mut parser := Parser{}
   mut comments := ""
   mut content := ""
   mut definitions := ""
+  mut functions := ""
   mut mainContent := ""
 
   loop i := 0; i < files.len; i++ {
-    file := files[i]
+    file: str = files[i]
     print("Processing file:", file)
 
     parserResult := parser.parse(file)
     comments += parserResult.comments
     content += parserResult.content
     definitions += parserResult.definitions
+    functions += parserResult.functions
 
-    if !parserResult.mainContent.empty() && !mainContent.empty() {
+    if !parserResult.mainContent.empty && !mainContent.empty {
       RaiseError("Found multiple blocks of main")
-    } elif !parserResult.mainContent.empty() {
+    } elif !parserResult.mainContent.empty {
       mainContent = parserResult.mainContent
     }
   }
@@ -65,8 +70,8 @@ fn Builder_build (targetPath: str, buildDir: str) {
     fs_mkdirSync(buildDir)
   }
 
-  result := comments + content + definitions + mainContent
-  fs_writeFileSync(buildDir + "/result", result.toBuffer())
+  result := comments + content + definitions + functions + mainContent
+  fs_writeFileSync(buildDir + path_SEP + "result", result.toBuffer())
 
-  print("Build finished:", buildDir + "/result")
+  print("Build finished:", buildDir + path_SEP + "result")
 }

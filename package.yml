@@ -10,4 +10,4 @@ packages:
 
 scripts:
   - build: the build src
-  - test: the test !src/main
+  - test: the test --exclude src/main

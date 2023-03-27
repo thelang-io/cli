@@ -17,7 +17,7 @@ obj PackageMetadata {
   versions: PackageMetadataVersion[]
 
   fn existsVersion (self: ref Self, version: str) bool {
-    return !self.getVersionHash(version).empty()
+    return !self.getVersionHash(version).empty
   }
 
   fn getVersionHash (self: ref Self, mut version: str) str {
@@ -40,4 +40,5 @@ obj PackageMetadata {
 fn PackageMetadata_parse (data: str) PackageMetadata {
   // todo parse and repositoryPath defaults to ""
   // todo needs yaml parser here
+  return PackageMetadata{}
 }

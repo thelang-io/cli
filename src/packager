@@ -3,7 +3,160 @@
  * Licensed under the MIT License
  */
 
-const PACKAGES_TEMP_PATH := path_tempDirectory() + "/packages"
+const PACKAGES_TEMP_PATH := path_tempDirectory() + path_SEP + "packages"
+
+obj Package {
+  name: str
+  version: str
+  cwd: str
+  mut _globalPath: str
+  mut _initialized: bool
+  mut _metaFile: str
+  mut _packagesProjectPath: str
+  mut _projectPath: str
+  mut _tempPath: str
+
+  fn init (mut self: ref Self) ref Self {
+    if self._initialized {
+      RaiseError("tried package init on initialized")
+    } elif !self.validName() {
+      RaiseError("invalid package name")
+    } elif !self.validVersion() {
+      RaiseError("invalid package version")
+    }
+
+    self._packagesProjectPath = self.cwd + path_SEP + ".packages"
+    self._globalPath = Config_getPackagesPath() + path_SEP + self.name +
+      path_SEP + self.version
+    self._metaFile = PACKAGES_TEMP_PATH + path_SEP + self.name + ".yml"
+    self._projectPath = self._packagesProjectPath + path_SEP + self.name
+    self._tempPath = path_tempDirectory() + path_SEP + "package"
+
+    if !fs_isFileSync(self._metaFile) {
+      RaiseError("metadata of package `" + self.name + "` does not exists")
+    }
+
+    self._initialized = true
+    return self
+  }
+
+  fn deinit (mut self: ref Self) {
+    self._checkInitialized("deinit")
+    self._initialized = false
+  }
+
+  fn download (self: ref Self) ref Self {
+    self._checkInitialized("download")
+
+    metaContent := fs_readFileSync(self._metaFile)
+    meta := PackageMetadata_parse(metaContent.str())
+
+    if !meta.existsVersion(self.version) {
+      RaiseError(
+        "package `" + self.name + "` " +
+        "version `" + self.version + "` does not exists"
+      )
+    }
+
+    process_runSync("git clone " + meta.repository + " " + self._tempPath)
+    process_runSync("git reset --hard " + meta.getVersionHash(self.version))
+    fs_rmdirSync(self._tempPath + path_SEP + ".git")
+    Config_initHome(packageAuthor: self.getAuthor())
+    fs_renameSync(self._tempPath + meta.repositoryPath, self._globalPath)
+
+    if !meta.repositoryPath.empty {
+      fs_rmdirSync(self._tempPath)
+    }
+
+    // todo parse package.yml and install dependency packages
+    return self
+  }
+
+  fn install (self: ref Self) ref Self {
+    self._checkInitialized("install")
+
+    if fs_existsSync(self._projectPath) {
+      return self
+    } elif !fs_existsSync(self._globalPath) {
+      self.download()
+    }
+
+    if !fs_existsSync(self._packagesProjectPath) {
+      fs_mkdirSync(self._packagesProjectPath)
+    }
+
+    author := self.getAuthor()
+
+    if !fs_existsSync(self._packagesProjectPath + path_SEP + author) {
+      fs_mkdirSync(self._packagesProjectPath + path_SEP + author)
+    }
+
+    fs_linkSync(self._globalPath, self._projectPath)
+    return self
+  }
+
+  fn getAuthor (self: ref Self) str {
+    nameParts := self.name.split("/")
+    return nameParts[0]
+  }
+
+  fn getProject (self: ref Self) str {
+    nameParts := self.name.split("/")
+    return nameParts[1]
+  }
+
+  fn update (self: ref Self) ref Self {
+    self._checkInitialized("update")
+    // todo
+    return self
+  }
+
+  fn validAuthor (self: ref Self) bool {
+    val := self.getAuthor()
+    // todo
+    return false
+  }
+
+  fn validName (self: ref Self) bool {
+    parts := self.name.split("/")
+    hasProject := parts.len == 2 && !parts[1].empty
+
+    return hasProject ? self.validAuthor() && self.validProject() : false
+  }
+
+  fn validProject (self: ref Self) bool {
+    val := self.getProject()
+    // todo
+    return false
+  }
+
+  fn validVersion (self: ref Self) bool {
+    // todo
+    return false
+  }
+
+  fn _checkInitialized (self: ref Self, callee: str) ref Self {
+    if !self._initialized {
+      RaiseError("tried package " + callee + " on non-initialized")
+    }
+
+    return self
+  }
+}
+
+fn Package_fromArgument (val: str, cwd := process_cwd()) Package {
+  parts := val.split("@")
+  hasVersion := parts.len == 2 && !parts[1].empty
+
+  mut result := Package{
+    name: hasVersion ? parts[0] : val,
+    version: hasVersion ? parts[1] : "latest",
+    cwd: cwd
+  }
+
+  result.init()
+  return result
+}
 
 obj Packager {
   cwd: str
@@ -22,7 +175,7 @@ obj Packager {
       PACKAGES_TEMP_PATH + "-tmp"
     )
 
-    fs_renameSync(PACKAGES_TEMP_PATH + "-tmp/packages", PACKAGES_TEMP_PATH)
+    fs_renameSync(PACKAGES_TEMP_PATH + "-tmp" + path_SEP + "packages", PACKAGES_TEMP_PATH)
     fs_rmdirSync(PACKAGES_TEMP_PATH + "-tmp")
 
     self._initialized = true
@@ -57,7 +210,7 @@ obj Packager {
 
   fn lock (self: ref Self) ref Self {
     self._checkInitialized("lock")
-    // todo
+    // todo generate lock file
     return self
   }
 

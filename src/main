@@ -8,7 +8,7 @@ const VERSION_NAME := "Submarine Ocean"
 
 main {
   mut args := Args{lineLength: 70}
-  defaultOutput := os_name() == "Windows" ? "a.exe" : "a.out"
+  defaultOutput := os_NAME == "Windows" ? "a.exe" : "a.out"
 
   args
     .usage("the [options]")
@@ -24,6 +24,7 @@ main {
     .command("lex", "Lex file")
     .command("parse", "Parse file")
     .command("run", "Compile and execute file")
+    .command("test", "Test source directory", default: ".")
     .command("update", "Update package")
     .command(
       "upgrade",
@@ -37,6 +38,7 @@ main {
       default: "build"
     )
     .option("compiler", "Offline compiler to use instead of cloud servers")
+    .option("exclude", "Exclude paths separated by comma")
     .option("help", "Print help information", alias: "h", hasValue: false)
     .option(
       "output",
@@ -47,7 +49,7 @@ main {
     .option(
       "platform",
       "Target platform, one of: linux, macos, windows",
-      default: os_name().lower()
+      default: os_NAME.lower
     )
     .option("run-args", "Arguments to be passed when running executable")
     .option(
@@ -69,11 +71,12 @@ main {
     .example("the install the/error@1.0.0")
     .example("the upgrade")
 
-  args.parse()
+  args.parse(process_args)
 
   mut action := ""
   mut buildDir := ""
   mut compiler := ""
+  mut excludePaths := [".git", ".svn", "thumbs.db", ".DS_Store"]
   mut outputPath := ""
   mut packageArgument := ""
   mut platform := ""
@@ -89,6 +92,7 @@ main {
       arg.command == "compile" ||
       arg.command == "lex" ||
       arg.command == "parse" ||
+      arg.command == "test" ||
       arg.command == "run"
     ) {
       action = arg.command
@@ -104,10 +108,12 @@ main {
       buildDir = arg.value
     } elif arg.option == "compiler" {
       compiler = arg.value
+    } elif arg.option == "exclude" {
+      excludePaths.merge(arg.value.split(","))
     } elif arg.option == "output" {
       outputPath = fs_isAbsoluteSync(arg.value)
         ? arg.value
-        : process_cwd() + "/" + arg.value
+        : process_cwd() + path_SEP + arg.value
     } elif arg.option == "platform" {
       platform = arg.value
     } elif arg.option == "run-args" {
@@ -119,28 +125,28 @@ main {
 
   if action == "help" {
     print(args.help(), terminator: "")
-    exit(0)
+    process_exit(0)
   } elif action == "version" {
     print("The Programming Language")
     print("Version", VERSION_NUM, "(" + VERSION_NAME + ")")
     print("Copyright (c) Aaron Delasy")
-    exit(0)
+    process_exit(0)
   }
 
   qs := "?v=" + version + "&p=" + platform
 
   if action == "build" {
-    Builder_build(targetPath, buildDir)
+    Builder_init(targetPath, buildDir, excludePaths)
   } elif action == "compile" || action == "lex" || action == "parse" {
     command(compiler, action, targetPath, outputPath, qs)
   } elif action == "install" || action == "update" {
     mut packager := Packager_init()
 
-    if action == "install" && packageArgument.empty() {
+    if action == "install" && packageArgument.empty {
       packager.installAll()
     } elif action == "install" {
       packager.install(packageArgument)
-    } elif action == "update" && packageArgument.empty() {
+    } elif action == "update" && packageArgument.empty {
       packager.updateAll()
     } elif action == "update" {
       packager.update(packageArgument)
@@ -151,20 +157,22 @@ main {
   } elif action == "run" {
     command(compiler, "compile", targetPath, outputPath, qs)
 
-    cmd := outputPath + (runArgs.empty() ? "" : " ") + runArgs
+    cmd := outputPath + (runArgs.empty ? "" : " ") + runArgs
     stdout := process_runSync(cmd)
 
     fs_rmSync(outputPath)
     print(stdout.str(), terminator: "")
+  } elif action == "test" {
+    Tester_init(targetPath, excludePaths)
   } elif action == "upgrade" {
-    executablePath := os_name() == "Windows"
+    executablePath := os_NAME == "Windows"
       ? "C:/Program Files/The/the.exe"
       : "/usr/local/bin/the"
-    url := "https://cdn.thelang.io/cli-core-" + os_name().lower()
+    url := "https://cdn.thelang.io/cli-core-" + os_NAME.lower
 
     mut req := request_open("GET", url)
-    res := request_read(ref req)
-    request_close(ref req)
+    res := req.read()
+    req.close()
 
     fs_writeFileSync(executablePath, res.data)
     chmodAddSync(executablePath, 0o111)

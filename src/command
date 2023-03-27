@@ -18,13 +18,13 @@ fn command (
     RaiseError("Path '" + filePath + "' is not a file")
   }
 
-  if (action == "lex" || action == "parse") && compiler.empty() {
+  if (action == "lex" || action == "parse") && compiler.empty {
     data := request(ENDPOINT_URL + "/" + action + qs, filePath)
     print(data.str(), terminator: "")
   } elif action == "lex" || action == "parse" {
     data := customCompile(compiler, action, filePath, outputPath)
     print(data.str(), terminator: "")
-  } elif action == "compile" && compiler.empty() {
+  } elif action == "compile" && compiler.empty {
     data := request(ENDPOINT_URL + "/" + action + qs, filePath)
     fs_writeFileSync(outputPath, data)
     chmodAddSync(outputPath, 0o111)

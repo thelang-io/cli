@@ -3,8 +3,8 @@
  * Licensed under the MIT License
  */
 
-// todo v0.15 - replace with one-liner
 fn chmodAddSync (path: str, mode: int) {
+  // todo v0.15 - replace with one-liner
   stat := fs_statSync(path)
   fs_chmodSync(path, stat.mode | mode)
 }

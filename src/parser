@@ -7,6 +7,7 @@ obj ParserResult {
   mut comments: str
   mut content: str
   mut definitions: str
+  mut functions: str
   mut mainContent: str
 }
 
@@ -14,6 +15,7 @@ obj ParserState {
   mut prevCh: char
   mut isComment: bool
   mut isDefinition: bool
+  mut isFunction: bool
   mut isMain: bool
   mut blocks: int
 }
@@ -29,48 +31,54 @@ obj Parser {
     self._state = ParserState{}
 
     loop i := 0; i < self._fileContent.len; i++ {
-      ch := self._fileContent[i]
-
       if self._state.isComment || self._isComment(i) {
         i = self._comment(i)
       } elif self._state.isDefinition || self._isDefinition(i) {
         i = self._definition(i)
+      } elif self._state.isFunction || self._isFunction(i) {
+        i = self._function(i)
       } elif self._state.isMain || self._isMain(i) {
         i = self._main(i)
       } else {
-        self._result.content += ch.str()
+        self._result.content += self._fileContent[i].str()
       }
 
-      self._state.prevCh = ch
+      self._state.prevCh = self._fileContent[i]
     }
 
     self._result.content = self._result.content.trim()
 
-    if !self._result.content.empty() {
+    if !self._result.content.empty {
       self._result.content += os_EOL
     }
 
     return self._result
   }
 
-  fn _isComment (self: ref Self, i: int) int {
+  fn _isComment (self: ref Self, i: int) bool {
     hasEscapeInFront := i != 0 && self._state.prevCh == '\\'
     nextIsComment := self._fileContent.slice(i, i + 3) == "/" + "*!"
 
     return !hasEscapeInFront && nextIsComment
   }
 
-  fn _isDefinition (self: ref Self, i: int) int {
-    hasSpaceInFront := i == 0 || self._state.prevCh.isSpace()
+  fn _isDefinition (self: ref Self, i: int) bool {
+    hasSpaceInFront := i == 0 || self._state.prevCh.isWhitespace
     nextIsEnum := self._fileContent.slice(i, i + 5) == "enum "
-    nextIsFn := self._fileContent.slice(i, i + 3) == "fn "
     nextIsObj := self._fileContent.slice(i, i + 4) == "obj "
 
-    return hasSpaceInFront && (nextIsEnum || nextIsFn || nextIsObj)
+    return hasSpaceInFront && (nextIsEnum || nextIsObj)
   }
 
-  fn _isMain (self: ref Self, i: int) int {
-    hasSpaceInFront := i == 0 || self._state.prevCh.isSpace()
+  fn _isFunction (self: ref Self, i: int) bool {
+    hasSpaceInFront := i == 0 || self._state.prevCh.isWhitespace
+    nextIsFn := self._fileContent.slice(i, i + 3) == "fn "
+
+    return hasSpaceInFront && nextIsFn
+  }
+
+  fn _isMain (self: ref Self, i: int) bool {
+    hasSpaceInFront := i == 0 || self._state.prevCh.isWhitespace
     nextIsMain := self._fileContent.slice(i, i + 5) == "main "
 
     return hasSpaceInFront && nextIsMain
@@ -98,17 +106,12 @@ obj Parser {
   fn _definition (mut self: ref Self, mut i: int) int {
     ch := self._fileContent[i]
     nextIsEnum := self._fileContent.slice(i, i + 5) == "enum "
-    nextIsFn := self._fileContent.slice(i, i + 3) == "fn "
     nextIsObj := self._fileContent.slice(i, i + 4) == "obj "
 
     if !self._state.isDefinition && nextIsEnum {
       self._result.definitions += self._fileContent.slice(i, i + 5)
       self._state.isDefinition = true
       i += 4
-    } elif !self._state.isDefinition && nextIsFn {
-      self._result.definitions += self._fileContent.slice(i, i + 3)
-      self._state.isDefinition = true
-      i += 2
     } elif !self._state.isDefinition && nextIsObj {
       self._result.definitions += self._fileContent.slice(i, i + 4)
       self._state.isDefinition = true
@@ -116,14 +119,40 @@ obj Parser {
     } elif ch == '{' { // { // todo v0.15 - remove
       self._result.definitions += ch.str()
       self._state.blocks++
-    } elif ch == '}' && self._state.blocks == 0 {
+    } elif ch == '}' && self._state.blocks == 1 {
       self._result.definitions += ch.str() + os_EOL
+      self._state.blocks--
       self._state.isDefinition = false
     } elif ch == '}' {
       self._result.definitions += ch.str()
       self._state.blocks--
     } else {
       self._result.definitions += ch.str()
+    }
+
+    return i
+  }
+
+  fn _function (mut self: ref Self, mut i: int) int {
+    ch := self._fileContent[i]
+    nextIsFn := self._fileContent.slice(i, i + 3) == "fn "
+
+    if !self._state.isFunction && nextIsFn {
+      self._result.functions += self._fileContent.slice(i, i + 3)
+      self._state.isFunction = true
+      i += 2
+    } elif ch == '{' { // { // todo v0.15 - remove
+      self._result.functions += ch.str()
+      self._state.blocks++
+    } elif ch == '}' && self._state.blocks == 1 {
+      self._result.functions += ch.str() + os_EOL
+      self._state.blocks--
+      self._state.isFunction = false
+    } elif ch == '}' {
+      self._result.functions += ch.str()
+      self._state.blocks--
+    } else {
+      self._result.functions += ch.str()
     }
 
     return i

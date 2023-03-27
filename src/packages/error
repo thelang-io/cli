@@ -45,5 +45,5 @@ fn RaiseError (fmt: str, args: any...) {
   }
 
   print("Error: " + message, to: "stderr")
-  exit(1)
+  process_exit(1)
 }

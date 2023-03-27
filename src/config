@@ -4,11 +4,11 @@
  */
 
 fn Config_getHomePath () str {
-  return process_home + "/.the"
+  return process_home + path_SEP + ".the"
 }
 
 fn Config_getPackagesPath () str {
-  return Config_getHomePath() + "/packages"
+  return Config_getHomePath() + path_SEP + "packages"
 }
 
 fn Config_initHome (packageAuthor := "") {
@@ -19,14 +19,14 @@ fn Config_initHome (packageAuthor := "") {
     fs_mkdirSync(homePath)
   }
 
-  if !packageAuthor.empty() && !fs_existsSync(packagesPath) {
+  if !packageAuthor.empty && !fs_existsSync(packagesPath) {
     fs_mkdirSync(packagesPath)
   }
 
   if (
-    !packageAuthor.empty() &&
-    !fs_existsSync(packagesPath + "/" + packageAuthor)
+    !packageAuthor.empty &&
+    !fs_existsSync(packagesPath + path_SEP + packageAuthor)
   ) {
-    fs_mkdirSync(packagesPath + "/" + packageAuthor)
+    fs_mkdirSync(packagesPath + path_SEP + packageAuthor)
   }
 }
