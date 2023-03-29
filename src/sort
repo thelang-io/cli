@@ -3,7 +3,7 @@
  * Licensed under the MIT License
  */
 
-fn sortStrStrAsc (a: str, b: str) int {
+fn sortStrAsc (a: str, b: str) int {
   if a.len == 0 && b.len == 0 {
     return 0
   } elif a.len == 0 || b.len == 0 {

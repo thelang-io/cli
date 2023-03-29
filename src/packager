@@ -5,11 +5,12 @@
 
 obj Package {
   name: str
-  version: str
+  mut version: str
   cwd: str
   packagesTempPath: str
   mut _globalPath: str
   mut _initialized: bool
+  mut _meta: PackageMetadata
   mut _metaFile: str
   mut _packagesProjectPath: str
   mut _projectPath: str
@@ -29,11 +30,26 @@ obj Package {
 
     self._packagesProjectPath = self.cwd + path_SEP + ".packages"
     self._globalPath = globalPackagePath + path_SEP + self.version
-    self._metaFile = self.packagesTempPath + path_SEP + "packages" + path_SEP + locationName + ".yml"
     self._projectPath = self._packagesProjectPath + path_SEP + locationName
 
-    if !fs_isFileSync(self._metaFile) {
+    metaFile := self.packagesTempPath + path_SEP + "packages" + path_SEP + locationName + ".yml"
+
+    if !fs_isFileSync(metaFile) {
       RaiseError("metadata of package `" + self.name + "` does not exists")
+    }
+
+    metaContent := fs_readFileSync(metaFile).str()
+    self._meta = PackageMetadata_parse(metaContent)
+
+    if self.version == "latest" {
+      self.version = self._meta.latestVersion
+    }
+
+    if !self._meta.existsVersion(self.version) {
+      RaiseError(
+        "package `" + self.name + "` " +
+        "version `" + self.version + "` does not exists"
+      )
     }
 
     if !fs_existsSync(globalPackagePath) {
@@ -51,25 +67,14 @@ obj Package {
 
   fn download (self: ref Self) ref Self {
     self._checkInitialized("download")
-
-    metaContent := fs_readFileSync(self._metaFile).str()
-    meta := PackageMetadata_parse(metaContent)
-
-    if !meta.existsVersion(self.version) {
-      RaiseError(
-        "package `" + self.name + "` " +
-        "version `" + self.version + "` does not exists"
-      )
-    }
-
     tempPath := path_tempDirectory()
 
-    process_runSync("git clone " + meta.repository + " '" + tempPath + "'")
-    process_runSync("cd '" + tempPath + "' && git reset --hard " + meta.getVersionHash(self.version))
+    process_runSync("git clone " + self._meta.repository + " '" + tempPath + "'")
+    process_runSync("cd '" + tempPath + "' && git reset --hard " + self._meta.getVersionHash(self.version))
     removeDirectorySync(tempPath + path_SEP + ".git")
-    fs_renameSync(tempPath + meta.repositoryPath, self._globalPath)
+    fs_renameSync(tempPath + self._meta.repositoryPath, self._globalPath)
 
-    if !meta.repositoryPath.empty {
+    if !self._meta.repositoryPath.empty {
       removeDirectorySync(tempPath)
     }
 
@@ -112,6 +117,16 @@ obj Package {
   fn getProject (self: ref Self) str {
     nameParts := self.name.split("/")
     return nameParts[1]
+  }
+
+  fn uninstall (self: ref Self) ref Self {
+    self._checkInitialized("uninstall")
+
+    if fs_existsSync(self._projectPath) {
+      fs_rmSync(self._projectPath)
+    }
+
+    return self
   }
 
   fn update (self: ref Self) ref Self {
@@ -280,6 +295,20 @@ obj Packager {
     self._checkInitialized("lock")
     // todo generate lock file
     return self
+  }
+
+  fn uninstall (self: ref Self, argument: str) ref Self {
+    self._checkInitialized("uninstall")
+
+    package := Package_fromArgument(argument, self.tempPath, cwd: self.cwd)
+    package.uninstall()
+
+    if self._packageYAML.packages.has(package.name) {
+      self._packageYAML.packages.remove(package.name)
+    }
+
+    fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
+    return self.lock()
   }
 
   fn update (self: ref Self, argument: str) ref Self {

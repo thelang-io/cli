@@ -34,7 +34,7 @@ obj PackageYAML {
       code += code.empty ? "" : os_EOL
       code += "packages:" + os_EOL
       mut keys := self.packages.keys
-      keys.sort(sortStrStrAsc)
+      keys.sort(sortStrAsc)
 
       loop i := 0; i < keys.len; i++ {
         key := keys[i]
@@ -46,7 +46,7 @@ obj PackageYAML {
       code += code.empty ? "" : os_EOL
       code += "scripts:" + os_EOL
       mut keys := self.scripts.keys
-      keys.sort(sortStrStrAsc)
+      keys.sort(sortStrAsc)
 
       loop i := 0; i < keys.len; i++ {
         key := keys[i]
