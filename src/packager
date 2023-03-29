@@ -293,7 +293,7 @@ obj Packager {
 
   fn lock (self: ref Self) ref Self {
     self._checkInitialized("lock")
-    // todo generate lock file
+    // todo generate package.lock file
     return self
   }
 

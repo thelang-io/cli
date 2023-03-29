@@ -16,11 +16,11 @@ fn Builder_collectFiles (path: str, excludePaths: str[], tree := "") str[] {
     if (
       entity.find(".") == -1 &&
       fs_isFileSync(entityPath) &&
-      !excludePaths.contains(treePath + entity)
+      !excludePaths.contains(entityTreePath)
     ) {
       result.push(entityPath)
-    } elif fs_isDirectorySync(entityPath) && !excludePaths.contains(entity) {
-      files := Builder_collectFiles(entityPath, excludePaths, treePath + path_SEP + entity)
+    } elif fs_isDirectorySync(entityPath) && !excludePaths.contains(entityTreePath) {
+      files := Builder_collectFiles(entityPath, excludePaths, entityTreePath)
       result.merge(files)
     }
   }
@@ -28,9 +28,46 @@ fn Builder_collectFiles (path: str, excludePaths: str[], tree := "") str[] {
   return result
 }
 
+fn Builder_collectPackagesFiles (cwd: str, mut includedPackages: str[] = []) str[][] {
+  packageYAMLPath := cwd + path_SEP + "package.yml"
+
+  if !fs_existsSync(packageYAMLPath) {
+    return []
+  }
+
+  packagesPath := cwd + path_SEP + ".packages"
+  content := fs_readFileSync(packageYAMLPath).str()
+  packageYaml := PackageYAML_parse(content)
+  mut files := packageYaml.files
+
+  loop i := 0; i < files.len; i++ {
+    files[i] = cwd + path_SEP + files[i]
+  }
+
+  if fs_existsSync(packagesPath) {
+    keys := packageYaml.packages.keys
+
+    loop i := 0; i < keys.len; i++ {
+      key := keys[i]
+      packagePath := packagesPath + path_SEP + key.replace("/", path_SEP)
+
+      if includedPackages.contains(key) || !fs_existsSync(packagePath) {
+        continue
+      }
+
+      includedPackages.push(key)
+      packageCollection := Builder_collectPackagesFiles(packagePath, includedPackages)
+
+      files.merge(packageCollection[0])
+      includedPackages = packageCollection[1]
+    }
+  }
+
+  return [files, includedPackages]
+}
+
 fn Builder_init (targetPath: str, buildDir: str, excludePaths: str[]) {
-  fullPath := (fs_isAbsoluteSync(targetPath) ? "" : process_cwd() + path_SEP) +
-    targetPath
+  fullPath := (fs_isAbsoluteSync(targetPath) ? "" : process_cwd() + path_SEP) + targetPath
   buildPath := fs_realpathSync(fullPath)
 
   if !fs_existsSync(buildPath) {
@@ -41,7 +78,10 @@ fn Builder_init (targetPath: str, buildDir: str, excludePaths: str[]) {
 
   print("Starting build")
 
-  files := Builder_collectFiles(buildPath, excludePaths)
+  mut files := Builder_collectFiles(buildPath, excludePaths)
+  packageCollection := Builder_collectPackagesFiles(process_cwd())
+  files.merge(packageCollection[0])
+
   mut parser := Parser{}
   mut comments := ""
   mut content := ""

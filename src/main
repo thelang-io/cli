@@ -115,7 +115,13 @@ main {
     } elif arg.option == "compiler" {
       compiler = arg.value
     } elif arg.option == "exclude" {
-      excludePaths.merge(arg.value.split(","))
+      mut otherExcludePaths := arg.value.split(",")
+
+      loop j := 0; j < otherExcludePaths.len; j++ {
+        otherExcludePaths[j] = otherExcludePaths[j].trim()
+      }
+
+      excludePaths.merge(otherExcludePaths)
     } elif arg.option == "output" {
       outputPath = fs_isAbsoluteSync(arg.value)
         ? arg.value

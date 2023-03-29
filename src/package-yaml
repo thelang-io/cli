@@ -8,6 +8,7 @@ obj PackageYAML {
   mut description: str
   mut version: str
   mut mainFile: str
+  mut files: str[]
   mut packages: str[str]
   mut scripts: str[str]
 
@@ -28,6 +29,15 @@ obj PackageYAML {
 
     if !self.mainFile.empty {
       code += "main: " + self.mainFile + os_EOL
+    }
+
+    if !self.files.empty {
+      code += code.empty ? "" : os_EOL
+      code += "files:" + os_EOL
+
+      loop i := 0; i < self.files.len; i++ {
+        code += "  - " + self.files[i] + os_EOL
+      }
     }
 
     if !self.packages.empty {
@@ -103,6 +113,24 @@ fn PackageYAML_parse (content: str) PackageYAML {
             result.mainFile = YAMLNode_stringify(val)
           } else {
             RaiseError("Property `main` of package.yml expected to be a scalar")
+          }
+        }
+      } elif nodeKey == "files" {
+        if mappingNode.value != nil {
+          val := mappingNode.value
+          if val is YAMLNodeSeq {
+            items := val.items
+            loop i := 0; i < items.len; i++ {
+              item: YAMLNode = items[i]
+              if item is YAMLNodeScalar {
+                file := YAMLNode_stringify(item)
+                result.files.push(file)
+              } else {
+                RaiseError("Property `files` of package.yml expected to be a sequence of scalars")
+              }
+            }
+          } else {
+            RaiseError("Property `files` of package.yml expected to be a sequence")
           }
         }
       } elif nodeKey == "packages" {
