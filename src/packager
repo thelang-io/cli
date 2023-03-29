@@ -3,18 +3,16 @@
  * Licensed under the MIT License
  */
 
-const PACKAGES_TEMP_PATH := path_tempDirectory() + path_SEP + "packages"
-
 obj Package {
   name: str
   version: str
   cwd: str
+  packagesTempPath: str
   mut _globalPath: str
   mut _initialized: bool
   mut _metaFile: str
   mut _packagesProjectPath: str
   mut _projectPath: str
-  mut _tempPath: str
 
   fn init (mut self: ref Self) ref Self {
     if self._initialized {
@@ -25,15 +23,21 @@ obj Package {
       RaiseError("invalid package version")
     }
 
+    Config_initHome(packageAuthor: self.getAuthor())
+    locationName := self.getAuthor() + path_SEP + self.getProject()
+    globalPackagePath := Config_getPackagesPath() + path_SEP + locationName
+
     self._packagesProjectPath = self.cwd + path_SEP + ".packages"
-    self._globalPath = Config_getPackagesPath() + path_SEP + self.name +
-      path_SEP + self.version
-    self._metaFile = PACKAGES_TEMP_PATH + path_SEP + self.name + ".yml"
-    self._projectPath = self._packagesProjectPath + path_SEP + self.name
-    self._tempPath = path_tempDirectory() + path_SEP + "package"
+    self._globalPath = globalPackagePath + path_SEP + self.version
+    self._metaFile = self.packagesTempPath + path_SEP + "packages" + path_SEP + locationName + ".yml"
+    self._projectPath = self._packagesProjectPath + path_SEP + locationName
 
     if !fs_isFileSync(self._metaFile) {
       RaiseError("metadata of package `" + self.name + "` does not exists")
+    }
+
+    if !fs_existsSync(globalPackagePath) {
+      fs_mkdirSync(globalPackagePath)
     }
 
     self._initialized = true
@@ -48,8 +52,8 @@ obj Package {
   fn download (self: ref Self) ref Self {
     self._checkInitialized("download")
 
-    metaContent := fs_readFileSync(self._metaFile)
-    meta := PackageMetadata_parse(metaContent.str())
+    metaContent := fs_readFileSync(self._metaFile).str()
+    meta := PackageMetadata_parse(metaContent)
 
     if !meta.existsVersion(self.version) {
       RaiseError(
@@ -58,17 +62,22 @@ obj Package {
       )
     }
 
-    process_runSync("git clone " + meta.repository + " " + self._tempPath)
-    process_runSync("git reset --hard " + meta.getVersionHash(self.version))
-    fs_rmdirSync(self._tempPath + path_SEP + ".git")
-    Config_initHome(packageAuthor: self.getAuthor())
-    fs_renameSync(self._tempPath + meta.repositoryPath, self._globalPath)
+    tempPath := path_tempDirectory()
+
+    process_runSync("git clone " + meta.repository + " '" + tempPath + "'")
+    process_runSync("cd '" + tempPath + "' && git reset --hard " + meta.getVersionHash(self.version))
+    removeDirectorySync(tempPath + path_SEP + ".git")
+    fs_renameSync(tempPath + meta.repositoryPath, self._globalPath)
 
     if !meta.repositoryPath.empty {
-      fs_rmdirSync(self._tempPath)
+      removeDirectorySync(tempPath)
     }
 
-    // todo parse package.yml and install dependency packages
+    mut packager := Packager{cwd: self._globalPath, tempPath: self.packagesTempPath}
+    packager.init()
+    packager.installAll()
+    packager.deinit()
+
     return self
   }
 
@@ -113,8 +122,14 @@ obj Package {
 
   fn validAuthor (self: ref Self) bool {
     val := self.getAuthor()
-    // todo
-    return false
+
+    loop i := 0; i < val.len; i++ {
+      if !val[i].isLetterOrDigit {
+        return false
+      }
+    }
+
+    return val.lower == val
   }
 
   fn validName (self: ref Self) bool {
@@ -126,13 +141,38 @@ obj Package {
 
   fn validProject (self: ref Self) bool {
     val := self.getProject()
-    // todo
-    return false
+
+    loop i := 0; i < val.len; i++ {
+      ch := val[i]
+
+      if !ch.isLetterOrDigit && ch != '_' && ch != '-' && ch != '.' {
+        return false
+      }
+    }
+
+    return val.lower == val
   }
 
   fn validVersion (self: ref Self) bool {
-    // todo
-    return false
+    if self.version == "latest" {
+      return true
+    }
+
+    mut part := 0
+
+    loop i := 0; i < self.version.len; i++ {
+      ch := self.version[i]
+
+      if ch == '.' {
+        if ++part == 3 {
+          return false
+        }
+      } elif !ch.isDigit {
+        return false
+      }
+    }
+
+    return true
   }
 
   fn _checkInitialized (self: ref Self, callee: str) ref Self {
@@ -144,14 +184,15 @@ obj Package {
   }
 }
 
-fn Package_fromArgument (val: str, cwd := process_cwd()) Package {
+fn Package_fromArgument (val: str, packagesTempPath: str, cwd := process_cwd()) Package {
   parts := val.split("@")
   hasVersion := parts.len == 2 && !parts[1].empty
 
   mut result := Package{
     name: hasVersion ? parts[0] : val,
     version: hasVersion ? parts[1] : "latest",
-    cwd: cwd
+    cwd: cwd,
+    packagesTempPath: packagesTempPath
   }
 
   result.init()
@@ -160,23 +201,41 @@ fn Package_fromArgument (val: str, cwd := process_cwd()) Package {
 
 obj Packager {
   cwd: str
+  mut tempPath: str
   mut _initialized: bool
   mut _packages: Package[]
+  mut _packageYAML: PackageYAML
+  mut _packageYAMLPath: str
+  mut _tempPathCreated: bool
 
   fn init (mut self: ref Self) ref Self {
     if self._initialized {
       RaiseError("tried packager init on initialized")
     }
 
-    // todo parse package.yml packages section with self.cwd
+    if self.tempPath.empty {
+      self.tempPath = path_tempDirectory()
+      self._tempPathCreated = true
+      process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git '" + self.tempPath + "'")
+    }
 
-    process_runSync(
-      "git clone --depth=1 https://github.com/thelang-io/packages.git " +
-      PACKAGES_TEMP_PATH + "-tmp"
-    )
+    self._packageYAMLPath = self.cwd + path_SEP + "package.yml"
 
-    fs_renameSync(PACKAGES_TEMP_PATH + "-tmp" + path_SEP + "packages", PACKAGES_TEMP_PATH)
-    fs_rmdirSync(PACKAGES_TEMP_PATH + "-tmp")
+    if fs_existsSync(self._packageYAMLPath) {
+      packageYAMLContent := fs_readFileSync(self._packageYAMLPath).str()
+      self._packageYAML = PackageYAML_parse(packageYAMLContent)
+      packageYAMLPackagesNames := self._packageYAML.packages.keys
+      packageYAMLPackagesVersions := self._packageYAML.packages.values
+
+      loop i := 0; i < packageYAMLPackagesNames.len; i++ {
+        self._packages.push(Package{
+          name: packageYAMLPackagesNames[i],
+          version: packageYAMLPackagesVersions[i],
+          cwd: self.cwd,
+          packagesTempPath: self.tempPath
+        })
+      }
+    }
 
     self._initialized = true
     return self
@@ -184,28 +243,37 @@ obj Packager {
 
   fn deinit (mut self: ref Self) {
     self._checkInitialized("deinit")
-    fs_rmdirSync(PACKAGES_TEMP_PATH)
+    if self._tempPathCreated {
+      removeDirectorySync(self.tempPath)
+    }
     self._initialized = false
   }
 
   fn install (self: ref Self, argument: str) ref Self {
     self._checkInitialized("install")
 
-    package := Package_fromArgument(argument, cwd: self.cwd)
+    package := Package_fromArgument(argument, self.tempPath, cwd: self.cwd)
     package.install()
-    // todo add to package.yml
 
-    return self
+    if !self._packageYAML.packages.has(package.name) {
+      self._packageYAML.packages.set(package.name, package.version)
+    }
+
+    fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
+    return self.lock()
   }
 
   fn installAll (self: ref Self) ref Self {
     self._checkInitialized("installAll")
 
     loop i := 0; i < self._packages.len; i++ {
-      self._packages[i].install()
+      mut package := self._packages[i]
+      package.init()
+      package.install()
     }
 
-    return self
+    fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
+    return self.lock()
   }
 
   fn lock (self: ref Self) ref Self {
@@ -217,20 +285,24 @@ obj Packager {
   fn update (self: ref Self, argument: str) ref Self {
     self._checkInitialized("update")
 
-    package := Package_fromArgument(argument, cwd: self.cwd)
+    package := Package_fromArgument(argument, self.tempPath, cwd: self.cwd)
     package.update()
 
-    return self
+    fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
+    return self.lock()
   }
 
   fn updateAll (self: ref Self) ref Self {
     self._checkInitialized("updateAll")
 
     loop i := 0; i < self._packages.len; i++ {
-      self._packages[i].update()
+      mut package := self._packages[i]
+      package.init()
+      package.update()
     }
 
-    return self
+    fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
+    return self.lock()
   }
 
   fn _checkInitialized (self: ref Self, callee: str) ref Self {
