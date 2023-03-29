@@ -3,42 +3,90 @@
  * Licensed under the MIT License
  */
 
-obj PackageMetadataVersion {
-  version: str
-  hash: str
-}
-
 obj PackageMetadata {
-  name: str
-  description: str
-  latestVersion: str
-  repository: str
-  repositoryPath: str
-  versions: PackageMetadataVersion[]
+  mut name: str
+  mut description: str
+  mut latestVersion: str
+  mut repository: str
+  mut repositoryPath: str
+  mut versions: str[str]
 
   fn existsVersion (self: ref Self, version: str) bool {
-    return !self.getVersionHash(version).empty
+    return self.versions.has(version == "latest" ? self.latestVersion : version)
   }
 
-  fn getVersionHash (self: ref Self, mut version: str) str {
-    if version == "latest" {
-      version = self.latestVersion
-    }
-
-    loop i := 0; i < self.versions.len; i++ {
-      item := self.versions[i]
-
-      if item.version == version {
-        return item.hash
-      }
-    }
-
-    return ""
+  fn getVersionHash (self: ref Self, version: str) str {
+    return self.versions.get(version == "latest" ? self.latestVersion : version)
   }
 }
 
-fn PackageMetadata_parse (data: str) PackageMetadata {
-  // todo parse and repositoryPath defaults to ""
-  // todo needs yaml parser here
-  return PackageMetadata{}
+fn PackageMetadata_parse (content: str) PackageMetadata {
+  mut yaml := YAML_parse(content)
+  mut result := PackageMetadata{}
+
+  loop yaml.hasNext() {
+    node := yaml.next()
+
+    if node is YAMLNodeMapping {
+      mappingNode := node
+      nodeKey := YAMLNode_stringify(mappingNode.key)
+
+      if nodeKey == "name" {
+        if mappingNode.value != nil {
+          val := mappingNode.value
+          if val is YAMLNodeScalar {
+            result.name = YAMLNode_stringify(val)
+          }
+        }
+      } elif nodeKey == "description" {
+        if mappingNode.value != nil {
+          val := mappingNode.value
+          if val is YAMLNodeScalar {
+            result.description = YAMLNode_stringify(val)
+          }
+        }
+      } elif nodeKey == "latest_version" {
+        if mappingNode.value != nil {
+          val := mappingNode.value
+          if val is YAMLNodeScalar {
+            result.latestVersion = YAMLNode_stringify(val)
+          }
+        }
+      } elif nodeKey == "repository" {
+        if mappingNode.value != nil {
+          val := mappingNode.value
+          if val is YAMLNodeScalar {
+            result.repository = YAMLNode_stringify(val)
+          }
+        }
+      } elif nodeKey == "repository_path" {
+        if mappingNode.value != nil {
+          val := mappingNode.value
+          if val is YAMLNodeScalar {
+            result.repositoryPath = YAMLNode_stringify(val)
+          }
+        }
+      } elif nodeKey == "versions" {
+        if mappingNode.value != nil {
+          val := mappingNode.value
+          if val is YAMLNodeMap {
+            loop i := 0; i < val.mappings.len; i++ {
+              mapping := val.mappings[i]
+              versionName := YAMLNode_stringify(mapping.key)
+
+              if mapping.value != nil {
+                val2 := mapping.value
+                if val2 is YAMLNodeScalar {
+                  versionHash := YAMLNode_stringify(val2)
+                  result.versions.set(versionName, versionHash)
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return result
 }
