@@ -58,6 +58,16 @@ obj YAML {
     self.state = YAMLState{}
   }
 
+  fn stringify (self: ref Self) str {
+    mut code := ""
+
+    loop i := 0; i < self.nodes.len; i++ {
+      code += YAMLNode_stringify(self.nodes[i])
+    }
+
+    return code
+  }
+
   fn _hasNextTk (self: ref Self) bool {
     mut pos := self.state.pos
     tokensLen := self.tokens.len
@@ -266,8 +276,8 @@ obj YAML {
   }
 }
 
-fn YAML_parse (path: str) YAML {
-  mut result := YAML{content: fs_readFileSync(path).str()}
+fn YAML_parse (content: str) YAML {
+  mut result := YAML{content: content}
   result._tokenize()
   loop result._hasNextTk() {
     node := result._parse()

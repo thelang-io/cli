@@ -10,10 +10,56 @@ obj PackageYAML {
   mut mainFile: str
   mut packages: str[str]
   mut scripts: str[str]
+
+  fn stringify (self: ref Self) str {
+    mut code := ""
+
+    if !self.name.empty {
+      code += "name: " + self.name + os_EOL
+    }
+
+    if !self.description.empty {
+      code += "description: " + self.description + os_EOL
+    }
+
+    if !self.version.empty {
+      code += "version: " + self.version + os_EOL
+    }
+
+    if !self.mainFile.empty {
+      code += "main: " + self.mainFile + os_EOL
+    }
+
+    if !self.packages.empty {
+      code += code.empty ? "" : os_EOL
+      code += "packages:" + os_EOL
+      mut keys := self.packages.keys
+      keys.sort(sortStrStrAsc)
+
+      loop i := 0; i < keys.len; i++ {
+        key := keys[i]
+        code += "  " + key + ": " + self.packages.get(key) + os_EOL
+      }
+    }
+
+    if !self.scripts.empty {
+      code += code.empty ? "" : os_EOL
+      code += "scripts:" + os_EOL
+      mut keys := self.scripts.keys
+      keys.sort(sortStrStrAsc)
+
+      loop i := 0; i < keys.len; i++ {
+        key := keys[i]
+        code += "  " + key + ": " + self.scripts.get(key) + os_EOL
+      }
+    }
+
+    return code
+  }
 }
 
-fn Packager_parsePackageYAML (path: str) PackageYAML {
-  mut yaml := YAML_parse(path)
+fn PackageYAML_parse (content: str) PackageYAML {
+  mut yaml := YAML_parse(content)
   mut result := PackageYAML{}
 
   loop yaml.hasNext() {
@@ -92,14 +138,14 @@ fn Packager_parsePackageYAML (path: str) PackageYAML {
               scriptName := YAMLNode_stringify(mapping.key)
 
               if mapping.value == nil {
-                RaiseError("Property `scripts[].version` of package.yml is required")
+                RaiseError("Property `scripts[].value` of package.yml is required")
               } else {
                 val2 := mapping.value
                 if val2 is YAMLNodeScalar {
-                  scriptVersion := YAMLNode_stringify(val2)
-                  result.scripts.set(scriptName, scriptVersion)
+                  scriptValue := YAMLNode_stringify(val2)
+                  result.scripts.set(scriptName, scriptValue)
                 } else {
-                  RaiseError("Property `scripts[].version` of package.yml expected to be a scalar")
+                  RaiseError("Property `scripts[].value` of package.yml expected to be a scalar")
                 }
               }
             }
