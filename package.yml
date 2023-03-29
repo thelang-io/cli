@@ -4,10 +4,9 @@ version: 0.12.1
 main: src/main
 
 packages:
-  - the/args: 0.1.0
-  - the/error: 1.0.0
-  - the/testing: 0.1.0
+  the/args: 0.1.1
+  the/error: 1.1.0
 
 scripts:
-  - build: the build src
-  - test: the test --exclude src/main
+  build: the build src
+  test: the test --exclude src/main
