@@ -8,3 +8,16 @@ fn chmodAddSync (path: str, mode: int) {
   stat := fs_statSync(path)
   fs_chmodSync(path, stat.mode | mode)
 }
+
+fn removeDirectorySync (path: str) {
+  entries := fs_scandirSync(path)
+  loop i := 0; i < entries.len; i++ {
+    entryPath := path + path_SEP + entries[i]
+    if fs_isDirectorySync(entryPath) {
+      removeDirectorySync(entryPath)
+    } else {
+      fs_rmSync(entryPath)
+    }
+  }
+  fs_rmdirSync(path)
+}
