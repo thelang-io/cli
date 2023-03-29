@@ -152,7 +152,6 @@ main {
       packager.update(packageArgument)
     }
 
-    packager.lock()
     packager.deinit()
   } elif action == "run" {
     command(compiler, "compile", targetPath, outputPath, qs)

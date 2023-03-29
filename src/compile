@@ -47,7 +47,7 @@ fn customCompile (
     fs_rmSync(buildDir + path_SEP + "a.out")
   } elif isCompile {
     fs_copyFileSync(buildDir + path_SEP + "a.out", outputPath)
-    fs_rmdirSync(buildDir)
+    removeDirectorySync(buildDir)
   }
 
   return stdout

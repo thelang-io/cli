@@ -3,8 +3,35 @@
  * Licensed under the MIT License
  */
 
+// todo tester functionality
+
 obj Tester {
+  cwd: str
+  includes: str[]
+  excludes: str[]
+
+  fn init (mut self: ref Self) {
+    files := self.collectFiles()
+    // todo pass all files to builder
+    // todo compile resulting file
+    // todo execute file
+    // todo delete resulted and compiled files
+  }
+
+  fn collectFiles (mut self: ref Self) str[] {
+    // todo go through all includes and collect files
+    // todo ignore files if exists in excludes array
+    return []
+  }
 }
 
-fn Tester_init (targetPath: str, excludePaths: str[]) void {
+fn Tester_init (targetPath: str, excludePaths: str[], cwd := process_cwd()) Tester {
+  mut result := Tester{
+    cwd: cwd,
+    includes: [targetPath],
+    excludes: excludePaths
+  }
+
+  result.init()
+  return result
 }
