@@ -24,8 +24,8 @@ main {
     .command("lex", "Lex file")
     .command("parse", "Parse file")
     .command("run", "Compile and execute file")
-    .command("script", "Execute script from package.yml") // todo
-    .command("test", "Test source directory", default: ".")
+    .command("script", "Execute script from package.yml")
+    .command("test", "Test source directory", default: ".") // todo
     .command("uninstall", "Uninstall package")
     .command("update", "Update package") // todo
     .command(
@@ -76,14 +76,13 @@ main {
   args.parse(process_args)
 
   mut action := ""
+  mut actionArgument := ""
   mut buildDir := ""
   mut compiler := ""
   mut excludePaths := [".git", ".svn", "thumbs.db", ".DS_Store"]
   mut outputPath := ""
-  mut packageArgument := ""
   mut platform := ""
   mut runArgs := ""
-  mut targetPath := ""
   mut version := ""
 
   loop i := 0; i < args.data.len; i++ {
@@ -92,20 +91,17 @@ main {
     if (
       arg.command == "build" ||
       arg.command == "compile" ||
+      arg.command == "install" ||
       arg.command == "lex" ||
       arg.command == "parse" ||
+      arg.command == "run" ||
+      arg.command == "script" ||
       arg.command == "test" ||
-      arg.command == "run"
-    ) {
-      action = arg.command
-      targetPath = arg.value
-    } elif (
-      arg.command == "install" ||
       arg.command == "uninstall" ||
       arg.command == "update"
     ) {
       action = arg.command
-      packageArgument = arg.value
+      actionArgument = arg.value
     } elif arg.command == "upgrade" {
       action = arg.command
     } elif arg.option == "help" || arg.option == "version" {
@@ -148,37 +144,61 @@ main {
   qs := "?v=" + version + "&p=" + platform
 
   if action == "build" {
-    Builder_init(targetPath, buildDir, excludePaths)
+    Builder_init(actionArgument, buildDir, excludePaths)
   } elif action == "compile" || action == "lex" || action == "parse" {
-    command(compiler, action, targetPath, outputPath, qs)
+    command(compiler, action, actionArgument, outputPath, qs)
   } elif action == "install" || action == "uninstall" || action == "update" {
     mut packager := Packager_init()
 
-    if action == "install" && packageArgument.empty {
+    if action == "install" && actionArgument.empty {
       packager.installAll()
     } elif action == "install" {
-      packager.install(packageArgument)
-    } elif action == "uninstall" && packageArgument.empty {
+      packager.install(actionArgument)
+    } elif action == "uninstall" && actionArgument.empty {
       RaiseError("To uninstall package please specify package id")
     } elif action == "uninstall" {
-      packager.uninstall(packageArgument)
-    } elif action == "update" && packageArgument.empty {
+      packager.uninstall(actionArgument)
+    } elif action == "update" && actionArgument.empty {
       packager.updateAll()
     } elif action == "update" {
-      packager.update(packageArgument)
+      packager.update(actionArgument)
     }
 
     packager.deinit()
   } elif action == "run" {
-    command(compiler, "compile", targetPath, outputPath, qs)
+    command(compiler, "compile", actionArgument, outputPath, qs)
 
     cmd := outputPath + (runArgs.empty ? "" : " ") + runArgs
     stdout := process_runSync(cmd)
 
     fs_rmSync(outputPath)
     print(stdout.str(), terminator: "")
+  } elif action == "script" {
+    packageYAMLPath := process_cwd() + path_SEP + "package.yml"
+
+    if !fs_existsSync(packageYAMLPath) {
+      RaiseError("File `package.yml` was not found")
+    }
+
+    content := fs_readFileSync(packageYAMLPath).str()
+    packageYAML := PackageYAML_parse(content)
+
+    if actionArgument.empty {
+      print("Available scripts:")
+      keys := packageYAML.scripts.keys
+      values := packageYAML.scripts.values
+
+      loop i := 0; i < keys.len; i++ {
+        print("  " + keys[i] + ": " + values[i])
+      }
+    } elif !packageYAML.scripts.has(actionArgument) {
+      RaiseError("Script `" + actionArgument + "` is missing in package.yml")
+    } else {
+      script := packageYAML.scripts.get(actionArgument)
+      process_runSync(script)
+    }
   } elif action == "test" {
-    Tester_init(targetPath, excludePaths)
+    Tester_init(actionArgument, excludePaths)
   } elif action == "upgrade" {
     executablePath := os_NAME == "Windows"
       ? "C:/Program Files/The/the.exe"
