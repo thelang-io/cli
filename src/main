@@ -27,7 +27,7 @@ main {
     .command("script", "Execute script from package.yml")
     .command("test", "Test source directory", default: ".") // todo
     .command("uninstall", "Uninstall package")
-    .command("update", "Update package") // todo
+    .command("update", "Update package")
     .command(
       "upgrade",
       "Self-upgrade CLI to newest version",

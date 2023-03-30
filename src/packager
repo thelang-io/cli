@@ -32,6 +32,10 @@ obj Package {
     self._globalPath = globalPackagePath + path_SEP + self.version
     self._projectPath = self._packagesProjectPath + path_SEP + locationName
 
+    if !fs_existsSync(globalPackagePath) {
+      fs_mkdirSync(globalPackagePath)
+    }
+
     metaFile := self.packagesTempPath + path_SEP + "packages" + path_SEP + locationName + ".yml"
 
     if !fs_isFileSync(metaFile) {
@@ -50,10 +54,6 @@ obj Package {
         "package `" + self.name + "` " +
         "version `" + self.version + "` does not exists"
       )
-    }
-
-    if !fs_existsSync(globalPackagePath) {
-      fs_mkdirSync(globalPackagePath)
     }
 
     self._initialized = true
@@ -129,9 +129,33 @@ obj Package {
     return self
   }
 
-  fn update (self: ref Self) ref Self {
+  fn update (mut self: ref Self) ref Self {
     self._checkInitialized("update")
-    // todo
+
+    if fs_existsSync(self._projectPath) {
+      fs_rmSync(self._projectPath)
+    }
+
+    self.version = self._meta.latestVersion
+    print(self._meta.latestVersion)
+    self.deinit()
+    self.init()
+
+    if !fs_existsSync(self._globalPath) {
+      self.download()
+    }
+
+    if !fs_existsSync(self._packagesProjectPath) {
+      fs_mkdirSync(self._packagesProjectPath)
+    }
+
+    author := self.getAuthor()
+
+    if !fs_existsSync(self._packagesProjectPath + path_SEP + author) {
+      fs_mkdirSync(self._packagesProjectPath + path_SEP + author)
+    }
+
+    fs_linkSync(self._globalPath, self._projectPath)
     return self
   }
 
@@ -270,11 +294,9 @@ obj Packager {
     package := Package_fromArgument(argument, self.tempPath, cwd: self.cwd)
     package.install()
 
-    if !self._packageYAML.packages.has(package.name) {
-      self._packageYAML.packages.set(package.name, package.version)
-    }
-
+    self._packageYAML.packages.set(package.name, package.version)
     fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
+
     return self.lock()
   }
 
@@ -317,7 +339,9 @@ obj Packager {
     package := Package_fromArgument(argument, self.tempPath, cwd: self.cwd)
     package.update()
 
+    self._packageYAML.packages.set(package.name, package.version)
     fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
+
     return self.lock()
   }
 
@@ -328,6 +352,8 @@ obj Packager {
       mut package := self._packages[i]
       package.init()
       package.update()
+      self._packageYAML.packages.set(package.name, package.version)
+      print(package.name, package.version)
     }
 
     fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
