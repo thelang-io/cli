@@ -315,7 +315,7 @@ obj Packager {
 
   fn lock (self: ref Self) ref Self {
     self._checkInitialized("lock")
-    // todo generate package.lock file
+    // todo v0.15 - generate package.lock file with hashes of packages
     return self
   }
 
