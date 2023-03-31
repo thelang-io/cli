@@ -8,6 +8,7 @@ obj ParserResult {
   mut content: str
   mut definitions: str
   mut functions: str
+  mut functionNames: str[]
   mut mainContent: str
 }
 
@@ -141,6 +142,16 @@ obj Parser {
       self._result.functions += self._fileContent.slice(i, i + 3)
       self._state.isFunction = true
       i += 2
+
+      loop j := i + 1; j < self._fileContent.len; j++ {
+        ch := self._fileContent[j]
+
+        if !ch.isLetterOrDigit && ch != '_' {
+          name := self._fileContent.slice(i + 1, j)
+          self._result.functionNames.push(name)
+          break
+        }
+      }
     } elif ch == '{' { // { // todo v0.15 - remove
       self._result.functions += ch.str()
       self._state.blocks++

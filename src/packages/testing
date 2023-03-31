@@ -110,7 +110,7 @@ fn MATCH_STR (a: str, b: str) {
 
 fn FAIL_TEST (message: str) {
   TEST_FAILED = true
-  print("Failure: " + message, to: "stderr")
+  print("Failure: " + message)
 }
 
 obj Test {
@@ -123,7 +123,7 @@ fn testing_testWord (n: int) str {
 }
 
 obj Tests {
-  _tests: Test[]
+  mut _tests: Test[]
 
   fn register (mut self: ref Self, name: str, body: TestBody) ref Self {
     self._tests.push(Test{name: name, body: body})

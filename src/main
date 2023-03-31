@@ -25,7 +25,7 @@ main {
     .command("parse", "Parse file")
     .command("run", "Compile and execute file")
     .command("script", "Execute script from package.yml")
-    .command("test", "Test source directory", default: ".") // todo
+    .command("test", "Test source directory", default: ".")
     .command("uninstall", "Uninstall package")
     .command("update", "Update package")
     .command(
@@ -131,6 +131,8 @@ main {
     }
   }
 
+  excludePaths.push(buildDir)
+
   if action == "help" {
     print(args.help(), terminator: "")
     process_exit(0)
@@ -195,10 +197,17 @@ main {
       RaiseError("Script `" + actionArgument + "` is missing in package.yml")
     } else {
       script := packageYAML.scripts.get(actionArgument)
-      process_runSync(script)
+      stdout := process_runSync(script)
+      print(stdout.str(), terminator: "")
     }
   } elif action == "test" {
-    Tester_init(actionArgument, excludePaths)
+    mut tester := Tester_init(actionArgument, excludePaths)
+    command(compiler, "compile", tester.inputPath, tester.outputPath, qs)
+
+    stdout := process_runSync(tester.outputPath)
+    print(stdout.str(), terminator: "")
+
+    tester.deinit()
   } elif action == "upgrade" {
     executablePath := os_NAME == "Windows"
       ? "C:/Program Files/The/the.exe"

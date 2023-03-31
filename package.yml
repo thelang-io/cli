@@ -8,5 +8,5 @@ packages:
   the/error: 1.1.1
 
 scripts:
-  build: the build src
-  test: the test --exclude src/main
+  build: the build
+  test: the test

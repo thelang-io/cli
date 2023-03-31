@@ -16,10 +16,15 @@ fn Builder_collectFiles (path: str, excludePaths: str[], tree := "") str[] {
     if (
       entity.find(".") == -1 &&
       fs_isFileSync(entityPath) &&
-      !excludePaths.contains(entityTreePath)
+      !excludePaths.contains(entityTreePath) &&
+      !excludePaths.contains(entity)
     ) {
       result.push(entityPath)
-    } elif fs_isDirectorySync(entityPath) && !excludePaths.contains(entityTreePath) {
+    } elif (
+      fs_isDirectorySync(entityPath) &&
+      !excludePaths.contains(entityTreePath) &&
+      !excludePaths.contains(entity)
+    ) {
       files := Builder_collectFiles(entityPath, excludePaths, entityTreePath)
       result.merge(files)
     }

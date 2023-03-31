@@ -3,33 +3,85 @@
  * Licensed under the MIT License
  */
 
-// todo tester functionality
-
 obj Tester {
   cwd: str
-  includes: str[]
-  excludes: str[]
+  targetPath: str
+  excludePaths: str[]
+  mut inputPath: str
+  mut outputDir: str
+  mut outputPath: str
+  mut _includes: str[]
+  mut _tests: str[]
 
   fn init (mut self: ref Self) {
-    files := self.collectFiles()
-    // todo pass all files to builder
-    // todo compile resulting file
-    // todo execute file
-    // todo delete resulted and compiled files
+    fullPath := (fs_isAbsoluteSync(self.targetPath) ? "" : self.cwd + path_SEP) + self.targetPath
+    realFullPath := fs_realpathSync(fullPath)
+
+    if !fs_existsSync(realFullPath) {
+      RaiseError("Path '" + realFullPath + "' doesn't exists")
+    }
+
+    mut files: str[]
+
+    if fs_isDirectorySync(realFullPath) {
+      files = Builder_collectFiles(realFullPath, self.excludePaths)
+      packageCollection := Builder_collectPackagesFiles(self.cwd)
+      files.merge(packageCollection[0])
+    } else {
+      files.push(realFullPath)
+    }
+
+    mut parser := Parser{}
+    mut comments := ""
+    mut content := ""
+    mut definitions := ""
+    mut functions := ""
+    mut testNames: str[]
+
+    loop i := 0; i < files.len; i++ {
+      parserResult := parser.parse(files[i])
+      comments += parserResult.comments
+      content += parserResult.content
+      definitions += parserResult.definitions
+      functions += parserResult.functions
+
+      loop j := 0; j < parserResult.functionNames.len; j++ {
+        functionName := parserResult.functionNames[j]
+
+        if functionName.slice(0, 5) == "TEST_" {
+          testNames.push(functionName.slice(5))
+        }
+      }
+    }
+
+    mut result := comments + content + definitions + functions
+    result += "main {" + os_EOL
+    result += "  mut tests := Tests{}" + os_EOL
+
+    loop i := 0; i < testNames.len; i++ {
+      testName := testNames[i]
+      result += "  tests.register(\"" + testName + "\", TEST_" + testName + ")" + os_EOL
+    }
+
+    result += "  tests.run(process_args)" + os_EOL
+    result += "}" + os_EOL
+
+    self.outputDir = path_tempDirectory()
+    self.inputPath = self.outputDir + path_SEP + "result"
+    self.outputPath = self.outputDir + path_SEP + "a" + (os_NAME == "Windows" ? "exe" : "out")
+    fs_writeFileSync(self.inputPath, result.toBuffer())
   }
 
-  fn collectFiles (mut self: ref Self) str[] {
-    // todo go through all includes and collect files
-    // todo ignore files if exists in excludes array
-    return []
+  fn deinit (self: ref Self) {
+    removeDirectorySync(self.outputDir)
   }
 }
 
 fn Tester_init (targetPath: str, excludePaths: str[], cwd := process_cwd()) Tester {
   mut result := Tester{
     cwd: cwd,
-    includes: [targetPath],
-    excludes: excludePaths
+    targetPath: targetPath,
+    excludePaths: excludePaths
   }
 
   result.init()
