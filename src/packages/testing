@@ -1,0 +1,178 @@
+/*!
+ * Copyright (c) Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+type TestBody = () -> void
+
+mut TEST_FAILED := false
+
+// todo arrays
+// todo maps
+// todo optionals
+// todo references
+
+fn EXPECT_EQ (a: any, b: any) {
+  MATCH_ANY(a, b)
+}
+
+fn MATCH_ANY (a: any, b: any) {
+  if (a is any) && (b is any) { MATCH_ANY(a, b) }
+  elif (a is bool) && (b is bool) { MATCH_BOOL(a, b) }
+  elif (a is byte) && (b is byte) { MATCH_BYTE(a, b) }
+  elif (a is char) && (b is char) { MATCH_CHAR(a, b) }
+  elif (a is float) && (b is float) { MATCH_FLOAT(a, b) }
+  elif (a is f32) && (b is f32) { MATCH_FLOAT(a, b) }
+  elif (a is f64) && (b is f64) { MATCH_FLOAT(a, b) }
+  elif (a is int) && (b is int) { MATCH_INT_SIGNED(a, b) }
+  elif (a is str) && (b is str) { MATCH_STR(a, b) }
+  elif (a is any) || (b is any) { FAIL_TEST("any type parameters mismatch") }
+  elif (a is bool) || (b is bool) { FAIL_TEST("bool type parameters mismatch") }
+  elif (a is byte) || (b is byte) { FAIL_TEST("byte type parameters mismatch") }
+  elif (a is char) || (b is char) { FAIL_TEST("char type parameters mismatch") }
+  elif (a is float) || (b is float) { FAIL_TEST("float type parameters mismatch") }
+  elif (a is f32) || (b is f32) { FAIL_TEST("float type parameters mismatch") }
+  elif (a is f64) || (b is f64) { FAIL_TEST("float type parameters mismatch") }
+  elif (a is int) || (b is int) { FAIL_TEST("int type parameters mismatch") }
+  elif (a is str) || (b is str) { FAIL_TEST("str type parameters mismatch") }
+  else { FAIL_TEST("Matcher for this type doesn't exist") }
+}
+
+fn MATCH_BOOL (a: bool, b: bool) {
+  if a != b {
+    FAIL_TEST(
+      "Expected equality of these values:" + os_EOL +
+      "  " + a.str() + os_EOL +
+      "  " + b.str()
+    )
+  }
+}
+
+fn MATCH_BYTE (a: byte, b: byte) {
+  if a != b {
+    FAIL_TEST(
+      "Expected equality of these values:" + os_EOL +
+      "  " + a.str() + os_EOL +
+      "  " + b.str()
+    )
+  }
+}
+
+fn MATCH_CHAR (a: char, b: char) {
+  if a != b {
+    FAIL_TEST(
+      "Expected equality of these values:" + os_EOL +
+      "  " + a.str() + os_EOL +
+      "  " + b.str()
+    )
+  }
+}
+
+fn MATCH_FLOAT (a: float, b: float) {
+  if a != b {
+    FAIL_TEST(
+      "Expected equality of these values:" + os_EOL +
+      "  " + a.str() + os_EOL +
+      "  " + b.str()
+    )
+  }
+}
+
+fn MATCH_INT_SIGNED (a: i64, b: i64) {
+  if a != b {
+    FAIL_TEST(
+      "Expected equality of these values:" + os_EOL +
+      "  " + a.str() + os_EOL +
+      "  " + b.str()
+    )
+  }
+}
+
+fn MATCH_INT_UNSIGNED (a: u64, b: u64) {
+  if a != b {
+    FAIL_TEST(
+      "Expected equality of these values:" + os_EOL +
+      "  " + a.str() + os_EOL +
+      "  " + b.str()
+    )
+  }
+}
+
+fn MATCH_STR (a: str, b: str) {
+  if a != b {
+    FAIL_TEST(
+      "Expected equality of these values:" + os_EOL +
+      "  " + a + os_EOL +
+      "  " + b
+    )
+  }
+}
+
+fn FAIL_TEST (message: str) {
+  TEST_FAILED = true
+  print("Failure: " + message, to: "stderr")
+}
+
+obj Test {
+  name: str
+  body: TestBody
+}
+
+fn testing_testWord (n: int) str {
+  return n == 1 ? "test" : "tests"
+}
+
+obj Tests {
+  _tests: Test[]
+
+  fn register (mut self: ref Self, name: str, body: TestBody) ref Self {
+    self._tests.push(Test{name: name, body: body})
+    return self
+  }
+
+  fn run (mut self: ref Self, args: str[]) ref Self {
+    mut totalTime := 0
+    mut failedTests: str[]
+
+    print("[==========] Running", self._tests.len, testing_testWord(self._tests.len))
+
+    loop i := 0; i < self._tests.len; i++ {
+      test := self._tests[i]
+
+      print("[ RUN      ]", test.name)
+      timeStart := date_now()
+      test.body()
+      timeDelta := date_now() - timeStart
+      testStatus := TEST_FAILED ? "[  FAILED  ]" : "[       OK ]"
+      print(testStatus, test.name, "(" + timeDelta.str() + " ms)")
+
+      if TEST_FAILED {
+        failedTests.push(test.name)
+      }
+
+      totalTime += timeDelta
+      TEST_FAILED = false
+    }
+
+    print(
+      "[==========]",
+      self._tests.len,
+      testing_testWord(self._tests.len) + " ran (" + totalTime.str() + " ms total)"
+    )
+
+    passedTestsNum := self._tests.len - failedTests.len
+    print("[  PASSED  ]", passedTestsNum, testing_testWord(passedTestsNum))
+
+    if !failedTests.empty {
+      print("[  FAILED  ]", failedTests.len, testing_testWord(failedTests.len) + ", listed below:")
+
+      loop i := 0; i < failedTests.len; i++ {
+        failedTest: str = failedTests[i]
+        print("[  FAILED  ]", failedTest)
+      }
+
+      print()
+      print(" " + failedTests.len.str() + " FAILED", testing_testWord(failedTests.len).upper)
+    }
+  }
+}

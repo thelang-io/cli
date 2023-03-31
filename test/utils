@@ -1,0 +1,12 @@
+/*!
+ * Copyright (c) Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+fn TEST_sortStrAsc_empty () {
+  EXPECT_EQ(sortStrAsc("", ""), 0)
+  EXPECT_EQ(sortStrAsc("", "a"), -1)
+  EXPECT_EQ(sortStrAsc("", "test"), -1)
+  EXPECT_EQ(sortStrAsc("a", ""), 1)
+  EXPECT_EQ(sortStrAsc("test", ""), 1)
+}
