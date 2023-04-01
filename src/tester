@@ -68,7 +68,7 @@ obj Tester {
 
     self.outputDir = path_tempDirectory()
     self.inputPath = self.outputDir + path_SEP + "result"
-    self.outputPath = self.outputDir + path_SEP + "a" + (os_NAME == "Windows" ? "exe" : "out")
+    self.outputPath = self.outputDir + path_SEP + "a." + (os_NAME == "Windows" ? "exe" : "out")
     fs_writeFileSync(self.inputPath, result.toBuffer())
   }
 
