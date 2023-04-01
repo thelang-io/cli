@@ -5,8 +5,6 @@
 # Licensed under the MIT License
 #
 
-set -e
-
 panic () {
   echo "Error: $@" 1>&2
   exit 1
@@ -33,8 +31,8 @@ main () {
   fi
 
   echo "Installing The CLI..."
-  curl -fsSL "$cdn_url" -o "$install_path"
-  chmod a+x "$install_path"
+  curl -fsSL "$cdn_url" -o "$install_path" || panic "failed to download and install"
+  chmod a+x "$install_path" || panic "failed to set permissions"
   echo "Successfully installed The CLI!"
   echo "  Type \`the -h\` to explore available options"
 }
