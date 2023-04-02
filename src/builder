@@ -37,7 +37,7 @@ fn Builder_collectPackagesFiles (cwd: str, mut includedPackages: str[] = []) str
   packageYAMLPath := cwd + path_SEP + "package.yml"
 
   if !fs_existsSync(packageYAMLPath) {
-    return []
+    return [[], []]
   }
 
   packagesPath := cwd + path_SEP + ".packages"
