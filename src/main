@@ -3,8 +3,8 @@
  * Licensed under the MIT License
  */
 
-const VERSION_NUM := "0.12.1"
-const VERSION_NAME := "Submarine Ocean"
+const VERSION_NUM := "0.13.0"
+const VERSION_NAME := "Enidora"
 
 main {
   mut args := Args{lineLength: 70}
