@@ -25,7 +25,7 @@ jobs:
       - run: valgrind ./b.out -v
       - run: valgrind ./b.out build test
       - run: valgrind ./b.out build src
-      - run: valgrind ./b.out lex build.out
-      - run: valgrind ./b.out parse build.out
-      - run: valgrind ./b.out compile build.out
-      - run: valgrind ./b.out run build.out
+      - run: valgrind ./b.out lex build/result
+      - run: valgrind ./b.out parse build/result
+      - run: valgrind ./b.out compile build/result
+      - run: valgrind ./b.out run build/result
