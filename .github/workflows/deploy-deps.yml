@@ -11,7 +11,7 @@ env:
 
 jobs:
   build-osxcross:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -30,7 +30,7 @@ jobs:
           path: build-osxcross.tar.gz
   build-cross-compile-macos:
     needs: build-osxcross
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -53,7 +53,7 @@ jobs:
           name: build-cross-compile-macos
           path: build-cross-compile-macos.tar.gz
   build-cross-compile-windows:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -71,7 +71,7 @@ jobs:
           name: build-cross-compile-windows
           path: build-cross-compile-windows.tar.gz
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -124,7 +124,7 @@ jobs:
           path: build-windows.tar.gz
   deploy:
     needs: [build-osxcross, build-cross-compile-macos, build-cross-compile-windows, build-linux, build-macos, build-windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/download-artifact@v3
       - run: |
