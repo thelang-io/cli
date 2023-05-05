@@ -14,10 +14,6 @@ function Request-File ([string] $Url, [string] $Path) {
   (New-Object -TypeName System.Net.WebClient).DownloadFile($DownloadUrl, $InstallPath)
 }
 
-function Set-SystemEnv ([string] $Name, [string] $Value) {
-  [System.Environment]::SetEnvironmentVariable($Name, $Value, [System.EnvironmentVariableTarget]::Machine)
-}
-
 function Set-ExecuteAcl ([string] $Path) {
   $Acl = Get-Acl -Path $Path
   $AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList Users, Traverse, Allow
@@ -26,8 +22,11 @@ function Set-ExecuteAcl ([string] $Path) {
   Set-Acl -Path $Path -AclObject $Acl
 }
 
+function Set-SystemEnv ([string] $Name, [string] $Value) {
+  [System.Environment]::SetEnvironmentVariable($Name, $Value, [System.EnvironmentVariableTarget]::Machine)
+}
+
 function main {
-  $MachinePath = Get-SystemEnv -Name Path
   $DownloadUrl = 'https://cdn.thelang.io/cli-core-windows'
   $InstallDir = 'C:\Program Files\The'
   $InstallPath = "$InstallDir\the.exe"
@@ -41,7 +40,7 @@ function main {
   New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
   Request-File -Url $DownloadUrl -Path $InstallPath
   Set-ExecuteAcl -Path $InstallPath
-  Set-SystemEnv -Name Path -Value "$MachinePath;$InstallDir"
+  Set-SystemEnv -Name Path -Value "$(Get-SystemEnv -Name Path);$InstallDir"
   $env:Path += ";$InstallDir"
   Write-Host 'Successfully installed The CLI!'
   Write-Host '  Type `the -h` to explore available options'
