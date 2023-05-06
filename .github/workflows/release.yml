@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+      - uses: thelang-io/setup-the@v1
       - run: |
           msg="${{ github.event.release.tag_name }}"
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
-      - run: curl -fsSL https://cdn.thelang.io/cli | bash
       - run: the build src
       - run: the compile build/result --platform=linux   && mv a.out cli-core-linux   && sleep 1
       - run: the compile build/result --platform=macos   && mv a.out cli-core-macos   && sleep 1

@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: thelang-io/setup-the@v1
       - run: sudo apt-get update
       - run: sudo apt-get install valgrind
-      - run: curl -fsSL https://cdn.thelang.io/cli | bash
       - run: the build src
       - run: the compile build/result && mv a.out b.out
       - run: valgrind ./b.out -h
