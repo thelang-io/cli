@@ -32,23 +32,8 @@ fn customCompile (
   outputPath: str
 ) buffer_Buffer {
   isCompile := action == "compile"
-  buildDir := process_cwd() + path_SEP + "build"
-  buildDirExisted := fs_existsSync(buildDir)
-
-  if isCompile && !buildDirExisted {
-    fs_mkdirSync(buildDir)
-  }
-
   actionArg := isCompile ? "" : " " + action
-  stdout := process_runSync(compiler + actionArg + " " + filePath)
-
-  if isCompile && buildDirExisted {
-    fs_copyFileSync(buildDir + path_SEP + "a.out", outputPath)
-    fs_rmSync(buildDir + path_SEP + "a.out")
-  } elif isCompile {
-    fs_copyFileSync(buildDir + path_SEP + "a.out", outputPath)
-    removeDirectorySync(buildDir)
-  }
-
+  optionArg := " --output='" + outputPath + "'"
+  stdout := process_runSync(compiler + actionArg + optionArg + " " + filePath)
   return stdout
 }
