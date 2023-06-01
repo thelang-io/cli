@@ -1,12 +1,10 @@
 name: CLI
-description: CLI for The Programming Language
+description: CLI for The programming language
 version: 0.13.1
 main: src/main
 
 packages:
-  the/args: 0.1.2
-  the/error: 1.1.1
-
-scripts:
-  build: the build
-  test: the test
+  the/args: 0.2.1
+  the/error: 1.1.3
+  the/testing: 0.2.0
+  the/yaml: 0.2.0

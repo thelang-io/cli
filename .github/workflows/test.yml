@@ -19,6 +19,7 @@ jobs:
       - uses: thelang-io/setup-the@v1
       - run: sudo apt-get update
       - run: sudo apt-get install valgrind
+      - run: the install
       - run: the build src
       - run: the compile build/result && mv a.out b.out
       - run: valgrind ./b.out -h
