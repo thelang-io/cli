@@ -21,6 +21,7 @@ fn Builder_collectFiles (path: str, excludePaths: str[], tree := "") str[] {
     ) {
       result.push(entityPath)
     } elif (
+      entity.find(".") == -1 &&
       fs_isDirectorySync(entityPath) &&
       !excludePaths.contains(entityTreePath) &&
       !excludePaths.contains(entity)
@@ -33,7 +34,11 @@ fn Builder_collectFiles (path: str, excludePaths: str[], tree := "") str[] {
   return result
 }
 
-fn Builder_collectPackagesFiles (cwd: str, mut includedPackages: str[] = []) str[][] {
+fn Builder_collectPackagesFiles (
+  cwd: str,
+  mut includedPackages: str[] = [],
+  root := true
+) str[][] {
   packageYAMLPath := cwd + path_SEP + "package.yml"
 
   if !fs_existsSync(packageYAMLPath) {
@@ -43,14 +48,19 @@ fn Builder_collectPackagesFiles (cwd: str, mut includedPackages: str[] = []) str
   packagesPath := cwd + path_SEP + ".packages"
   content := fs_readFileSync(packageYAMLPath).str()
   packageYaml := PackageYAML_parse(content)
-  mut files := packageYaml.files
+  mut files: str[]
 
-  loop i := 0; i < files.len; i++ {
-    files[i] = cwd + path_SEP + files[i]
+  if !root {
+    files = packageYaml.files
+
+    loop i := 0; i < files.len; i++ {
+      files[i] = cwd + path_SEP + files[i]
+    }
   }
 
   if fs_existsSync(packagesPath) {
     keys := packageYaml.packages.keys
+    mut subPackagePaths: str[]
 
     loop i := 0; i < keys.len; i++ {
       key := keys[i]
@@ -60,9 +70,12 @@ fn Builder_collectPackagesFiles (cwd: str, mut includedPackages: str[] = []) str
         continue
       }
 
+      subPackagePaths.push(packagePath)
       includedPackages.push(key)
-      packageCollection := Builder_collectPackagesFiles(packagePath, includedPackages)
+    }
 
+    loop i := 0; i < subPackagePaths.len; i++ {
+      packageCollection := Builder_collectPackagesFiles(subPackagePaths[i], includedPackages, root: false)
       files.merge(packageCollection[0])
       includedPackages = packageCollection[1]
     }
