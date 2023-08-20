@@ -7,7 +7,8 @@ const AUTH_TOKEN := "pELerETRaVeYHEne"
 const ENDPOINT_URL := "https://api.thelang.io"
 
 fn request (url: str, path: str) buffer_Buffer {
-  data := fs_readFileSync(path)
+  data := zip.zip(path)
+
   headers := [
     request_Header{name: "authorization", value: AUTH_TOKEN},
     request_Header{name: "content-type", value: "application/octet-stream"}
@@ -16,6 +17,8 @@ fn request (url: str, path: str) buffer_Buffer {
   mut req := request_open("POST", url, headers: headers, data: data)
   res := req.read()
   req.close()
+
+  fs_removeFileSync(path)
 
   if res.status != 200 {
     print(res.data.str(), to: "stderr")

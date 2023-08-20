@@ -31,30 +31,13 @@ obj Tester {
       files.push(realFullPath)
     }
 
-    mut parser := Parser{}
     mut comments := ""
     mut content := ""
     mut definitions := ""
     mut functions := ""
     mut testNames: str[]
-
-    loop i := 0; i < files.len; i++ {
-      parserResult := parser.parse(files[i])
-      comments += parserResult.comments
-      content += parserResult.content
-      definitions += parserResult.definitions
-      functions += parserResult.functions
-
-      loop j := 0; j < parserResult.functionNames.len; j++ {
-        functionName := parserResult.functionNames[j]
-
-        if functionName.slice(0, 5) == "TEST_" {
-          testNames.push(functionName.slice(5))
-        }
-      }
-    }
-
     mut result := comments + content + definitions + functions
+
     result += "main {" + os_EOL
     result += "  mut tests := Tests{}" + os_EOL
 

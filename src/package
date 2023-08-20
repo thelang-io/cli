@@ -1,0 +1,239 @@
+/*!
+ * Copyright (c) Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+obj Package {
+  name: str
+  mut version: str
+  cwd: str
+  packagesTempPath: str
+  mut _globalPath: str
+  mut _initialized: bool
+  mut _meta: PackageMetadata
+  mut _metaFile: str
+  mut _packagesProjectPath: str
+  mut _projectPath: str
+
+  fn init (mut self: ref Self) ref Self {
+    if self._initialized {
+      RaiseError("tried package init on initialized")
+    } elif !self.validName() {
+      RaiseError("invalid package name")
+    } elif !self.validVersion() {
+      RaiseError("invalid package version")
+    }
+
+    Config_initHome(packageAuthor: self.getAuthor())
+    locationName := self.getAuthor() + path_SEP + self.getProject()
+    globalPackagePath := Config_getPackagesPath() + path_SEP + locationName
+
+    self._packagesProjectPath = self.cwd + path_SEP + ".packages"
+    self._globalPath = globalPackagePath + path_SEP + self.version
+    self._projectPath = self._packagesProjectPath + path_SEP + locationName
+
+    if !fs_existsSync(globalPackagePath) {
+      fs_mkdirSync(globalPackagePath)
+    }
+
+    metaFile := self.packagesTempPath + path_SEP + "packages" + path_SEP + locationName + ".yml"
+
+    if !fs_isFileSync(metaFile) {
+      RaiseError("metadata of package `" + self.name + "` does not exists")
+    }
+
+    metaContent := fs_readFileSync(metaFile).str()
+    self._meta = PackageMetadata_parse(metaContent)
+
+    if self.version == "latest" {
+      self.version = self._meta.latestVersion
+    }
+
+    if !self._meta.existsVersion(self.version) {
+      RaiseError(
+        "package `" + self.name + "` " +
+        "version `" + self.version + "` does not exists"
+      )
+    }
+
+    self._initialized = true
+    return self
+  }
+
+  fn deinit (mut self: ref Self) {
+    self._checkInitialized("deinit")
+    self._initialized = false
+  }
+
+  fn download (self: ref Self) ref Self {
+    self._checkInitialized("download")
+    tempPath := path_tempDirectory()
+
+    process_runSync("git clone " + self._meta.repository + " '" + tempPath + "'")
+    process_runSync("cd '" + tempPath + "' && git reset --hard " + self._meta.getVersionHash(self.version))
+    removeDirectorySync(tempPath + path_SEP + ".git")
+    fs_renameSync(tempPath + self._meta.repositoryPath, self._globalPath)
+
+    if !self._meta.repositoryPath.empty {
+      removeDirectorySync(tempPath)
+    }
+
+    mut packager := Packager{cwd: self._globalPath, tempPath: self.packagesTempPath}
+    packager.init()
+    packager.installAll()
+    packager.deinit()
+
+    return self
+  }
+
+  fn install (self: ref Self) ref Self {
+    self._checkInitialized("install")
+
+    if fs_existsSync(self._projectPath) {
+      return self
+    } elif !fs_existsSync(self._globalPath) {
+      self.download()
+    }
+
+    if !fs_existsSync(self._packagesProjectPath) {
+      fs_mkdirSync(self._packagesProjectPath)
+    }
+
+    author := self.getAuthor()
+
+    if !fs_existsSync(self._packagesProjectPath + path_SEP + author) {
+      fs_mkdirSync(self._packagesProjectPath + path_SEP + author)
+    }
+
+    fs_linkSync(self._globalPath, self._projectPath)
+    return self
+  }
+
+  fn getAuthor (self: ref Self) str {
+    nameParts := self.name.split("/")
+    return nameParts[0]
+  }
+
+  fn getProject (self: ref Self) str {
+    nameParts := self.name.split("/")
+    return nameParts[1]
+  }
+
+  fn uninstall (self: ref Self) ref Self {
+    self._checkInitialized("uninstall")
+
+    if fs_existsSync(self._projectPath) {
+      fs_rmSync(self._projectPath)
+    }
+
+    return self
+  }
+
+  fn update (mut self: ref Self) ref Self {
+    self._checkInitialized("update")
+
+    if fs_existsSync(self._projectPath) {
+      fs_rmSync(self._projectPath)
+    }
+
+    self.version = self._meta.latestVersion
+    print(self._meta.latestVersion)
+    self.deinit()
+    self.init()
+
+    if !fs_existsSync(self._globalPath) {
+      self.download()
+    }
+
+    if !fs_existsSync(self._packagesProjectPath) {
+      fs_mkdirSync(self._packagesProjectPath)
+    }
+
+    author := self.getAuthor()
+
+    if !fs_existsSync(self._packagesProjectPath + path_SEP + author) {
+      fs_mkdirSync(self._packagesProjectPath + path_SEP + author)
+    }
+
+    fs_linkSync(self._globalPath, self._projectPath)
+    return self
+  }
+
+  fn validAuthor (self: ref Self) bool {
+    val := self.getAuthor()
+
+    loop i := 0; i < val.len; i++ {
+      if !val[i].isLetterOrDigit {
+        return false
+      }
+    }
+
+    return val.lower == val
+  }
+
+  fn validName (self: ref Self) bool {
+    parts := self.name.split("/")
+    hasProject := parts.len == 2 && !parts[1].empty
+
+    return hasProject ? self.validAuthor() && self.validProject() : false
+  }
+
+  fn validProject (self: ref Self) bool {
+    val := self.getProject()
+
+    loop i := 0; i < val.len; i++ {
+      ch := val[i]
+
+      if !ch.isLetterOrDigit && ch != '_' && ch != '-' && ch != '.' {
+        return false
+      }
+    }
+
+    return val.lower == val
+  }
+
+  fn validVersion (self: ref Self) bool {
+    if self.version == "latest" {
+      return true
+    }
+
+    mut part := 0
+
+    loop i := 0; i < self.version.len; i++ {
+      ch := self.version[i]
+
+      if ch == '.' {
+        if ++part == 3 {
+          return false
+        }
+      } elif !ch.isDigit {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  fn _checkInitialized (self: ref Self, callee: str) ref Self {
+    if !self._initialized {
+      RaiseError("tried package " + callee + " on non-initialized")
+    }
+
+    return self
+  }
+}
+
+fn Package_fromArgument (val: str, packagesTempPath: str, cwd := process_cwd()) Package {
+  parts := val.split("@")
+  hasVersion := parts.len == 2 && !parts[1].empty
+
+  mut result := Package{
+    name: hasVersion ? parts[0] : val,
+    version: hasVersion ? parts[1] : "latest",
+    cwd: cwd,
+    packagesTempPath: packagesTempPath
+  }
+
+  result.init()
+  return result
+}
