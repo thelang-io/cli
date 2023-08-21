@@ -28,7 +28,31 @@ jobs:
         with:
           name: build-osxcross
           path: build-osxcross.tar.gz
-  build-cross-compile-macos:
+  build-cross-compile-macos-arm64:
+    needs: build-osxcross
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: openssl/openssl
+          ref: openssl-3.1.0
+      - uses: actions/download-artifact@v3
+        with:
+          name: build-osxcross
+      - run: sudo mkdir -p /usr/local/the
+      - run: sudo chown -R $USER /usr/local/the
+      - run: tar -xzf build-osxcross.tar.gz -C /usr/local/the
+      - run: echo "/usr/local/the/osxcross/bin" >> $GITHUB_PATH
+      - run: CC=clang perl Configure darwin64-arm64 --cross-compile-prefix=arm64-apple-darwin21.4- --prefix="$PWD/build" ${{ env.openssl_args }}
+      - run: perl configdata.pm --dump
+      - run: make -j4
+      - run: make install_sw
+      - run: tar -czf build-cross-compile-macos-arm64.tar.gz build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-cross-compile-macos-arm64
+          path: build-cross-compile-macos-arm64.tar.gz
+  build-cross-compile-macos-x86_64:
     needs: build-osxcross
     runs-on: ubuntu-20.04
     steps:
@@ -47,11 +71,11 @@ jobs:
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
-      - run: tar -czf build-cross-compile-macos.tar.gz build
+      - run: tar -czf build-cross-compile-macos-x86_64.tar.gz build
       - uses: actions/upload-artifact@v3
         with:
-          name: build-cross-compile-macos
-          path: build-cross-compile-macos.tar.gz
+          name: build-cross-compile-macos-x86_64
+          path: build-cross-compile-macos-x86_64.tar.gz
   build-cross-compile-windows:
     runs-on: ubuntu-20.04
     steps:
@@ -86,7 +110,7 @@ jobs:
         with:
           name: build-linux
           path: build-linux.tar.gz
-  build-macos:
+  build-macos-arm64:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -97,11 +121,27 @@ jobs:
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
-      - run: tar -czf build-macos.tar.gz build
+      - run: tar -czf build-macos-arm64.tar.gz build
       - uses: actions/upload-artifact@v3
         with:
-          name: build-macos
-          path: build-macos.tar.gz
+          name: build-macos-arm64
+          path: build-macos-arm64.tar.gz
+  build-macos-x86_64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: openssl/openssl
+          ref: openssl-3.1.0
+      - run: CC=clang perl Configure --prefix="$PWD/build" ${{ env.openssl_args }}
+      - run: perl configdata.pm --dump
+      - run: make -j4
+      - run: make install_sw
+      - run: tar -czf build-macos-x86_64.tar.gz build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-macos-x86_64
+          path: build-macos-x86_64.tar.gz
   build-windows:
     runs-on: windows-latest
     steps:
@@ -123,17 +163,27 @@ jobs:
           name: build-windows
           path: build-windows.tar.gz
   deploy:
-    needs: [build-osxcross, build-cross-compile-macos, build-cross-compile-windows, build-linux, build-macos, build-windows]
+    needs:
+      - build-osxcross
+      - build-cross-compile-macos-arm64
+      - build-cross-compile-macos-x86_64
+      - build-cross-compile-windows
+      - build-linux
+      - build-macos-arm64
+      - build-macos-x86_64
+      - build-windows
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/download-artifact@v3
       - run: |
           config=(
             build-linux:the/cross-compile/linux
-            build-cross-compile-macos:the/cross-compile/macos
+            build-cross-compile-macos-arm64:the/cross-compile/macos/arm64
+            build-cross-compile-macos-x86_64:the/cross-compile/macos/x86_64
             build-cross-compile-windows:the/cross-compile/windows
             build-linux:the/native/linux
-            build-macos:the/native/macos
+            build-macos-arm64:the/native/macos/arm64
+            build-macos-x86_64:the/native/macos/x86_64
             build-windows:the/native/windows
             build-osxcross:the/osxcross
           )
