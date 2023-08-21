@@ -29,6 +29,11 @@ main {
       hasValue: false
     )
 
+    .option(
+      "arch",
+      "Target arch, one of: arm64, x86_64",
+      default: os_ARCH
+    )
     .option("compiler", "Offline compiler to use instead of cloud servers")
     .option("exclude", "Exclude paths separated by comma")
     .option("help", "Print help information", alias: "h", hasValue: false)
@@ -66,6 +71,7 @@ main {
 
   mut action := ""
   mut actionArgument := ""
+  mut arch := ""
   mut compiler := ""
   mut excludePaths := [".git", ".svn", "thumbs.db", ".DS_Store"]
   mut outputPath := ""
@@ -93,6 +99,8 @@ main {
       action = arg.command
     } elif arg.option == "help" || arg.option == "version" {
       action = arg.option
+    } elif arg.option == "arch" {
+      arch = arg.value
     } elif arg.option == "compiler" {
       compiler = arg.value
     } elif arg.option == "exclude" {
@@ -126,7 +134,7 @@ main {
     process_exit(0)
   }
 
-  qs := "?v=" + version + "&p=" + platform
+  qs := "?v=" + version + "&a=" + arch + "&p=" + platform
 
   if action == "compile" || action == "lex" || action == "parse" {
     command(compiler, action, actionArgument, outputPath, qs)
