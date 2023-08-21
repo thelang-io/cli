@@ -34,6 +34,7 @@ main {
       hasValue: false
     )
 
+    .option("arch", "Target arch, one of: arm64, x86_64")
     .option(
       "build-dir",
       "Build output directory, by default \"build\"",
@@ -81,6 +82,7 @@ main {
   mut compiler := ""
   mut excludePaths := [".git", ".svn", "thumbs.db", ".DS_Store"]
   mut outputPath := ""
+  mut arch := ""
   mut platform := ""
   mut runArgs := ""
   mut version := ""
@@ -106,6 +108,8 @@ main {
       action = arg.command
     } elif arg.option == "help" || arg.option == "version" {
       action = arg.option
+    } elif arg.option == "arch" {
+      arch = arg.value
     } elif arg.option == "build-dir" {
       buildDir = arg.value
     } elif arg.option == "compiler" {
@@ -143,7 +147,7 @@ main {
     process_exit(0)
   }
 
-  qs := "?v=" + version + "&p=" + platform
+  qs := "?v=" + version + "&p=" + platform + (arch.empty ? arch : "&a=" + arch)
 
   if action == "build" {
     Builder_init(actionArgument, buildDir, excludePaths)
