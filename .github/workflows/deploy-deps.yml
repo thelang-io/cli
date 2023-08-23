@@ -117,7 +117,7 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
-      - run: CC=clang perl Configure --prefix="$PWD/build" ${{ env.openssl_args }}
+      - run: CC=clang perl Configure darwin64-arm64 --prefix="$PWD/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
@@ -133,7 +133,7 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
-      - run: CC=clang perl Configure --prefix="$PWD/build" ${{ env.openssl_args }}
+      - run: CC=clang perl Configure darwin64-x86_64 --prefix="$PWD/build" ${{ env.openssl_args }}
       - run: perl configdata.pm --dump
       - run: make -j4
       - run: make install_sw
