@@ -3,14 +3,16 @@
  * Licensed under the MIT License
  */
 
-const AUTH_TOKEN := "pELerETRaVeYHEne"
-const ENDPOINT_URL := "https://api.thelang.io"
+import zip from "the/zip"
 
-fn request (url: str, path: str) buffer_Buffer {
-  data := zip.zip(path)
+export fn request (url: str, path: str) buffer_Buffer {
+  archivePath := path + ".zip"
+  zip(archivePath, path)
+
+  data := fs_readFileSync(archivePath)
 
   headers := [
-    request_Header{name: "authorization", value: AUTH_TOKEN},
+    request_Header{name: "authorization", value: "pELerETRaVeYHEne"},
     request_Header{name: "content-type", value: "application/octet-stream"}
   ]
 
@@ -18,7 +20,8 @@ fn request (url: str, path: str) buffer_Buffer {
   res := req.read()
   req.close()
 
-  fs_removeFileSync(path)
+  fs_rmSync(path)
+  fs_rmSync(archivePath)
 
   if res.status != 200 {
     print(res.data.str(), to: "stderr")
@@ -28,15 +31,11 @@ fn request (url: str, path: str) buffer_Buffer {
   return res.data
 }
 
-fn customCompile (
-  compiler: str,
-  action: str,
-  filePath: str,
-  outputPath: str
-) buffer_Buffer {
+export fn customCompile (compiler: str, action: str, filePath: str, outputPath: str) buffer_Buffer {
   isCompile := action == "compile"
   actionArg := isCompile ? "" : " " + action
   optionArg := " --output='" + outputPath + "'"
   stdout := process_runSync(compiler + actionArg + optionArg + " " + filePath)
+
   return stdout
 }

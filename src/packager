@@ -3,7 +3,11 @@
  * Licensed under the MIT License
  */
 
-obj Packager {
+import Package, Package_fromArgument from "./package"
+import PackageYAML, PackageYAML_parse from "./package-yaml"
+import removeDirectorySync from "./utils"
+
+export obj Packager {
   cwd: str
   mut tempPath: str
   mut _initialized: bool
@@ -14,13 +18,13 @@ obj Packager {
 
   fn init (mut self: ref Self) ref Self {
     if self._initialized {
-      RaiseError("tried packager init on initialized")
+      throw error_NewError("tried packager init on initialized")
     }
 
     if self.tempPath.empty {
       self.tempPath = path_tempDirectory()
       self._tempPathCreated = true
-      process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git '" + self.tempPath + "'")
+      process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git '" + self.tempPath + "' > /dev/null")
     }
 
     self._packageYAMLPath = self.cwd + path_SEP + "package.yml"
@@ -80,7 +84,7 @@ obj Packager {
 
   fn lock (self: ref Self) ref Self {
     self._checkInitialized("lock")
-    // todo v0.15 - generate package.lock file with hashes of packages
+    // todo v0.14 - generate package.lock file with hashes of packages
     return self
   }
 
@@ -118,7 +122,6 @@ obj Packager {
       package.init()
       package.update()
       self._packageYAML.packages.set(package.name, package.version)
-      print(package.name, package.version)
     }
 
     fs_writeFileSync(self._packageYAMLPath, self._packageYAML.stringify().toBuffer())
@@ -127,15 +130,22 @@ obj Packager {
 
   fn _checkInitialized (self: ref Self, callee: str) ref Self {
     if !self._initialized {
-      RaiseError("tried packager " + callee + " on non-initialized")
+      throw error_NewError("tried packager " + callee + " on non-initialized")
     }
 
     return self
   }
 }
 
-fn Packager_init (cwd := process_cwd()) Packager {
+export fn Packager_init (cwd := process_cwd()) Packager {
   mut result := Packager{cwd: cwd}
   result.init()
   return result
+}
+
+export fn Packager_installAll (cwd: str, tempPath: str) {
+  mut packager := Packager{cwd: cwd, tempPath: tempPath}
+  packager.init()
+  packager.installAll()
+  packager.deinit()
 }

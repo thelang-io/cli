@@ -3,17 +3,17 @@
  * Licensed under the MIT License
  */
 
-fn Config_getHomePath () str {
+export fn getHomePath () str {
   return process_home + path_SEP + ".the"
 }
 
-fn Config_getPackagesPath () str {
-  return Config_getHomePath() + path_SEP + "packages"
+export fn getPackagesPath () str {
+  return getHomePath() + path_SEP + "packages"
 }
 
-fn Config_initHome (packageAuthor := "") {
-  homePath := Config_getHomePath()
-  packagesPath := Config_getPackagesPath()
+export fn initHome (packageAuthor := "") {
+  homePath := getHomePath()
+  packagesPath := getPackagesPath()
 
   if !fs_existsSync(homePath) {
     fs_mkdirSync(homePath)
@@ -23,10 +23,7 @@ fn Config_initHome (packageAuthor := "") {
     fs_mkdirSync(packagesPath)
   }
 
-  if (
-    !packageAuthor.empty &&
-    !fs_existsSync(packagesPath + path_SEP + packageAuthor)
-  ) {
+  if !packageAuthor.empty && !fs_existsSync(packagesPath + path_SEP + packageAuthor) {
     fs_mkdirSync(packagesPath + path_SEP + packageAuthor)
   }
 }

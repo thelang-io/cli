@@ -3,8 +3,16 @@
  * Licensed under the MIT License
  */
 
+import Args from "the/args"
+import Packager_init from "./packager"
+import PackageYAML_parse from "./package-yaml"
+import Tester_init from "./tester"
+import chmodAddSync from "./utils"
+import command from "./command"
+
 const VERSION_NUM := "0.13.3"
 const VERSION_NAME := "Enidora"
+const os_ARCH := "x86_64"
 
 main {
   mut args := Args{lineLength: 70}
@@ -23,11 +31,7 @@ main {
     .command("test", "Test source directory", default: ".")
     .command("uninstall", "Uninstall package")
     .command("update", "Update package")
-    .command(
-      "upgrade",
-      "Self-upgrade CLI to newest version",
-      hasValue: false
-    )
+    .command("upgrade", "Self-upgrade CLI to newest version", hasValue: false)
 
     .option("arch", "Target arch, one of: arm64, x86_64", default: os_ARCH)
     .option("compiler", "Offline compiler to use instead of cloud servers")
@@ -39,17 +43,9 @@ main {
       alias: "o",
       default: defaultOutput
     )
-    .option(
-      "platform",
-      "Target platform, one of: linux, macos, windows",
-      default: os_NAME.lower
-    )
+    .option("platform", "Target platform, one of: linux, macos, windows", default: os_NAME.lower)
     .option("run-args", "Arguments to be passed when running executable")
-    .option(
-      "the",
-      "The Programming Language version, valid formats: latest, 1, 1.1, 1.1.1",
-      default: "latest"
-    )
+    .option("the", "The Programming Language version, valid formats: latest, 1, 1.1, 1.1.1", default: "latest")
     .option("version", "Print version", alias: "v", hasValue: false)
 
     .example("the -h")
@@ -142,7 +138,7 @@ main {
     } elif action == "install" {
       packager.install(actionArgument)
     } elif action == "uninstall" && actionArgument.empty {
-      RaiseError("To uninstall package please specify package id")
+      throw error_NewError("To uninstall package please specify package id")
     } elif action == "uninstall" {
       packager.uninstall(actionArgument)
     } elif action == "update" && actionArgument.empty {
@@ -164,7 +160,7 @@ main {
     packageYAMLPath := process_cwd() + path_SEP + "package.yml"
 
     if !fs_existsSync(packageYAMLPath) {
-      RaiseError("File `package.yml` was not found")
+      throw error_NewError("File `package.yml` was not found")
     }
 
     content := fs_readFileSync(packageYAMLPath).str()
@@ -179,7 +175,7 @@ main {
         print("  " + keys[i] + ": " + values[i])
       }
     } elif !packageYAML.scripts.has(actionArgument) {
-      RaiseError("Script `" + actionArgument + "` is missing in package.yml")
+      throw error_NewError("Script `" + actionArgument + "` is missing in package.yml")
     } else {
       script := packageYAML.scripts.get(actionArgument)
       stdout := process_runSync(script)

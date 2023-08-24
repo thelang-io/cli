@@ -3,7 +3,10 @@
  * Licensed under the MIT License
  */
 
-obj PackageYAML {
+import * as YAML from "the/yaml"
+import sortStrAsc from "./utils"
+
+export obj PackageYAML {
   mut name: str
   mut description: str
   mut version: str
@@ -68,117 +71,117 @@ obj PackageYAML {
   }
 }
 
-fn PackageYAML_parse (content: str) PackageYAML {
-  mut yaml := YAML_parse(content)
+export fn PackageYAML_parse (content: str) PackageYAML {
+  mut yaml := YAML.parse(content)
   mut result := PackageYAML{}
 
   loop yaml.hasNext() {
     node := yaml.next()
 
-    if node is YAMLNodeMapping {
+    if node is YAML.NodeMapping {
       mappingNode := node
-      nodeKey := YAMLNode_stringify(mappingNode.key)
+      nodeKey := YAML.Node_stringify(mappingNode.key)
 
       if nodeKey == "name" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.name = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.name = YAML.Node_stringify(val)
           } else {
-            RaiseError("Property `name` of package.yml expected to be a scalar")
+            throw error_NewError("Property `name` of package.yml expected to be a scalar")
           }
         }
       } elif nodeKey == "description" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.description = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.description = YAML.Node_stringify(val)
           } else {
-            RaiseError("Property `description` of package.yml expected to be a scalar")
+            throw error_NewError("Property `description` of package.yml expected to be a scalar")
           }
         }
       } elif nodeKey == "version" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.version = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.version = YAML.Node_stringify(val)
           } else {
-            RaiseError("Property `version` of package.yml expected to be a scalar")
+            throw error_NewError("Property `version` of package.yml expected to be a scalar")
           }
         }
       } elif nodeKey == "main" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.mainFile = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.mainFile = YAML.Node_stringify(val)
           } else {
-            RaiseError("Property `main` of package.yml expected to be a scalar")
+            throw error_NewError("Property `main` of package.yml expected to be a scalar")
           }
         }
       } elif nodeKey == "files" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeSeq {
+          if val is YAML.NodeSeq {
             items := val.items
             loop i := 0; i < items.len; i++ {
-              item: YAMLNode = items[i]
-              if item is YAMLNodeScalar {
-                file := YAMLNode_stringify(item)
+              item: YAML.Node = items[i]
+              if item is YAML.NodeScalar {
+                file := YAML.Node_stringify(item)
                 result.files.push(file)
               } else {
-                RaiseError("Property `files` of package.yml expected to be a sequence of scalars")
+                throw error_NewError("Property `files` of package.yml expected to be a sequence of scalars")
               }
             }
           } else {
-            RaiseError("Property `files` of package.yml expected to be a sequence")
+            throw error_NewError("Property `files` of package.yml expected to be a sequence")
           }
         }
       } elif nodeKey == "packages" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeMap {
+          if val is YAML.NodeMap {
             loop i := 0; i < val.mappings.len; i++ {
               mapping := val.mappings[i]
-              packageName := YAMLNode_stringify(mapping.key)
+              packageName := YAML.Node_stringify(mapping.key)
 
               if mapping.value == nil {
-                RaiseError("Property `packages[].version` of package.yml is required")
+                throw error_NewError("Property `packages[].version` of package.yml is required")
               } else {
                 val2 := mapping.value
-                if val2 is YAMLNodeScalar {
-                  packageVersion := YAMLNode_stringify(val2)
+                if val2 is YAML.NodeScalar {
+                  packageVersion := YAML.Node_stringify(val2)
                   result.packages.set(packageName, packageVersion)
                 } else {
-                  RaiseError("Property `packages[].version` of package.yml expected to be a scalar")
+                  throw error_NewError("Property `packages[].version` of package.yml expected to be a scalar")
                 }
               }
             }
           } else {
-            RaiseError("Property `packages` of package.yml expected to be a map")
+            throw error_NewError("Property `packages` of package.yml expected to be a map")
           }
         }
       } elif nodeKey == "scripts" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeMap {
+          if val is YAML.NodeMap {
             loop i := 0; i < val.mappings.len; i++ {
               mapping := val.mappings[i]
-              scriptName := YAMLNode_stringify(mapping.key)
+              scriptName := YAML.Node_stringify(mapping.key)
 
               if mapping.value == nil {
-                RaiseError("Property `scripts[].value` of package.yml is required")
+                throw error_NewError("Property `scripts[].value` of package.yml is required")
               } else {
                 val2 := mapping.value
-                if val2 is YAMLNodeScalar {
-                  scriptValue := YAMLNode_stringify(val2)
+                if val2 is YAML.NodeScalar {
+                  scriptValue := YAML.Node_stringify(val2)
                   result.scripts.set(scriptName, scriptValue)
                 } else {
-                  RaiseError("Property `scripts[].value` of package.yml expected to be a scalar")
+                  throw error_NewError("Property `scripts[].value` of package.yml expected to be a scalar")
                 }
               }
             }
           } else {
-            RaiseError("Property `scripts` of package.yml expected to be a map")
+            throw error_NewError("Property `scripts` of package.yml expected to be a map")
           }
         }
       }
@@ -186,9 +189,9 @@ fn PackageYAML_parse (content: str) PackageYAML {
   }
 
   if result.name.empty {
-    RaiseError("Property `name` of package.yml is required")
+    throw error_NewError("Property `name` of package.yml is required")
   } elif result.version.empty {
-    RaiseError("Property `version` of package.yml is required")
+    throw error_NewError("Property `version` of package.yml is required")
   }
 
   return result

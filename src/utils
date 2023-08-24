@@ -3,13 +3,13 @@
  * Licensed under the MIT License
  */
 
-fn chmodAddSync (path: str, mode: int) {
-  // todo v0.15 - replace with one-liner
+export fn chmodAddSync (path: str, mode: int) {
+  // todo v1.0 - replace with one-liner
   stat := fs_statSync(path)
   fs_chmodSync(path, stat.mode | mode)
 }
 
-fn removeDirectorySync (path: str) {
+export fn removeDirectorySync (path: str) {
   entries := fs_scandirSync(path)
   loop i := 0; i < entries.len; i++ {
     entryPath := path + path_SEP + entries[i]
@@ -22,7 +22,7 @@ fn removeDirectorySync (path: str) {
   fs_rmdirSync(path)
 }
 
-fn sortStrAsc (a: str, b: str) int {
+export fn sortStrAsc (a: str, b: str) int {
   if a.len == 0 && b.len == 0 {
     return 0
   } elif a.len == 0 || b.len == 0 {

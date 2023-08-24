@@ -3,19 +3,18 @@
  * Licensed under the MIT License
  */
 
-fn command (
-  compiler: str,
-  action: str,
-  path: str,
-  outputPath: str,
-  qs: str
-) {
+import customCompile, request from "./compile"
+import chmodAddSync from "./utils"
+
+const ENDPOINT_URL := "https://api.thelang.io"
+
+export fn command (compiler: str, action: str, path: str, outputPath: str, qs: str) {
   filePath := fs_realpathSync(path)
 
   if !fs_existsSync(filePath) {
-    RaiseError("File '" + filePath + "' does not exists")
+    throw error_NewError("File '" + filePath + "' does not exists")
   } elif !fs_isFileSync(filePath) {
-    RaiseError("Path '" + filePath + "' is not a file")
+    throw error_NewError("Path '" + filePath + "' is not a file")
   }
 
   if (action == "lex" || action == "parse") && compiler.empty {

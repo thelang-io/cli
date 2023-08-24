@@ -3,7 +3,9 @@
  * Licensed under the MIT License
  */
 
-obj PackageMetadata {
+import * as YAML from "the/yaml"
+
+export obj PackageMetadata {
   mut name: str
   mut description: str
   mut latestVersion: str
@@ -20,64 +22,64 @@ obj PackageMetadata {
   }
 }
 
-fn PackageMetadata_parse (content: str) PackageMetadata {
-  mut yaml := YAML_parse(content)
+export fn PackageMetadata_parse (content: str) PackageMetadata {
+  mut yaml := YAML.parse(content)
   mut result := PackageMetadata{}
 
   loop yaml.hasNext() {
     node := yaml.next()
 
-    if node is YAMLNodeMapping {
+    if node is YAML.NodeMapping {
       mappingNode := node
-      nodeKey := YAMLNode_stringify(mappingNode.key)
+      nodeKey := YAML.Node_stringify(mappingNode.key)
 
       if nodeKey == "name" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.name = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.name = YAML.Node_stringify(val)
           }
         }
       } elif nodeKey == "description" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.description = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.description = YAML.Node_stringify(val)
           }
         }
       } elif nodeKey == "latest_version" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.latestVersion = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.latestVersion = YAML.Node_stringify(val)
           }
         }
       } elif nodeKey == "repository" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.repository = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.repository = YAML.Node_stringify(val)
           }
         }
       } elif nodeKey == "repository_path" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeScalar {
-            result.repositoryPath = YAMLNode_stringify(val)
+          if val is YAML.NodeScalar {
+            result.repositoryPath = YAML.Node_stringify(val)
           }
         }
       } elif nodeKey == "versions" {
         if mappingNode.value != nil {
           val := mappingNode.value
-          if val is YAMLNodeMap {
+          if val is YAML.NodeMap {
             loop i := 0; i < val.mappings.len; i++ {
               mapping := val.mappings[i]
-              versionName := YAMLNode_stringify(mapping.key)
+              versionName := YAML.Node_stringify(mapping.key)
 
               if mapping.value != nil {
                 val2 := mapping.value
-                if val2 is YAMLNodeScalar {
-                  versionHash := YAMLNode_stringify(val2)
+                if val2 is YAML.NodeScalar {
+                  versionHash := YAML.Node_stringify(val2)
                   result.versions.set(versionName, versionHash)
                 }
               }

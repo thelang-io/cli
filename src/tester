@@ -3,7 +3,7 @@
  * Licensed under the MIT License
  */
 
-obj Tester {
+export obj Tester {
   cwd: str
   targetPath: str
   excludePaths: str[]
@@ -18,7 +18,7 @@ obj Tester {
     realFullPath := fs_realpathSync(fullPath)
 
     if !fs_existsSync(realFullPath) {
-      RaiseError("Path '" + realFullPath + "' doesn't exists")
+      throw error_NewError("Path '" + realFullPath + "' doesn't exists")
     }
 
     mut files: str[]
@@ -60,7 +60,7 @@ obj Tester {
   }
 }
 
-fn Tester_init (targetPath: str, excludePaths: str[], cwd := process_cwd()) Tester {
+export fn Tester_init (targetPath: str, excludePaths: str[], cwd := process_cwd()) Tester {
   mut result := Tester{
     cwd: cwd,
     targetPath: targetPath,
