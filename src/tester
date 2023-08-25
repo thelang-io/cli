@@ -3,17 +3,20 @@
  * Licensed under the MIT License
  */
 
+import parse from "the/parser"
+import collectImportPaths, collectTestFunctionNames from "./parser"
+import excludePaths, removeDirectorySync, scandirDeepSync from "./utils"
+
 export obj Tester {
   cwd: str
   targetPath: str
-  excludePaths: str[]
+  exclude: str[]
   mut inputPath: str
   mut outputDir: str
   mut outputPath: str
-  mut _includes: str[]
-  mut _tests: str[]
 
   fn init (mut self: ref Self) {
+    cwdLen := self.cwd.len
     fullPath := (fs_isAbsoluteSync(self.targetPath) ? "" : self.cwd + path_SEP) + self.targetPath
     realFullPath := fs_realpathSync(fullPath)
 
@@ -21,38 +24,57 @@ export obj Tester {
       throw error_NewError("Path '" + realFullPath + "' doesn't exists")
     }
 
-    mut files: str[]
-
-    if fs_isDirectorySync(realFullPath) {
-      files = Builder_collectFiles(realFullPath, self.excludePaths)
-      packageCollection := Builder_collectPackagesFiles(self.cwd)
-      files.merge(packageCollection[0])
-    } else {
-      files.push(realFullPath)
-    }
-
-    mut comments := ""
-    mut content := ""
-    mut definitions := ""
-    mut functions := ""
-    mut testNames: str[]
-    mut result := comments + content + definitions + functions
-
-    result += "main {" + os_EOL
-    result += "  mut tests := Tests{}" + os_EOL
-
-    loop i := 0; i < testNames.len; i++ {
-      testName := testNames[i]
-      result += "  tests.register(\"" + testName + "\", TEST_" + testName + ")" + os_EOL
-    }
-
-    result += "  tests.run(process_args)" + os_EOL
-    result += "}" + os_EOL
-
     self.outputDir = path_tempDirectory()
-    self.inputPath = self.outputDir + path_SEP + "result"
+    self.inputPath = self.outputDir + path_SEP + "__the__main__"
+    allFiles := fs_isDirectorySync(realFullPath) ? scandirDeepSync(realFullPath) : [realFullPath]
+    files := excludePaths(allFiles, self.exclude)
+    mut tests: str[][str]
+
+    loop i := 0; i < files.len; i++ {
+      f := parse(files[i])
+      relativePath := "." + f.path.slice(cwdLen)
+      fnNames := collectTestFunctionNames(f)
+      fileContent := fs_readFileSync(f.path).str()
+
+      if !fnNames.empty {
+        tests.set(relativePath, fnNames)
+        fileContent = "import EXPECT_EQ from \"the/testing\"" + os_EOL + fileContent
+      }
+
+      fs_writeFileSync(self.outputDir + relativePath, fileContent.toBuffer())
+      importPaths := excludePaths(collectImportPaths(f), self.exclude)
+
+      loop j := 0; j < importPaths.len; j++ {
+        // todo the same as above
+      }
+    }
+
+    testsKeys := tests.keys
+    mut mainFileImports := "import Tests from \"the/testing\"" + os_EOL
+    mut mainFile := "main {" + os_EOL + os_EOL
+    mainFile += "  mut tests := Tests{}" + os_EOL
+
+    loop i := 0; i < testsKeys.len; i++ {
+      testsKey := testsKeys[i]
+      mainFileImports += "import "
+      testNames := tests.get(testsKey)
+
+      loop j := 0; j < testNames.len; j++ {
+        testName := testNames[j]
+        testFnName := "TEST_" + testName
+        mainFileImports += (j == 0 ? "" : ", ") + testFnName
+        mainFile += "  tests.register(\"" + testName + "\", " + testFnName + ")" + os_EOL
+      }
+
+      mainFileImports += "from \"" + testsKey + "\"" + os_EOL
+    }
+
+    mainFile += "  tests.run(process_args)" + os_EOL
+    mainFile += "}" + os_EOL
+
+    mainContent := mainFileImports + os_EOL + mainFile
     self.outputPath = self.outputDir + path_SEP + "a." + (os_NAME == "Windows" ? "exe" : "out")
-    fs_writeFileSync(self.inputPath, result.toBuffer())
+    fs_writeFileSync(self.inputPath, mainContent.toBuffer())
   }
 
   fn deinit (self: ref Self) {
@@ -60,11 +82,11 @@ export obj Tester {
   }
 }
 
-export fn Tester_init (targetPath: str, excludePaths: str[], cwd := process_cwd()) Tester {
+export fn Tester_init (targetPath: str, exclude: str[], cwd := process_cwd()) Tester {
   mut result := Tester{
     cwd: cwd,
     targetPath: targetPath,
-    excludePaths: excludePaths
+    exclude: exclude
   }
 
   result.init()

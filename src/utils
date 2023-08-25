@@ -9,9 +9,31 @@ export fn chmodAddSync (path: str, mode: int) {
   fs_chmodSync(path, stat.mode | mode)
 }
 
+export fn excludePaths (paths: str[], exclude: str[]) str[] {
+  mut result: str[]
+
+  loop i := paths.len - 1; i >= 0; i-- {
+    p := paths[i]
+    if !exclude.contains(p) {
+      result.push(p)
+    }
+  }
+
+  return result
+}
+
+export fn mapStr (arr: str[], cb: (str, int) -> str) str[] {
+  l := arr.len
+  mut result := arr
+  loop i := 0; i < l; i++ {
+    result[i] = cb(result[i], i)
+  }
+  return result
+}
+
 export fn removeDirectorySync (path: str) {
   entries := fs_scandirSync(path)
-  loop i := 0; i < entries.len; i++ {
+  loop i := entries.len - 1; i >= 0; i-- {
     entryPath := path + path_SEP + entries[i]
     if fs_isDirectorySync(entryPath) {
       removeDirectorySync(entryPath)
@@ -22,20 +44,7 @@ export fn removeDirectorySync (path: str) {
   fs_rmdirSync(path)
 }
 
-export fn sortStrAsc (a: str, b: str) int {
-  if a.len == 0 && b.len == 0 {
-    return 0
-  } elif a.len == 0 || b.len == 0 {
-    return a.len == 0 ? -1 : 1
-  }
-
-  len := a.len > b.len ? b.len : a.len
-
-  loop i := 0; i < len; i++ {
-    if a[i] != b[i] {
-      return a[i].byte > b[i].byte ? 1 : -1
-    }
-  }
-
-  return a.len == b.len ? 0 : a.len > b.len ? 1 : -1
+export fn scandirDeepSync (path: str) str[] {
+  // todo canonical needed
+  return []
 }

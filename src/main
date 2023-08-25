@@ -7,7 +7,7 @@ import Args from "the/args"
 import Packager_init from "./packager"
 import PackageYAML_parse from "./package-yaml"
 import Tester_init from "./tester"
-import chmodAddSync from "./utils"
+import chmodAddSync, mapStr from "./utils"
 import command from "./command"
 
 const VERSION_NUM := "0.13.3"
@@ -96,17 +96,13 @@ main {
     } elif arg.option == "compiler" {
       compiler = arg.value
     } elif arg.option == "exclude" {
-      mut otherExcludePaths := arg.value.split(",")
+      paths := mapStr(arg.value.split(","), (it: str, idx: int) -> str {
+        return it.trim()
+      })
 
-      loop j := 0; j < otherExcludePaths.len; j++ {
-        otherExcludePaths[j] = otherExcludePaths[j].trim()
-      }
-
-      excludePaths.merge(otherExcludePaths)
+      excludePaths.merge(paths)
     } elif arg.option == "output" {
-      outputPath = fs_isAbsoluteSync(arg.value)
-        ? arg.value
-        : process_cwd() + path_SEP + arg.value
+      outputPath = fs_isAbsoluteSync(arg.value) ? arg.value : process_cwd() + path_SEP + arg.value
     } elif arg.option == "platform" {
       platform = arg.value
     } elif arg.option == "run-args" {
@@ -149,6 +145,8 @@ main {
 
     packager.deinit()
   } elif action == "run" {
+    // todo prepare directory inputPath
+    // todo create object Runner
     command(compiler, "compile", actionArgument, outputPath, qs)
 
     cmd := outputPath + (runArgs.empty ? "" : " ") + runArgs

@@ -4,7 +4,6 @@
  */
 
 import * as YAML from "the/yaml"
-import sortStrAsc from "./utils"
 
 export obj PackageYAML {
   mut name: str
@@ -47,7 +46,7 @@ export obj PackageYAML {
       code += code.empty ? "" : os_EOL
       code += "packages:" + os_EOL
       mut keys := self.packages.keys
-      keys.sort(sortStrAsc)
+      keys.sort((a: str, b: str) -> int { return a > b })
 
       loop i := 0; i < keys.len; i++ {
         key := keys[i]
@@ -59,7 +58,7 @@ export obj PackageYAML {
       code += code.empty ? "" : os_EOL
       code += "scripts:" + os_EOL
       mut keys := self.scripts.keys
-      keys.sort(sortStrAsc)
+      keys.sort((a: str, b: str) -> int { return a > b })
 
       loop i := 0; i < keys.len; i++ {
         key := keys[i]

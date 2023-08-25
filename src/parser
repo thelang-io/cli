@@ -1,0 +1,42 @@
+/*!
+ * Copyright (c) Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+import File, FunctionDeclaration, ImportDeclaration, Statement from "the/parser"
+
+export fn collectImportPaths (file: ref File) str[] {
+  mut result: str[]
+
+  file.program.traverse((it: Statement) -> void {
+    if !(it.body is ImportDeclaration) {
+      return
+    }
+
+    source := (it.body as ImportDeclaration).source
+
+    if [".", "/"].contains(source.slice(0, 1)) {
+      result.push(source)
+    }
+  })
+
+  return result
+}
+
+export fn collectTestFunctionNames (file: ref File) str[] {
+  mut result: str[]
+
+  file.program.traverse((it: Statement) -> void {
+    if !(it.body is FunctionDeclaration) {
+      return
+    }
+
+    statement := it.body as FunctionDeclaration
+
+    if statement.id.slice(0, 5) == "TEST_" {
+      result.push(statement.id.slice(5))
+    }
+  })
+
+  return result
+}
