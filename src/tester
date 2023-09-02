@@ -33,8 +33,8 @@ export obj Tester {
     loop i := 0; i < files.len; i++ {
       f := parse(files[i])
       relativePath := "." + f.path.slice(cwdLen)
-      fnNames := collectTestFunctionNames(f)
-      fileContent := fs_readFileSync(f.path).str()
+      fnNames := collectTestFunctionNames(ref f)
+      mut fileContent := fs_readFileSync(f.path).str()
 
       if !fnNames.empty {
         tests.set(relativePath, fnNames)
@@ -42,7 +42,7 @@ export obj Tester {
       }
 
       fs_writeFileSync(self.outputDir + relativePath, fileContent.toBuffer())
-      importPaths := excludePaths(collectImportPaths(f), self.exclude)
+      importPaths := excludePaths(collectImportPaths(ref f), self.exclude)
 
       loop j := 0; j < importPaths.len; j++ {
         // todo the same as above
