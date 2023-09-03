@@ -11,22 +11,14 @@ panic () {
 }
 
 main () {
+  install_dir="$HOME/.the/bin"
+  install_path="$install_dir/the"
+  [[ ! -d "$install_dir" ]] && mkdir -p "$install_dir"
+
   if [[ "$OSTYPE" == "darwin"* ]]; then
     cdn_url="https://cdn.thelang.io/cli-core-macos-$(uname -m)"
-    mkdir -p "$HOME/.the/bin"
-    install_path="$HOME/.the/bin/the"
-  elif
-    [[ "$OSTYPE" == "cygwin" ]] ||
-    [[ "$OSTYPE" == "msys" ]] ||
-    [[ "$OSTYPE" == "win32" ]]
-  then
-    cdn_url="https://cdn.thelang.io/cli-core-windows"
-    install_path="C:/Program Files/The/the.exe"
-  elif
-    [[ "$OSTYPE" == "linux"* ]]
-  then
+  elif [[ "$OSTYPE" == "linux"* ]]; then
     cdn_url="https://cdn.thelang.io/cli-core-linux"
-    install_path="/usr/bin/the"
   else
     panic "unknown platform"
   fi
@@ -37,6 +29,9 @@ main () {
 
   if [[ "$OSTYPE" == "darwin"* ]]; then
     profile_file="$HOME/.zprofile"
+    [[ ! -e "$profile_file" ]] && profile_file="$HOME/.bash_profile"
+    [[ ! -e "$profile_file" ]] && profile_file="$HOME/.profile"
+
     profile_content="export PATH=\"\$PATH:$HOME/.the/bin\" # Added by the-install (https://docs.thelang.io/install)"
 
     if [ -s "$profile_file" ] && [ -n "$(tail -c 1 < "$profile_file")" ]; then

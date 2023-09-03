@@ -28,7 +28,7 @@ function Set-SystemEnv ([string] $Name, [string] $Value) {
 
 function main {
   $DownloadUrl = 'https://cdn.thelang.io/cli-core-windows'
-  $InstallDir = 'C:\Program Files\The'
+  $InstallDir = "$env:UserProfile\The"
   $InstallPath = "$InstallDir\the.exe"
 
   if (Test-Path -Path $InstallDir) {

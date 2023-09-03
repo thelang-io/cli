@@ -76,17 +76,21 @@ main {
 
     if (
       arg.command == "compile" ||
-      arg.command == "install" ||
       arg.command == "lex" ||
       arg.command == "parse" ||
       arg.command == "run" ||
+      arg.command == "test"
+    ) {
+      action = arg.command
+      actionArgument = fs_isAbsoluteSync(arg.value) ? arg.value : process_cwd() + path_SEP + arg.value
+    } elif (
+      arg.command == "install" ||
       arg.command == "script" ||
-      arg.command == "test" ||
       arg.command == "uninstall" ||
       arg.command == "update"
     ) {
       action = arg.command
-      actionArgument = fs_isAbsoluteSync(arg.value) ? arg.value : process_cwd() + path_SEP + arg.value
+      actionArgument = arg.value
     } elif arg.command == "upgrade" {
       action = arg.command
     } elif arg.option == "help" || arg.option == "version" {
@@ -126,11 +130,14 @@ main {
     mut runner := Runner_init(actionArgument, excludePaths)
     command(compiler, commandAction, runner.inputPath, outputPath, qs)
 
-    cmd := outputPath + (action == "run" && !runArgs.empty ? " " + runArgs : "")
-    stdout := process_runSync(cmd)
-    print(stdout.str(), terminator: "")
+    if action == "run" {
+      cmd := outputPath + (runArgs.empty ? "" : " " + runArgs)
+      stdout := process_runSync(cmd)
+      print(stdout.str(), terminator: "")
+    }
 
     runner.deinit()
+    fs_rmSync(outputPath)
   } elif action == "install" || action == "uninstall" || action == "update" {
     mut packager := Packager_init()
 
@@ -183,13 +190,12 @@ main {
 
     tester.deinit()
   } elif action == "upgrade" {
-    mut executablePath := "/usr/local/bin/the"
+    mut executablePath := process_home + "/.the/bin/the"
     mut url := "https://cdn.thelang.io/cli-core-" + os_NAME.lower
 
     if os_NAME == "Windows" {
-      executablePath = "C:/Program Files/The/the.exe"
+      executablePath = process_home + "/The/bin/the"
     } elif os_NAME == "macOS" {
-      executablePath = process_home + "/.the/bin/the"
       url = "https://cdn.thelang.io/cli-core-" + os_NAME.lower + "-" + os_ARCH
     }
 

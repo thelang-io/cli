@@ -11,6 +11,7 @@ import
   ImportDeclaration,
   Program_traverse,
   Statement,
+  StringLiteral,
   parse
 from "the/parser"
 
@@ -18,7 +19,7 @@ export fn collectTestFunctionNames (path: str) str[] {
   mut file := parse(path)
   mut result: str[]
 
-  Program_traverse(file.program, (it: Statement) -> void {
+  Program_traverse(ref file.program, (it: Statement) -> void {
     if !(it.body is FunctionDeclaration) {
       return
     }
@@ -35,6 +36,7 @@ export fn collectTestFunctionNames (path: str) str[] {
 }
 
 export fn collectUsedPaths (paths: str[]) str[] {
+  cwd := process_cwd()
   mut result: str[]
 
   loop i := 0; i < paths.len; i++ {
@@ -43,16 +45,18 @@ export fn collectUsedPaths (paths: str[]) str[] {
 
     mut importPaths: str[]
 
-    Program_traverse(file.program, (it: Statement) -> void {
+    Program_traverse(ref file.program, (it: Statement) -> void {
       if !(it.body is ImportDeclaration) {
         return
       }
 
       statement := it.body as ImportDeclaration
-      source := Expression_toText(statement.source)
+      sourceLiteral := statement.source.body as StringLiteral
+      source := sourceLiteral.value
 
       if [".", "/"].contains(source.slice(0, 1)) {
-        importPaths.push(source)
+        sourcePath := fs_isAbsoluteSync(source) ? source : cwd + path_SEP + source
+        importPaths.push(sourcePath)
       }
     })
 
