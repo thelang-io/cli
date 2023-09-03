@@ -3,9 +3,8 @@
  * Licensed under the MIT License
  */
 
-import parse from "the/parser"
-import collectImportPaths, collectTestFunctionNames from "./parser"
-import excludePaths, removeDirectorySync, scandirDeepSync from "./utils"
+import collectTestFunctionNames, collectUsedPaths from "./parser"
+import ensurePathDirectory, excludePaths, removeDirectorySync, scandirDeepSync from "./utils"
 
 export obj Tester {
   cwd: str
@@ -27,46 +26,33 @@ export obj Tester {
     self.outputDir = path_tempDirectory()
     self.inputPath = self.outputDir + path_SEP + "__the__main__"
     allFiles := fs_isDirectorySync(realFullPath) ? scandirDeepSync(realFullPath) : [realFullPath]
-    files := excludePaths(allFiles, self.exclude)
-    mut tests: str[][str]
-
-    loop i := 0; i < files.len; i++ {
-      f := parse(files[i])
-      relativePath := "." + f.path.slice(cwdLen)
-      fnNames := collectTestFunctionNames(ref f)
-      mut fileContent := fs_readFileSync(f.path).str()
-
-      if !fnNames.empty {
-        tests.set(relativePath, fnNames)
-        fileContent = "import EXPECT_EQ from \"the/testing\"" + os_EOL + fileContent
-      }
-
-      fs_writeFileSync(self.outputDir + relativePath, fileContent.toBuffer())
-      importPaths := excludePaths(collectImportPaths(ref f), self.exclude)
-
-      loop j := 0; j < importPaths.len; j++ {
-        // todo the same as above
-      }
-    }
-
-    testsKeys := tests.keys
+    files := excludePaths(collectUsedPaths(allFiles), self.exclude)
     mut mainFileImports := "import Tests from \"the/testing\"" + os_EOL
-    mut mainFile := "main {" + os_EOL + os_EOL
+    mut mainFile := "main {" + os_EOL
     mainFile += "  mut tests := Tests{}" + os_EOL
 
-    loop i := 0; i < testsKeys.len; i++ {
-      testsKey := testsKeys[i]
-      mainFileImports += "import "
-      testNames := tests.get(testsKey)
+    loop i := 0; i < files.len; i++ {
+      file := files[i] as str
+      relativePath := file.slice(cwdLen)
+      fnNames := collectTestFunctionNames(file)
+      mut fileContent := fs_readFileSync(file).str()
 
-      loop j := 0; j < testNames.len; j++ {
-        testName := testNames[j]
-        testFnName := "TEST_" + testName
-        mainFileImports += (j == 0 ? "" : ", ") + testFnName
-        mainFile += "  tests.register(\"" + testName + "\", " + testFnName + ")" + os_EOL
+      if !fnNames.empty {
+        fileContent = "import EXPECT_EQ from \"the/testing\"" + os_EOL + fileContent
+        mainFileImports += "import "
+
+        loop j := 0; j < fnNames.len; j++ {
+          testName := fnNames[j]
+          testFnName := "TEST_" + testName
+          mainFileImports += (j == 0 ? "" : ", ") + testFnName
+          mainFile += "  tests.register(\"" + testName + "\", " + testFnName + ")" + os_EOL
+        }
+
+        mainFileImports += " from \"." + relativePath + "\"" + os_EOL
       }
 
-      mainFileImports += "from \"" + testsKey + "\"" + os_EOL
+      ensurePathDirectory(self.outputDir + relativePath)
+      fs_writeFileSync(self.outputDir + relativePath, fileContent.toBuffer())
     }
 
     mainFile += "  tests.run(process_args)" + os_EOL

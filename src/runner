@@ -1,0 +1,54 @@
+/*!
+ * Copyright (c) Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+import collectUsedPaths from "./parser"
+import ensurePathDirectory, excludePaths, removeDirectorySync, scandirDeepSync from "./utils"
+
+export obj Runner {
+  cwd: str
+  targetPath: str
+  exclude: str[]
+  mut inputPath: str
+  mut outputDir: str
+
+  fn init (mut self: ref Self) {
+    cwdLen := self.cwd.len
+    fullPath := (fs_isAbsoluteSync(self.targetPath) ? "" : self.cwd + path_SEP) + self.targetPath
+    realFullPath := fs_realpathSync(fullPath)
+
+    if !fs_existsSync(realFullPath) {
+      throw error_NewError("Path '" + realFullPath + "' doesn't exists")
+    }
+
+    self.outputDir = path_tempDirectory()
+    self.inputPath = self.outputDir + self.targetPath.slice(cwdLen)
+    files := excludePaths(collectUsedPaths([realFullPath]), self.exclude)
+
+    loop i := 0; i < files.len; i++ {
+      file := files[i] as str
+      relativePath := file.slice(cwdLen)
+      ensurePathDirectory(self.outputDir + relativePath)
+      fs_copyFileSync(file, self.outputDir + relativePath)
+    }
+
+    ensurePathDirectory(self.outputDir + self.targetPath.slice(cwdLen))
+    fs_copyFileSync(self.targetPath, self.inputPath)
+  }
+
+  fn deinit (self: ref Self) {
+    removeDirectorySync(self.outputDir)
+  }
+}
+
+export fn Runner_init (targetPath: str, exclude: str[], cwd := process_cwd()) Runner {
+  mut result := Runner{
+    cwd: cwd,
+    targetPath: targetPath,
+    exclude: exclude
+  }
+
+  result.init()
+  return result
+}

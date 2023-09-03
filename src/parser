@@ -10,29 +10,12 @@ import
   FunctionDeclaration,
   ImportDeclaration,
   Program_traverse,
-  Statement
+  Statement,
+  parse
 from "the/parser"
 
-export fn collectImportPaths (file: ref File) str[] {
-  mut result: str[]
-
-  Program_traverse(file.program, (it: Statement) -> void {
-    if !(it.body is ImportDeclaration) {
-      return
-    }
-
-    statement := it.body as ImportDeclaration
-    source := Expression_toText(statement.source)
-
-    if [".", "/"].contains(source.slice(0, 1)) {
-      result.push(source)
-    }
-  })
-
-  return result
-}
-
-export fn collectTestFunctionNames (file: ref File) str[] {
+export fn collectTestFunctionNames (path: str) str[] {
+  mut file := parse(path)
   mut result: str[]
 
   Program_traverse(file.program, (it: Statement) -> void {
@@ -47,6 +30,36 @@ export fn collectTestFunctionNames (file: ref File) str[] {
       result.push(name.slice(5))
     }
   })
+
+  return result
+}
+
+export fn collectUsedPaths (paths: str[]) str[] {
+  mut result: str[]
+
+  loop i := 0; i < paths.len; i++ {
+    file := parse(paths[i])
+    result.push(file.path)
+
+    mut importPaths: str[]
+
+    Program_traverse(file.program, (it: Statement) -> void {
+      if !(it.body is ImportDeclaration) {
+        return
+      }
+
+      statement := it.body as ImportDeclaration
+      source := Expression_toText(statement.source)
+
+      if [".", "/"].contains(source.slice(0, 1)) {
+        importPaths.push(source)
+      }
+    })
+
+    if !importPaths.empty {
+      result.merge(collectUsedPaths(importPaths))
+    }
+  }
 
   return result
 }

@@ -6,13 +6,13 @@
 import Args from "the/args"
 import Packager_init from "./packager"
 import PackageYAML_parse from "./package-yaml"
+import Runner_init from "./runner"
 import Tester_init from "./tester"
 import chmodAddSync, mapStr from "./utils"
 import command from "./command"
 
 const VERSION_NUM := "0.13.3"
 const VERSION_NAME := "Enidora"
-const os_ARCH := "x86_64"
 
 main {
   mut args := Args{lineLength: 70}
@@ -86,7 +86,7 @@ main {
       arg.command == "update"
     ) {
       action = arg.command
-      actionArgument = arg.value
+      actionArgument = fs_isAbsoluteSync(arg.value) ? arg.value : process_cwd() + path_SEP + arg.value
     } elif arg.command == "upgrade" {
       action = arg.command
     } elif arg.option == "help" || arg.option == "version" {
@@ -96,10 +96,7 @@ main {
     } elif arg.option == "compiler" {
       compiler = arg.value
     } elif arg.option == "exclude" {
-      paths := mapStr(arg.value.split(","), (it: str, idx: int) -> str {
-        return it.trim()
-      })
-
+      paths := mapStr(arg.value.split(","), (it: str, idx: int) -> str { return it.trim() })
       excludePaths.merge(paths)
     } elif arg.option == "output" {
       outputPath = fs_isAbsoluteSync(arg.value) ? arg.value : process_cwd() + path_SEP + arg.value
@@ -124,8 +121,16 @@ main {
 
   qs := "?v=" + version + "&p=" + platform + (arch.empty ? arch : "&a=" + arch)
 
-  if action == "compile" || action == "lex" || action == "parse" {
-    command(compiler, action, actionArgument, outputPath, qs)
+  if action == "compile" || action == "lex" || action == "parse" || action == "run" {
+    commandAction := action == "run" ? "compile" : action
+    mut runner := Runner_init(actionArgument, excludePaths)
+    command(compiler, commandAction, runner.inputPath, outputPath, qs)
+
+    cmd := outputPath + (action == "run" && !runArgs.empty ? " " + runArgs : "")
+    stdout := process_runSync(cmd)
+    print(stdout.str(), terminator: "")
+
+    runner.deinit()
   } elif action == "install" || action == "uninstall" || action == "update" {
     mut packager := Packager_init()
 
@@ -144,16 +149,6 @@ main {
     }
 
     packager.deinit()
-  } elif action == "run" {
-    // todo prepare directory inputPath
-    // todo create object Runner
-    command(compiler, "compile", actionArgument, outputPath, qs)
-
-    cmd := outputPath + (runArgs.empty ? "" : " ") + runArgs
-    stdout := process_runSync(cmd)
-
-    fs_rmSync(outputPath)
-    print(stdout.str(), terminator: "")
   } elif action == "script" {
     packageYAMLPath := process_cwd() + path_SEP + "package.yml"
 

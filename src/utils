@@ -9,6 +9,11 @@ export fn chmodAddSync (path: str, mode: int) {
   fs_chmodSync(path, stat.mode | mode)
 }
 
+export fn ensurePathDirectory (path: str) {
+  dir := path_dirname(path)
+  if !fs_existsSync(dir) { fs_mkdirSync(dir) }
+}
+
 export fn excludePaths (paths: str[], exclude: str[]) str[] {
   mut result: str[]
 
