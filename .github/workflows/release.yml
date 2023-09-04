@@ -24,24 +24,24 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli                            --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
-      - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli@latest                     --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
-      - run: aws s3 cp install.sh       s3://${{ secrets.AWS_S3_BUCKET }}/cli@$VERSION                   --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
-      - run: aws s3 cp install.ps1      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win                        --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
-      - run: aws s3 cp install.ps1      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@latest                 --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
-      - run: aws s3 cp install.ps1      s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@$VERSION               --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
-      - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux                 --content-type application/octet-stream
-      - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux@latest          --content-type application/octet-stream
-      - run: aws s3 cp cli-core-linux   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux@$VERSION        --content-type application/octet-stream
-      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-arm64           --content-type application/octet-stream
-      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-arm64@latest    --content-type application/octet-stream
-      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-arm64@$VERSION  --content-type application/octet-stream
-      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-x86_64          --content-type application/octet-stream
-      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-x86_64@latest   --content-type application/octet-stream
-      - run: aws s3 cp cli-core-macos   s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-x86_64@$VERSION --content-type application/octet-stream
-      - run: aws s3 cp cli-core-windows s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows               --content-type application/octet-stream
-      - run: aws s3 cp cli-core-windows s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows@latest        --content-type application/octet-stream
-      - run: aws s3 cp cli-core-windows s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows@$VERSION      --content-type application/octet-stream
+      - run: aws s3 cp install.sh            s3://${{ secrets.AWS_S3_BUCKET }}/cli                            --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
+      - run: aws s3 cp install.sh            s3://${{ secrets.AWS_S3_BUCKET }}/cli@latest                     --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
+      - run: aws s3 cp install.sh            s3://${{ secrets.AWS_S3_BUCKET }}/cli@$VERSION                   --content-type text/plain --content-disposition "attachment;filename=the-install.sh"
+      - run: aws s3 cp install.ps1           s3://${{ secrets.AWS_S3_BUCKET }}/cli-win                        --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
+      - run: aws s3 cp install.ps1           s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@latest                 --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
+      - run: aws s3 cp install.ps1           s3://${{ secrets.AWS_S3_BUCKET }}/cli-win@$VERSION               --content-type text/plain --content-disposition "attachment;filename=the-install.ps1"
+      - run: aws s3 cp cli-core-linux        s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux                 --content-type application/octet-stream
+      - run: aws s3 cp cli-core-linux        s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux@latest          --content-type application/octet-stream
+      - run: aws s3 cp cli-core-linux        s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-linux@$VERSION        --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos-arm64  s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-arm64           --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos-arm64  s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-arm64@latest    --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos-arm64  s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-arm64@$VERSION  --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos-x86_64 s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-x86_64          --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos-x86_64 s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-x86_64@latest   --content-type application/octet-stream
+      - run: aws s3 cp cli-core-macos-x86_64 s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-macos-x86_64@$VERSION --content-type application/octet-stream
+      - run: aws s3 cp cli-core-windows      s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows               --content-type application/octet-stream
+      - run: aws s3 cp cli-core-windows      s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows@latest        --content-type application/octet-stream
+      - run: aws s3 cp cli-core-windows      s3://${{ secrets.AWS_S3_BUCKET }}/cli-core-windows@$VERSION      --content-type application/octet-stream
       - run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }} \
