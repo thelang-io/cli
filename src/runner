@@ -4,7 +4,7 @@
  */
 
 import collectUsedPaths from "./parser"
-import ensurePathDirectory, excludePaths, removeDirectorySync, scandirDeepSync from "./utils"
+import ensurePathDirectory, excludePaths, removeDirectorySync from "./utils"
 
 export obj Runner {
   cwd: str
@@ -35,6 +35,12 @@ export obj Runner {
 
     ensurePathDirectory(self.outputDir + self.targetPath.slice(cwdLen))
     fs_copyFileSync(self.targetPath, self.inputPath)
+
+    packageYamlPath := self.cwd + path_SEP + "package.yml"
+
+    if fs_existsSync(packageYamlPath) {
+      fs_copyFileSync(packageYamlPath, self.outputDir + path_SEP + "package.yml")
+    }
   }
 
   fn deinit (self: ref Self) {

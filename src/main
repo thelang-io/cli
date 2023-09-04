@@ -15,6 +15,7 @@ const VERSION_NUM := "0.13.3"
 const VERSION_NAME := "Enidora"
 
 main {
+  cwd := process_cwd()
   mut args := Args{lineLength: 70}
   defaultOutput := os_NAME == "Windows" ? "a.exe" : "a.out"
 
@@ -82,7 +83,7 @@ main {
       arg.command == "test"
     ) {
       action = arg.command
-      actionArgument = fs_isAbsoluteSync(arg.value) ? arg.value : process_cwd() + path_SEP + arg.value
+      actionArgument = fs_isAbsoluteSync(arg.value) ? arg.value : cwd + path_SEP + arg.value
     } elif (
       arg.command == "install" ||
       arg.command == "script" ||
@@ -103,7 +104,7 @@ main {
       paths := mapStr(arg.value.split(","), (it: str, idx: int) -> str { return it.trim() })
       excludePaths.merge(paths)
     } elif arg.option == "output" {
-      outputPath = fs_isAbsoluteSync(arg.value) ? arg.value : process_cwd() + path_SEP + arg.value
+      outputPath = fs_isAbsoluteSync(arg.value) ? arg.value : cwd + path_SEP + arg.value
     } elif arg.option == "platform" {
       platform = arg.value
     } elif arg.option == "run-args" {
@@ -123,12 +124,15 @@ main {
     process_exit(0)
   }
 
-  qs := "?v=" + version + "&p=" + platform + (arch.empty ? arch : "&a=" + arch)
+  mut qs := "?v=" + version
+  qs += "&p=" + platform
+  qs += (arch.empty ? arch : "&a=" + arch)
 
   if action == "compile" || action == "lex" || action == "parse" || action == "run" {
     commandAction := action == "run" ? "compile" : action
     mut runner := Runner_init(actionArgument, excludePaths)
-    command(compiler, commandAction, runner.inputPath, outputPath, qs)
+    qs += "&m=" + actionArgument.slice(cwd.len + path_SEP.len)
+    command(compiler, commandAction, runner.outputDir, outputPath, qs)
 
     if action == "run" {
       cmd := outputPath + (runArgs.empty ? "" : " " + runArgs)
@@ -137,7 +141,10 @@ main {
     }
 
     runner.deinit()
-    fs_rmSync(outputPath)
+
+    if action != "compile" {
+      fs_rmSync(outputPath)
+    }
   } elif action == "install" || action == "uninstall" || action == "update" {
     mut packager := Packager_init()
 
@@ -157,7 +164,7 @@ main {
 
     packager.deinit()
   } elif action == "script" {
-    packageYAMLPath := process_cwd() + path_SEP + "package.yml"
+    packageYAMLPath := cwd + path_SEP + "package.yml"
 
     if !fs_existsSync(packageYAMLPath) {
       throw error_NewError("File `package.yml` was not found")
@@ -183,7 +190,8 @@ main {
     }
   } elif action == "test" {
     mut tester := Tester_init(actionArgument, excludePaths)
-    command(compiler, "compile", tester.inputPath, tester.outputPath, qs)
+    qs += "&m=__the__main__"
+    command(compiler, "compile", tester.outputDir, tester.outputPath, qs)
 
     stdout := process_runSync(tester.outputPath)
     print(stdout.str(), terminator: "")

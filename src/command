@@ -13,8 +13,6 @@ export fn command (compiler: str, action: str, path: str, outputPath: str, qs: s
 
   if !fs_existsSync(filePath) {
     throw error_NewError("File '" + filePath + "' does not exists")
-  } elif !fs_isFileSync(filePath) {
-    throw error_NewError("Path '" + filePath + "' is not a file")
   }
 
   if (action == "lex" || action == "parse") && compiler.empty {

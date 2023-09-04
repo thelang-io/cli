@@ -36,11 +36,11 @@ export fn collectTestFunctionNames (path: str) str[] {
 }
 
 export fn collectUsedPaths (paths: str[]) str[] {
-  cwd := process_cwd()
   mut result: str[]
 
   loop i := 0; i < paths.len; i++ {
     file := parse(paths[i])
+    dir := path_dirname(paths[i])
     result.push(file.path)
 
     mut importPaths: str[]
@@ -55,7 +55,7 @@ export fn collectUsedPaths (paths: str[]) str[] {
       source := sourceLiteral.value
 
       if [".", "/"].contains(source.slice(0, 1)) {
-        sourcePath := fs_isAbsoluteSync(source) ? source : cwd + path_SEP + source
+        sourcePath := fs_isAbsoluteSync(source) ? source : dir + path_SEP + source
         importPaths.push(sourcePath)
       }
     })

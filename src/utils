@@ -50,6 +50,21 @@ export fn removeDirectorySync (path: str) {
 }
 
 export fn scandirDeepSync (path: str) str[] {
-  // todo canonical needed
-  return []
+  files := fs_scandirSync(path)
+  filesLen := files.len
+  mut result: str[]
+
+  loop i := 0; i < filesLen; i++ {
+    file := files[i] as str
+    filePath := path + path_SEP + file
+    pathValid := !file.contains(".")
+
+    if pathValid && fs_isFileSync(filePath) {
+      result.push(filePath)
+    } elif pathValid && fs_isDirectorySync(filePath) {
+      result.merge(scandirDeepSync(filePath))
+    }
+  }
+
+  return result
 }

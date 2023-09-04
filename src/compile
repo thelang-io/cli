@@ -6,21 +6,19 @@
 import zip from "the/zip"
 
 export fn request (url: str, path: str) buffer_Buffer {
-  archivePath := path + ".zip"
-  zip(archivePath, path)
-
+  archivePath := path + path_SEP + "file.zip"
+  zip(archivePath, "*", cwd: path)
   data := fs_readFileSync(archivePath)
 
   headers := [
     request_Header{name: "authorization", value: "pELerETRaVeYHEne"},
-    request_Header{name: "content-type", value: "application/octet-stream"}
+    request_Header{name: "content-type", value: "application/zip"}
   ]
 
   mut req := request_open("POST", url, headers: headers, data: data)
   res := req.read()
   req.close()
 
-  fs_rmSync(path)
   fs_rmSync(archivePath)
 
   if res.status != 200 {

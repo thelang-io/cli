@@ -61,6 +61,12 @@ export obj Tester {
     mainContent := mainFileImports + os_EOL + mainFile
     self.outputPath = self.outputDir + path_SEP + "a." + (os_NAME == "Windows" ? "exe" : "out")
     fs_writeFileSync(self.inputPath, mainContent.toBuffer())
+
+    packageYamlPath := self.cwd + path_SEP + "package.yml"
+
+    if fs_existsSync(packageYamlPath) {
+      fs_copyFileSync(packageYamlPath, self.outputDir + path_SEP + "package.yml")
+    }
   }
 
   fn deinit (self: ref Self) {
