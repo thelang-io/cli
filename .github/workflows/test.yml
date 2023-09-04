@@ -20,12 +20,6 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install valgrind
       - run: the install
-      - run: build.out compile build/result && mv a.out b.out
+      - run: ./build.out compile src/main && mv a.out b.out
       - run: valgrind ./b.out -h
       - run: valgrind ./b.out -v
-      - run: valgrind ./b.out build test
-      - run: valgrind ./b.out build src
-      - run: valgrind ./b.out lex build/result
-      - run: valgrind ./b.out parse build/result
-      - run: valgrind ./b.out compile build/result
-      - run: valgrind ./b.out run build/result

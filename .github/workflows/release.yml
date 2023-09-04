@@ -14,11 +14,11 @@ jobs:
       - run: |
           msg="${{ github.event.release.tag_name }}"
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
-      - run: build.out install
-      - run: build.out compile build/result --platform=linux                 && mv a.out cli-core-linux        && sleep 1
-      - run: build.out compile build/result --platform=macos   --arch=arm64  && mv a.out cli-core-macos-arm64  && sleep 1
-      - run: build.out compile build/result --platform=macos   --arch=x86_64 && mv a.out cli-core-macos-x86_64 && sleep 1
-      - run: build.out compile build/result --platform=windows               && mv a.out cli-core-windows      && sleep 1
+      - run: ./build.out install
+      - run: ./build.out compile src/main --platform=linux                 && mv a.out cli-core-linux        && sleep 1
+      - run: ./build.out compile src/main --platform=macos   --arch=arm64  && mv a.out cli-core-macos-arm64  && sleep 1
+      - run: ./build.out compile src/main --platform=macos   --arch=x86_64 && mv a.out cli-core-macos-x86_64 && sleep 1
+      - run: ./build.out compile src/main --platform=windows               && mv a.out cli-core-windows      && sleep 1
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
