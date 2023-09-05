@@ -17,9 +17,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: thelang-io/setup-the@v1
-      - run: sudo apt-get update
-      - run: sudo apt-get install valgrind
       - run: the install
-      - run: ./build.out compile src/main && mv a.out b.out
-      - run: valgrind ./b.out -h
-      - run: valgrind ./b.out -v
+      - run: the test
