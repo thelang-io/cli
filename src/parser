@@ -25,7 +25,7 @@ export fn collectTestFunctionNames (path: str) str[] {
     }
 
     statement := it.body as FunctionDeclaration
-    name := Identifier_toText(statement.name)
+    name := statement.name.name
 
     if name.slice(0, 5) == "TEST_" {
       result.push(name.slice(5))
