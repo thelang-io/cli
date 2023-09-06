@@ -13,7 +13,7 @@ jobs:
   build-osxcross:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: tpoechtrager/osxcross
       - run: sudo apt-get update
@@ -32,7 +32,7 @@ jobs:
     needs: build-osxcross
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
@@ -56,7 +56,7 @@ jobs:
     needs: build-osxcross
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
@@ -79,7 +79,7 @@ jobs:
   build-cross-compile-windows:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
@@ -97,7 +97,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
@@ -113,7 +113,7 @@ jobs:
   build-macos-arm64:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
@@ -129,7 +129,7 @@ jobs:
   build-macos-x86_64:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
@@ -145,7 +145,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
