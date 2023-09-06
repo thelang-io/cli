@@ -27,20 +27,17 @@ main () {
   curl -fsSL "$cdn_url" -o "$install_path" || panic "failed to download and install"
   chmod +x "$install_path" || panic "failed to set permissions"
 
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    profile_file="$HOME/.zprofile"
-    [[ ! -e "$profile_file" ]] && profile_file="$HOME/.bash_profile"
-    [[ ! -e "$profile_file" ]] && profile_file="$HOME/.profile"
+  profile_file="$HOME/.zprofile"
+  [[ ! -e "$profile_file" ]] && profile_file="$HOME/.bash_profile"
+  [[ ! -e "$profile_file" ]] && profile_file="$HOME/.profile"
 
-    profile_content="export PATH=\"\$PATH:$HOME/.the/bin\" # Added by the-install (https://docs.thelang.io/install)"
+  profile_content="export PATH=\"\$PATH:$HOME/.the/bin\" # Added by the-install (https://docs.thelang.io/install)"
 
-    if [ -s "$profile_file" ] && [ -n "$(tail -c 1 < "$profile_file")" ]; then
-      profile_content="$(printf "\n%s" "$profile_content")"
-    fi
-
-    echo "$profile_content" >> "$profile_file" || panic "failed to add to PATH"
+  if [ -s "$profile_file" ] && [ -n "$(tail -c 1 < "$profile_file")" ]; then
+    profile_content="$(printf "\n%s" "$profile_content")"
   fi
 
+  echo "$profile_content" >> "$profile_file" || panic "failed to add to PATH"
   echo "Successfully installed The CLI!"
   echo "  Type \`the -h\` to explore available options"
 }
