@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [main]
+    branches: ['main', 'release-*']
     paths-ignore: ['**/*.md', '**/*.yml', '!.github/workflows/test.yml']
   pull_request:
     paths-ignore: ['**/*.md', '**/*.yml', '!.github/workflows/test.yml']
@@ -13,9 +13,19 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: macos-11
+          - os: macos-12
+          - os: macos-13
+          - os: ubuntu-20.04
+          - os: ubuntu-22.04
+          - os: windows-2022
     steps:
       - uses: actions/checkout@v4
       - uses: thelang-io/setup-the@v1
       - run: the install
-      - run: the compile src/main
+      - run: the test test
