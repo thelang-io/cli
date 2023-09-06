@@ -5,6 +5,6 @@
 
 import excludePaths from "../src/utils"
 
-fn TEST_ExcludesPaths () {
+export fn TEST_ExcludesPaths () {
   EXPECT_EQ(excludePaths(["a.txt", "b.txt"], ["b.txt"]), ["a.txt"])
 }
