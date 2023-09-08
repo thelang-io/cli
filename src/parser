@@ -20,11 +20,11 @@ export fn collectTestFunctionNames (path: str) str[] {
   mut result: str[]
 
   Program_traverse(ref file.program, (it: Statement) -> void {
-    if !(it.body is FunctionDeclaration) {
+    if !it.isFunctionDeclaration() {
       return
     }
 
-    statement := it.body as FunctionDeclaration
+    statement := it.asFunctionDeclaration()
     name := statement.name.name
 
     if name.slice(0, 5) == "TEST_" {
@@ -46,12 +46,12 @@ export fn collectUsedPaths (paths: str[]) str[] {
     mut importPaths: str[]
 
     Program_traverse(ref file.program, (it: Statement) -> void {
-      if !(it.body is ImportDeclaration) {
+      if !it.isImportDeclaration() {
         return
       }
 
-      statement := it.body as ImportDeclaration
-      sourceLiteral := statement.source.body as StringLiteral
+      statement := it.asImportDeclaration()
+      sourceLiteral := statement.source.asStringLiteral()
       source := sourceLiteral.value
 
       if [".", "/"].contains(source.slice(0, 1)) {
