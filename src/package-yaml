@@ -7,8 +7,9 @@ import * as YAML from "the/yaml"
 
 export obj PackageYAML {
   mut name: str
-  mut description: str
   mut version: str
+  mut description: str
+  mut license: str
   mut mainFile: str
   mut files: str[]
   mut packages: str[str]
@@ -21,12 +22,16 @@ export obj PackageYAML {
       code += "name: " + self.name + os_EOL
     }
 
+    if !self.version.empty {
+      code += "version: " + self.version + os_EOL
+    }
+
     if !self.description.empty {
       code += "description: " + self.description + os_EOL
     }
 
-    if !self.version.empty {
-      code += "version: " + self.version + os_EOL
+    if !self.license.empty {
+      code += "license: " + self.license + os_EOL
     }
 
     if !self.mainFile.empty {
@@ -90,6 +95,15 @@ export fn PackageYAML_parse (content: str) PackageYAML {
             throw error_NewError("Property `name` of package.yml expected to be a scalar")
           }
         }
+      } elif nodeKey == "version" {
+        if mappingNode.value != nil {
+          val := mappingNode.value
+          if val is YAML.NodeScalar {
+            result.version = YAML.Node_stringify(val)
+          } else {
+            throw error_NewError("Property `version` of package.yml expected to be a scalar")
+          }
+        }
       } elif nodeKey == "description" {
         if mappingNode.value != nil {
           val := mappingNode.value
@@ -99,13 +113,13 @@ export fn PackageYAML_parse (content: str) PackageYAML {
             throw error_NewError("Property `description` of package.yml expected to be a scalar")
           }
         }
-      } elif nodeKey == "version" {
+      } elif nodeKey == "license" {
         if mappingNode.value != nil {
           val := mappingNode.value
           if val is YAML.NodeScalar {
-            result.version = YAML.Node_stringify(val)
+            result.license = YAML.Node_stringify(val)
           } else {
-            throw error_NewError("Property `version` of package.yml expected to be a scalar")
+            throw error_NewError("Property `license` of package.yml expected to be a scalar")
           }
         }
       } elif nodeKey == "main" {
