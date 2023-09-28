@@ -1,11 +1,12 @@
 name: CLI
-description: CLI for The Programming Language
 version: 0.14.1
+description: CLI for The Programming Language
+license: MIT
 main: src/main
 
 packages:
   the/args: 0.3.0
-  the/parser: 0.3.2
+  the/parser: 0.4.1
   the/testing: 0.3.0
   the/yaml: 0.3.0
   the/zip: 0.1.10

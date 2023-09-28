@@ -35,10 +35,10 @@ export obj Tester {
       file := files[i] as str
       relativePath := file.slice(cwdLen)
       fnNames := collectTestFunctionNames(file)
-      mut fileContent := fs_readFileSync(file).str()
+      mut fileContent := "import EXPECT_EQ from \"the/testing\"" + os_EOL
+      fileContent += fs_readFileSync(file).str()
 
       if !fnNames.empty {
-        fileContent = "import EXPECT_EQ from \"the/testing\"" + os_EOL + fileContent
         mainFileImports += "import "
 
         loop j := 0; j < fnNames.len; j++ {

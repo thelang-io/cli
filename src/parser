@@ -35,14 +35,16 @@ export fn collectTestFunctionNames (path: str) str[] {
   return result
 }
 
-export fn collectUsedPaths (paths: str[]) str[] {
-  mut result: str[]
+export fn collectUsedPaths (paths: str[], parsed: str[] = []) str[] {
+  mut result := parsed
 
   loop i := 0; i < paths.len; i++ {
-    file := parse(paths[i])
-    dir := path_dirname(paths[i])
-    result.push(file.path)
+    path := fs_realpathSync(paths[i])
+    if result.contains(path) { continue }
+    result.push(path)
 
+    file := parse(path)
+    dir := path_dirname(paths[i])
     mut importPaths: str[]
 
     Program_traverse(ref file.program, (it: Statement) -> void {
@@ -61,9 +63,9 @@ export fn collectUsedPaths (paths: str[]) str[] {
     })
 
     if !importPaths.empty {
-      result.merge(collectUsedPaths(importPaths))
+      result.merge(collectUsedPaths(importPaths, result))
     }
   }
 
-  return result
+  return result.slice(parsed.len)
 }
