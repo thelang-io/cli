@@ -71,8 +71,14 @@ export obj Package {
     self._checkInitialized("download")
     tempPath := path_tempDirectory()
 
-    process_runSync("git clone " + self._meta.repository + " \"" + tempPath + "\" > /dev/null")
-    process_runSync("cd \"" + tempPath + "\" && git reset --hard " + self._meta.getVersionHash(self.version))
+    if os_NAME == "Windows" {
+      process_runSync("git clone " + self._meta.repository + " \"" + tempPath + "\" 2>&1>$null")
+      process_runSync("cd \"" + tempPath + "\" && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1>$null")
+    } else {
+      process_runSync("git clone " + self._meta.repository + " '" + tempPath + "' 2>&1 > /dev/null")
+      process_runSync("cd \"" + tempPath + "\" && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1 > /dev/null")
+    }
+
     removeDirectorySync(tempPath + path_SEP + ".git")
     fs_renameSync(tempPath + self._meta.repositoryPath, self._globalPath)
 
@@ -252,7 +258,12 @@ export obj Packager {
     if self.tempPath.empty {
       self.tempPath = path_tempDirectory()
       self._tempPathCreated = true
-      process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git \"" + self.tempPath + "\" > /dev/null")
+
+      if os_NAME == "Windows" {
+        process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git \"" + self.tempPath + "\" 2>&1>$null")
+      } else {
+        process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git '" + self.tempPath + "' 2>&1 > /dev/null")
+      }
     }
 
     self._packageYAMLPath = self.cwd + path_SEP + "package.yml"
