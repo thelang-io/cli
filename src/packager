@@ -73,10 +73,10 @@ export obj Package {
 
     if os_NAME == "Windows" {
       process_runSync("git clone " + self._meta.repository + " \"" + tempPath + "\" 2>&1>$null")
-      process_runSync("cd \"" + tempPath + "\" && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1>$null")
+      process_runSync("powershell 'Set-Location \"" + tempPath + "\"; git reset --hard " + self._meta.getVersionHash(self.version) + "' 2>&1>$null")
     } else {
       process_runSync("git clone " + self._meta.repository + " '" + tempPath + "' 2>&1 > /dev/null")
-      process_runSync("cd \"" + tempPath + "\" && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1 > /dev/null")
+      process_runSync("(cd '" + tempPath + "' && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1 > /dev/null)")
     }
 
     removeDirectorySync(tempPath + path_SEP + ".git")
