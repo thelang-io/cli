@@ -198,20 +198,35 @@ main {
 
     tester.deinit()
   } elif action == "upgrade" {
-    mut executablePath := process_home + "/.the/bin/the"
-    mut url := "https://cdn.thelang.io/cli-core-" + os_NAME.lower
-
     if os_NAME == "Windows" {
-      executablePath = process_home + "/The/bin/the"
+      upgradePath := process_home + path_SEP + "The" + path_SEP + "bin" + path_SEP + "the-upgrade.ps1"
+
+      upgradeContent := "$InstallPath = \"$env:UserProfile\\The\\the.exe\"" + os_EOL +
+        "(New-Object -TypeName System.Net.WebClient).DownloadFile('https://cdn.thelang.io/cli-core-windows', $InstallPath)" + os_EOL +
+        "$Acl = Get-Acl -Path $InstallPath" + os_EOL +
+        "$AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList Users, Traverse, Allow" + os_EOL +
+        "$Acl.SetAccessRule($AccessRule)" + os_EOL +
+        "Set-Acl -Path $InstallPath -AclObject $Acl" + os_EOL
+
+      process_runSync("powershell 'Start-Job -ScriptBlock { & \"" + upgradePath + "\" 2>&1>$null }'")
     } elif os_NAME == "macOS" {
-      url = "https://cdn.thelang.io/cli-core-" + os_NAME.lower + "-" + os_ARCH
+      upgradePath := process_home + path_SEP + ".the" + path_SEP + "bin" + path_SEP + "the-upgrade.sh"
+
+      upgradeContent := "install_path=\"$HOME/.the/bin/the\"" + os_EOL +
+        "cdn_url=\"https://cdn.thelang.io/cli-core-macos-$(uname -m)\"" + os_EOL +
+        "curl -fsSL \"$cdn_url\" -o \"$install_path\" || exit 1" + os_EOL +
+        "chmod +x \"$install_path\" || exit 1" + os_EOL
+
+      process_runSync("bash \"" + upgradePath + "\" 2>&1 > /dev/null &")
+    } else {
+      upgradePath := process_home + path_SEP + ".the" + path_SEP + "bin" + path_SEP + "the-upgrade.sh"
+
+      upgradeContent := "install_path=\"$HOME/.the/bin/the\"" + os_EOL +
+        "  cdn_url=\"https://cdn.thelang.io/cli-core-linux\"" + os_EOL +
+        "  curl -fsSL \"$cdn_url\" -o \"$install_path\" || exit 1" + os_EOL +
+        "  chmod +x \"$install_path\" || exit 1" + os_EOL
+
+      process_runSync("bash \"" + upgradePath + "\" 2>&1 > /dev/null &")
     }
-
-    mut req := request_open("GET", url)
-    res := req.read()
-    req.close()
-
-    fs_writeFileSync(executablePath, res.data)
-    chmodAddSync(executablePath, 0o111)
   }
 }
