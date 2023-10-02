@@ -111,7 +111,7 @@ jobs:
           name: build-linux
           path: build-linux.tar.gz
   build-macos-arm64:
-    runs-on: macos-latest
+    runs-on: macos-latest-xlarge
     steps:
       - uses: actions/checkout@v4
         with:
