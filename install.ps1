@@ -31,12 +31,14 @@ function main {
   $InstallDir = "$env:UserProfile\The"
   $InstallPath = "$InstallDir\the.exe"
 
-  if (Test-Path -Path $InstallDir) {
+  if (Test-Path -Path "$InstallDir\bin") {
     Write-Host 'The CLI is already installed'
     return
   }
 
   Write-Host 'Installing The CLI...'
+  New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+  $InstallDir += "\bin"
   New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
   Request-File -Url $DownloadUrl -Path $InstallPath
   Set-ExecuteAcl -Path $InstallPath
