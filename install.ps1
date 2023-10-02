@@ -29,7 +29,6 @@ function Set-SystemEnv ([string] $Name, [string] $Value) {
 function main {
   $DownloadUrl = 'https://cdn.thelang.io/cli-core-windows'
   $InstallDir = "$env:UserProfile\The"
-  $InstallPath = "$InstallDir\the.exe"
 
   if (Test-Path -Path "$InstallDir\bin") {
     Write-Host 'The CLI is already installed'
@@ -38,8 +37,11 @@ function main {
 
   Write-Host 'Installing The CLI...'
   New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+
   $InstallDir += "\bin"
   New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+  $InstallPath = "$InstallDir\the.exe"
+
   Request-File -Url $DownloadUrl -Path $InstallPath
   Set-ExecuteAcl -Path $InstallPath
   Set-SystemEnv -Name Path -Value "$(Get-SystemEnv -Name Path);$InstallDir"
