@@ -11,7 +11,7 @@ import Tester_init from "./tester"
 import chmodAddSync, mapStr from "./utils"
 import command from "./command"
 
-const VERSION_NUM := "0.14.5"
+const VERSION_NUM := "0.14.6"
 const VERSION_NAME := "Tiarin Rise"
 
 main {
