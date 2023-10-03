@@ -72,11 +72,11 @@ export obj Package {
     tempPath := path_tempDirectory()
 
     if os_NAME == "Windows" {
-      process_runSync("git clone " + self._meta.repository + " \"" + tempPath + "\" 2>&1 >$null")
-      process_runSync("powershell 'Set-Location \"" + tempPath + "\"; git reset --hard " + self._meta.getVersionHash(self.version) + "' 2>&1 >$null")
+      process_runSync("git clone " + self._meta.repository + " \"" + tempPath + "\" 2>&1")
+      process_runSync("powershell 'Set-Location \"" + tempPath + "\"; git reset --hard " + self._meta.getVersionHash(self.version) + "' 2>&1")
     } else {
-      process_runSync("git clone " + self._meta.repository + " '" + tempPath + "' 2>&1 > /dev/null")
-      process_runSync("(cd '" + tempPath + "' && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1 > /dev/null)")
+      process_runSync("git clone " + self._meta.repository + " '" + tempPath + "' 2>&1")
+      process_runSync("(cd '" + tempPath + "' && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1)")
     }
 
     removeDirectorySync(tempPath + path_SEP + ".git")
@@ -260,9 +260,9 @@ export obj Packager {
       self._tempPathCreated = true
 
       if os_NAME == "Windows" {
-        process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git \"" + self.tempPath + "\" 2>&1 >$null")
+        process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git \"" + self.tempPath + "\" 2>&1")
       } else {
-        process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git '" + self.tempPath + "' 2>&1 > /dev/null")
+        process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git '" + self.tempPath + "' 2>&1")
       }
     }
 

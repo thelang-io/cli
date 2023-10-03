@@ -198,38 +198,39 @@ main {
 
     tester.deinit()
   } elif action == "upgrade" {
-    if os_NAME == "Windows" {
-      upgradePath := process_home + path_SEP + "The" + path_SEP + "bin" + path_SEP + "the-upgrade.ps1"
+    mut upgradePath := process_home + path_SEP + ".the" + path_SEP + "bin" + path_SEP + "the-upgrade.sh"
+    mut upgradeContent := ""
 
-      upgradeContent := "$InstallPath = \"$env:UserProfile\\The\\the.exe\"" + os_EOL +
+    if os_NAME == "Windows" {
+      upgradePath = process_home + path_SEP + "The" + path_SEP + "bin" + path_SEP + "the-upgrade.ps1"
+
+      upgradeContent = "$InstallPath = \"$env:UserProfile\\The\\the.exe\"" + os_EOL +
         "(New-Object -TypeName System.Net.WebClient).DownloadFile('https://cdn.thelang.io/cli-core-windows', $InstallPath)" + os_EOL +
         "$Acl = Get-Acl -Path $InstallPath" + os_EOL +
         "$AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList Users, Traverse, Allow" + os_EOL +
         "$Acl.SetAccessRule($AccessRule)" + os_EOL +
         "Set-Acl -Path $InstallPath -AclObject $Acl" + os_EOL
-
-      fs_writeFileSync(upgradePath, upgradeContent.toBuffer())
-      process_runSync("powershell 'Start-Job -ScriptBlock { & \"" + upgradePath + "\" 2>&1 >$null }'")
     } elif os_NAME == "macOS" {
-      upgradePath := process_home + path_SEP + ".the" + path_SEP + "bin" + path_SEP + "the-upgrade.sh"
-
-      upgradeContent := "install_path=\"$HOME/.the/bin/the\"" + os_EOL +
+      upgradeContent = "install_path=\"$HOME/.the/bin/the\"" + os_EOL +
         "cdn_url=\"https://cdn.thelang.io/cli-core-macos-$(uname -m)\"" + os_EOL +
         "curl -fsSL \"$cdn_url\" -o \"$install_path\" || exit 1" + os_EOL +
         "chmod +x \"$install_path\" || exit 1" + os_EOL
-
-      fs_writeFileSync(upgradePath, upgradeContent.toBuffer())
-      process_runSync("bash \"" + upgradePath + "\" 2>&1 > /dev/null &")
     } else {
-      upgradePath := process_home + path_SEP + ".the" + path_SEP + "bin" + path_SEP + "the-upgrade.sh"
-
       upgradeContent := "install_path=\"$HOME/.the/bin/the\"" + os_EOL +
         "  cdn_url=\"https://cdn.thelang.io/cli-core-linux\"" + os_EOL +
         "  curl -fsSL \"$cdn_url\" -o \"$install_path\" || exit 1" + os_EOL +
         "  chmod +x \"$install_path\" || exit 1" + os_EOL
+    }
 
-      fs_writeFileSync(upgradePath, upgradeContent.toBuffer())
-      process_runSync("bash \"" + upgradePath + "\" 2>&1 > /dev/null &")
+    fs_writeFileSync(upgradePath, upgradeContent.toBuffer())
+    chmodAddSync(outputPath, 0o111)
+
+    if os_NAME == "Windows" {
+      process_runSync("start \"" + upgradePath + "\" 2>&1 > nul")
+    } elif os_NAME == "macOS" {
+      process_runSync("\"" + upgradePath + "\" 2>&1 > /dev/null &")
+    } else {
+      process_runSync("\"" + upgradePath + "\" 2>&1 > /dev/null &")
     }
   }
 }
