@@ -48,7 +48,7 @@ export obj Tester {
           mainFile += "  tests.register(\"" + testName + "\", " + testFnName + ")" + os_EOL
         }
 
-        mainFileImports += " from \"." + relativePath + "\"" + os_EOL
+        mainFileImports += " from \"." + relativePath.replace("\\", "/") + "\"" + os_EOL
       }
 
       ensurePathDirectory(self.outputDir + relativePath)
