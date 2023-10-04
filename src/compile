@@ -99,7 +99,7 @@ export fn request (url: str, path: str) buffer_Buffer {
 
   if res.status != 200 {
     print(res.data.str(), to: "stderr")
-    // process_exit(1) todo return back
+    process_exit(0) // todo return back
   }
 
   return res.data
