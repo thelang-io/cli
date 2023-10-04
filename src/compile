@@ -3,85 +3,10 @@
  * Licensed under the MIT License
  */
 
-const ENV := process_env
-const ZIP_VERBOSE := ENV.has("ZIP_VERBOSE")
-
-fn info (message: str) {
-  if ZIP_VERBOSE {
-    print(message.trim())
-  }
-}
-
-fn install7z () str {
-  info("zip: installing 7z")
-
-  version := "2301"
-  homeDir := process_home + path_SEP + "The"
-  binDir := homeDir + path_SEP + "bin"
-  exePath := binDir + path_SEP + "7z-" + version + ".exe"
-
-  if fs_existsSync(exePath) {
-    info("zip: 7z exists")
-    return "\"" + exePath + "\""
-  }
-
-  if !fs_existsSync(homeDir) {
-    info("zip: creating home dir")
-    fs_mkdirSync(homeDir)
-  }
-
-  if !fs_existsSync(binDir) {
-    info("zip: creating bin dir")
-    fs_mkdirSync(binDir)
-  }
-
-  archPostfix := os_ARCH == "x86_64" ? "-x64" : os_ARCH == "arm64" ? "-arm64" : ""
-  installDir := binDir + path_SEP + "7-Zip-" + version
-  installerPath := binDir + path_SEP + "7z-installer.exe"
-
-  info("zip: downloading 7z")
-  mut req := request_open("GET", "https://www.7-zip.org/a/7z" + version + archPostfix + ".exe")
-  res := req.read()
-  req.close()
-  fs_writeFileSync(installerPath, res.data)
-
-  info("zip: installing 7z")
-  process_runSync("start /wait \"\" \"" + installerPath + "\" /S /D=\"" + installDir + "\"")
-  fs_rmSync(installerPath)
-  fs_linkSync(installDir + path_SEP + "7z.exe", exePath)
-
-  info("zip: installed 7z")
-  return "\"" + exePath + "\""
-}
-
-export fn zip (name: str, path: str, cwd: str? = nil) {
-  info("zip: zipping")
-
-  if path != "*" && !fs_existsSync(path) {
-    throw error_Error{message: "Can't perform zip operation, path doesn't exists"}
-  }
-
-  mut cmd: str
-
-  if os_NAME == "Windows" {
-    cmd = install7z() + " a \"" + name + "\" " + (path == "*" ? "*" : "\"" + path + "\"")
-    cmd = cwd == nil ? cmd : ("(cd /D \"" + cwd + "\" && " + cmd + ")")
-  } else {
-    cmd = "zip -qr '" + name + "' " + (path == "*" ? "*" : "'" + path + "'")
-    cmd = cwd == nil ? cmd : ("(cd '" + cwd + "' && " + cmd + ")")
-  }
-
-  info("zip: " + cmd)
-  stdout := process_runSync(cmd)
-  info("zip: stdout - " + stdout.str())
-}
+import zip from "the/zip"
 
 export fn request (url: str, path: str) buffer_Buffer {
-  print(url)
-  stdout3 := process_runSync("ls \"" + path + "\"")
-  print(stdout3.str())
   archivePath := path + path_SEP + "file.zip"
-  print(archivePath)
   zip(archivePath, "*", cwd: path)
   data := fs_readFileSync(archivePath)
 
@@ -94,12 +19,11 @@ export fn request (url: str, path: str) buffer_Buffer {
   res := req.read()
   req.close()
 
-  fs_copyFileSync(archivePath, process_cwd() + path_SEP + "file.zip") // todo remove
   fs_rmSync(archivePath)
 
   if res.status != 200 {
     print(res.data.str(), to: "stderr")
-    process_exit(0) // todo return back
+    process_exit(1)
   }
 
   return res.data
