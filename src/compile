@@ -94,7 +94,7 @@ export fn request (url: str, path: str) buffer_Buffer {
   res := req.read()
   req.close()
 
-  fs_copyFileSync(archivePath, process_cwd + path_SEP + "file.zip") // todo remove
+  fs_copyFileSync(archivePath, process_cwd() + path_SEP + "file.zip") // todo remove
   fs_rmSync(archivePath)
 
   if res.status != 200 {
