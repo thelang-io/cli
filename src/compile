@@ -65,7 +65,7 @@ export fn zip (name: str, path: str, cwd: str? = nil) {
 
   if os_NAME == "Windows" {
     cmd = install7z() + " a \"" + name + "\" " + (path == "*" ? "*" : "\"" + path + "\"")
-    cmd = cwd == nil ? cmd : ("(cd \"" + cwd + "\" && " + cmd + ")")
+    cmd = cwd == nil ? cmd : ("(cd /D \"" + cwd + "\" && " + cmd + ")")
   } else {
     cmd = "zip -qr '" + name + "' " + (path == "*" ? "*" : "'" + path + "'")
     cmd = cwd == nil ? cmd : ("(cd '" + cwd + "' && " + cmd + ")")
