@@ -28,8 +28,9 @@ export obj Tester {
     allFiles := fs_isDirectorySync(realFullPath) ? scandirDeepSync(realFullPath) : [realFullPath]
     files := excludePaths(collectUsedPaths(allFiles), self.exclude)
     mut mainFileImports := "import Tests from \"the/testing\"" + os_EOL
-    mut mainFile := "main {" + os_EOL
-    mainFile += "  mut tests := Tests{}" + os_EOL
+
+    mut mainFile := "main {" + os_EOL +
+      "  mut tests := Tests{}" + os_EOL
 
     loop i := 0; i < files.len; i++ {
       file := files[i] as str
