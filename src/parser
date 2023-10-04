@@ -44,7 +44,7 @@ export fn collectUsedPaths (paths: str[], parsed: str[] = []) str[] {
     result.push(path)
 
     file := parse(path)
-    dir := path_dirname(paths[i])
+    dir := path_dirname(file.path)
     mut importPaths: str[]
 
     Program_traverse(ref file.program, (it: Statement) -> void {
