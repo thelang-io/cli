@@ -226,7 +226,7 @@ main {
     chmodAddSync(upgradePath, 0o111)
 
     if os_NAME == "Windows" {
-      process_runSync("start /b \"powershell ^\"" + upgradePath + "^\"\" 2>&1 > nul")
+      process_runSync("start /b powershell \"" + upgradePath + "\" 2>&1 > nul")
     } elif os_NAME == "macOS" {
       process_runSync("\"" + upgradePath + "\" 2>&1 > /dev/null &")
     } else {

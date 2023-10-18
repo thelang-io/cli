@@ -10,6 +10,7 @@ const ENDPOINT_URL := "https://api.thelang.io"
 
 export fn command (compiler: str, action: str, path: str, outputPath: str, qs: str) {
   filePath := fs_realpathSync(path)
+  mainFile := qs.slice(qs.find("&m=") + 3)
 
   if !fs_existsSync(filePath) {
     throw error_NewError("File '" + filePath + "' does not exists")
@@ -19,14 +20,14 @@ export fn command (compiler: str, action: str, path: str, outputPath: str, qs: s
     data := request(ENDPOINT_URL + "/" + action + qs, filePath)
     print(data.str(), terminator: "")
   } elif action == "lex" || action == "parse" {
-    data := customCompile(compiler, action, filePath, outputPath)
+    data := customCompile(compiler, action, filePath + path_SEP + mainFile, outputPath)
     print(data.str(), terminator: "")
   } elif action == "compile" && compiler.empty {
     data := request(ENDPOINT_URL + "/" + action + qs, filePath)
     fs_writeFileSync(outputPath, data)
     chmodAddSync(outputPath, 0o111)
   } elif action == "compile" {
-    customCompile(compiler, action, filePath, outputPath)
+    customCompile(compiler, action, filePath + path_SEP + mainFile, outputPath)
     chmodAddSync(outputPath, 0o111)
   }
 }
