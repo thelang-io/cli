@@ -38,7 +38,7 @@ export obj Tester {
       fnNames := collectTestFunctionNames(file)
 
       fileContent := "import EXPECT_EQ, EXPECT_FALSE, EXPECT_NO_THROW, " +
-        "EXPECT_THROW_WITH_MESSAGE, EXPECT_TRUE from \"the/testing\"" + os_EOL +
+        "EXPECT_THROW_WITH_MESSAGE, EXPECT_TRUE from \"the/testing\" " +
         fs_readFileSync(file).str()
 
       if !fnNames.empty {
