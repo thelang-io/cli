@@ -10,10 +10,11 @@ export fn chmodAddSync (path: str, mode: int) {
 }
 
 export fn ensurePathDirectory (path: str) {
+  isWin := os_NAME == "Windows"
   paths := path_dirname(path).split(path_SEP)
-  mut currentPath := path_SEP
+  mut currentPath := (isWin ? paths[0] : "") + path_SEP
 
-  loop i := 0; i < paths.len; i++ {
+  loop i := isWin ? 1 : 0; i < paths.len; i++ {
     p := paths[i] as str
     if p.empty { continue }
     currentPath += p + path_SEP
