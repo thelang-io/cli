@@ -21,33 +21,175 @@ main {
 
   args
     .usage("the [options]")
-    .usage("the <command> file [options]")
+    .usage("the <command> [<args>] [options]")
 
-    .command("compile", "Compile file")
-    .command("install", "Add package to your project", alias: "i")
-    .command("lex", "Lex file")
-    .command("parse", "Parse file")
-    .command("run", "Compile and execute file")
-    .command("script", "Execute script from package.yml")
-    .command("test", "Test source directory", default: ".")
-    .command("uninstall", "Uninstall package")
-    .command("update", "Update package")
-    .command("upgrade", "Self-upgrade CLI to newest version", hasValue: false)
+    // Commands
 
-    .option("arch", "Target arch, one of: arm64, x86_64", default: os_ARCH)
-    .option("compiler", "Offline compiler to use instead of cloud servers")
-    .option("exclude", "Exclude paths separated by comma")
-    .option("help", "Print help information", alias: "h", hasValue: false)
+    .command(
+      "compile",
+      "Compiles specified file.",
+      synopsis: "the compile <file>",
+      examples: [
+        "the compile my-file",
+      ],
+    )
+
+    .command(
+      "lex",
+      "Converts specified file into tokenized representation.",
+      synopsis: "the lex <file>",
+      examples: [
+        "the lex my-file",
+      ],
+    )
+
+    .command(
+      "parse",
+      "Converts specified file into an AST.",
+      synopsis: "the parse <file>",
+      examples: [
+        "the parse my-file",
+      ],
+    )
+
+    .command(
+      "run",
+      "Compiles and executes specified file on current machine.",
+      synopsis: "the run <file>",
+      examples: [
+        "the run my-file",
+      ],
+    )
+
+    .command(
+      "script",
+      "Executes script from `package.yml`, if script doesn't exist throws error.",
+      synopsis: "the script <name>",
+      examples: [
+        "the script my-script",
+      ],
+    )
+
+    .command(
+      "test",
+      "Find and runs tests in specified directory (requires `the/testing` package installed). " +
+      "Current working directory is used if directory parameter is not specified. " +
+      "Paths ignored by default: `.git`, `.svn`, `thumbs.db`, `.DS_Store`.",
+      default: ".",
+      synopsis: "the test [directory]",
+      examples: [
+        "the test",
+        "the test .",
+        "the test path/to/source",
+      ],
+    )
+
+    .command(
+      "upgrade",
+      "Self-upgrades CLI to the latest version.",
+      hasValue: false,
+      synopsis: "the upgrade",
+      examples: [
+        "the upgrade",
+      ],
+    )
+
+    .command(
+      "install",
+      "Installs specified package and adds it to the `package.yml`. " +
+      "Installs all packages if package name was not specified. " +
+      "You can specify package version after package name followed by `@` sign.",
+      alias: "i",
+      synopsis: "the install [package]",
+      examples: [
+        "the install",
+        "the install the/example",
+        "the install the/example@latest",
+        "the install the/example@1.0.0",
+      ],
+    )
+
+    .command(
+      "uninstall",
+      "Uninstalls specified package from the project and removes it from `package.yml`.",
+      synopsis: "the uninstall <package>",
+      examples: [
+        "the uninstall the/example",
+      ],
+    )
+
+    .command(
+      "update",
+      "Updates specified package and changes version in package.yml" +
+      "Installs all packages if package name was not specified. " +
+      "You can specify package version after package name followed by `@` sign.",
+      synopsis: "the update [package]",
+      examples: [
+        "the update",
+        "the update the/example",
+        "the update the/example@latest",
+        "the update the/example@1.0.0",
+      ],
+    )
+
+    // Options
+
+    .option(
+      "arch",
+      "Target CPU architecture, one of: arm64, x86_64.",
+      default: os_ARCH,
+    )
+
+    .option(
+      "compiler",
+      "Path to offline compiler to be used instead of cloud servers.",
+    )
+
+    .option(
+      "exclude",
+      "Exclude paths separated by comma.",
+    )
+
+    .option(
+      "help",
+      "Print help information.",
+      alias: "h",
+      hasValue: false,
+    )
+
     .option(
       "output",
-      "Executable output path, by default \"" + defaultOutput + "\"",
+      "Executable output path, by default `" + defaultOutput + "`.",
       alias: "o",
-      default: defaultOutput
+      default: defaultOutput,
     )
-    .option("platform", "Target platform, one of: linux, macos, windows", default: os_NAME.lower)
-    .option("run-args", "Arguments to be passed when running executable")
-    .option("the", "The Programming Language version, valid formats: latest, 1, 1.1, 1.1.1", default: "latest")
-    .option("version", "Print version", alias: "v", hasValue: false)
+
+    .option(
+      "platform",
+      "Target platform of output executable, one of: linux, macos, windows. " +
+      "By default `os_NAME.lower`. " +
+      "Doesn't affect output executable when used together with `--compiler` option.",
+      default: os_NAME.lower,
+    )
+
+    .option(
+      "run-args",
+      "Arguments that are passed down to executable when executed by `the run` command.",
+    )
+
+    .option(
+      "the",
+      "The programming language version, valid formats: latest, 1, 1.1, 1.1.1. " +
+      "Doesn't affect output executable when used together with `--compiler` option.",
+      default: "latest",
+    )
+
+    .option(
+      "version",
+      "Print version information.",
+      alias: "v",
+      hasValue: false,
+    )
 
     .example("the -h")
     .example("the --version")
@@ -115,7 +257,8 @@ main {
   }
 
   if action == "help" {
-    print(args.help(), terminator: "")
+    helpInfo := action.empty ? args.help() : args.help(action)
+    print(helpInfo, terminator: "")
     process_exit(0)
   } elif action == "version" {
     print("The Programming Language")

@@ -1,6 +1,6 @@
 name: CLI
 version: 0.14.12
-description: CLI for The Programming Language
+description: CLI for The programming language
 license: MIT
 main: src/main
 
