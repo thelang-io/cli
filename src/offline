@@ -1,0 +1,60 @@
+/*!
+ * Copyright (c) Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+import * as Config from "./config"
+import profileFileAppend from "./utils"
+
+fn installDependencies (tempDirectory: str) {
+  fs_mkdirSync(tempDirectory)
+
+  tarballPath := tempDirectory + path_SEP + "deps.tar.gz"
+
+  platformDependenciesPath := tempDirectory +
+    path_SEP + "the" +
+    path_SEP + "native" +
+    path_SEP + os_NAME.lower +
+    (os_NAME == "macOS" ? path_SEP + os_ARCH : "")
+
+  mut req := request_open("GET", "https://cdn.thelang.io/deps.tar.gz")
+  res := req.read()
+  req.close()
+
+  fs_writeFileSync(tarballPath, res.data)
+  process_runSync("tar -xz -f '" + tarballPath + "' -C '" + tempDirectory + "'")
+
+  installPath := Config.getDependenciesPath()
+
+  fs_copyDirectorySync(platformDependenciesPath, installPath)
+  profileFileAppend("export THE_DEPS_DIR='" + installPath + "' # Added by `the offline`")
+}
+
+fn installCompiler (tempDirectory: str) {
+  fs_mkdirSync(tempDirectory)
+
+  repositoryDirectory := tempDirectory + path_SEP + "the"
+  buildDirectory := repositoryDirectory + path_SEP + "build"
+  releaseDirectory := buildDirectory + (os_NAME == "Windows" ? path_SEP + "Release" : "")
+
+  process_runSync("git clone -q --depth=1 --single-branch https://github.com/thelang-io/the.git '" + repositoryDirectory + "'")
+  process_runSync("cmake '" + repositoryDirectory + "' -B '" + buildDirectory + "' -D CMAKE_BUILD_TYPE=Release")
+  process_runSync("cmake --build '" + buildDirectory + "' --config Release --target the")
+
+  fs_copyFileSync(releaseDirectory + path_SEP + (os_NAME == "Windows" ? "the.exe" : "the"), Config.offlineCompilerPath())
+}
+
+export fn installOfflineCompiler () str {
+  Config.initHome()
+  tempDirectory := path_tempDirectory()
+
+  if !fs_existsSync(Config.getDependenciesPath()) {
+    installDependencies(tempDirectory + path_SEP + "the-offline-dependencies")
+  }
+
+  if !fs_existsSync(Config.offlineCompilerPath()) {
+    installCompiler(tempDirectory + path_SEP + "the-offline-compiler")
+  }
+
+  return Config.offlineCompilerPath()
+}

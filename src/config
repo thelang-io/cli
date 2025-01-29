@@ -3,6 +3,14 @@
  * Licensed under the MIT License
  */
 
+export fn getBinariesPath () str {
+  return getHomePath() + path_SEP + "bin"
+}
+
+export fn getDependenciesPath () str {
+  return getHomePath() + path_SEP + "deps"
+}
+
 export fn getHomePath () str {
   return process_home + path_SEP + (os_NAME == "Windows" ? "The" : ".the")
 }
@@ -26,4 +34,8 @@ export fn initHome (packageAuthor := "") {
   if !packageAuthor.empty && !fs_existsSync(packagesPath + path_SEP + packageAuthor) {
     fs_mkdirSync(packagesPath + path_SEP + packageAuthor)
   }
+}
+
+export fn offlineCompilerPath () str {
+  return getBinariesPath() + path_SEP + (os_NAME == "Windows" ? "compiler.exe" : "compiler")
 }

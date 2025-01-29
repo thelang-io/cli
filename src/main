@@ -10,6 +10,7 @@ import Runner_init from "./runner"
 import Tester_init from "./tester"
 import chmodAddSync, mapStr from "./utils"
 import command from "./command"
+import installOfflineCompiler from "./offline"
 
 const VERSION_NUM := "0.14.12"
 const VERSION_NAME := "Tiarin Rise"
@@ -40,6 +41,16 @@ main {
       synopsis: "the lex <file>",
       examples: [
         "the lex my-file",
+      ],
+    )
+
+    .command(
+      "offline",
+      "Downloads compiler source code and builds it on current machine (requires Git, CMake, and Tar installed).",
+      hasValue: false,
+      synopsis: "the offline",
+      examples: [
+        "the offline",
       ],
     )
 
@@ -193,13 +204,19 @@ main {
 
     .example("the -h")
     .example("the --version")
+
     .example("the compile /path/to/file")
-    .example("the lex /path/to/file")
     .example("the compile /path/to/file --the=1.0")
+    .example("the lex /path/to/file")
     .example("the lex /path/to/file --the=1.0.0")
     .example("the run /path/to/file --platform=macos")
-    .example("the update the/args")
+
+    .example("the i")
     .example("the install the/error@1.0.0")
+    .example("the update the/args@2")
+    .example("the uninstall the/error")
+
+    .example("the offline")
     .example("the upgrade")
 
   args.parse(process_args)
@@ -234,6 +251,8 @@ main {
     ) {
       action = arg.command
       actionArgument = arg.value
+    } elif arg.command == "offline" {
+      action = arg.command
     } elif arg.command == "upgrade" {
       action = arg.command
     } elif arg.option == "help" || arg.option == "version" {
@@ -306,6 +325,8 @@ main {
     }
 
     packager.deinit()
+  } elif action == "offline" {
+    installOfflineCompiler()
   } elif action == "script" {
     packageYAMLPath := cwd + path_SEP + "package.yml"
 
