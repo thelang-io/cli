@@ -32,8 +32,10 @@ export fn request (url: str, path: str) buffer_Buffer {
 export fn customCompile (compiler: str, action: str, filePath: str, outputPath: str) buffer_Buffer {
   isCompile := action == "compile"
   actionArg := isCompile ? "" : " " + action
-  optionArg := " --output='" + outputPath + "'"
-  stdout := process_runSync(compiler + actionArg + optionArg + " " + filePath)
+  quote := os_NAME == "Windows" ? "\"" : "'"
+  optionArg := " " + quote + "--output=" + outputPath + quote
+  fileArg := " " + quote + filePath + quote
+  stdout := process_runSync(compiler + actionArg + optionArg + fileArg)
 
   return stdout
 }
