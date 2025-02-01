@@ -18,8 +18,10 @@ jobs:
       - run: sudo sed -e 's/#define _WIN32_WINNT .*/#define _WIN32_WINNT 0x0A00/' -i /usr/share/mingw-w64/include/_mingw.h
 
       - run: |
-          msg="${{ github.event.release.tag_name }}"
-          echo "VERSION=${msg:1}" >> $GITHUB_ENV
+          VERSION="${{ github.event.release.tag_name || github.ref }}"
+          VERSION="${VERSION#refs/tags/}"
+          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+      - run: echo $VERSION
       - run: the install
       - run: the compile src/main --compiler=compiler --platform=linux                 && mv a.out cli-core-linux        && sleep 1
       - run: the compile src/main --compiler=compiler --platform=macos   --arch=arm64  && mv a.out cli-core-macos-arm64  && sleep 1
