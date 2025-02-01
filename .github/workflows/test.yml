@@ -31,4 +31,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: thelang-io/setup-the@v1
       - run: the install
-      - run: the test test --compiler=compiler
+      - run: the test test
