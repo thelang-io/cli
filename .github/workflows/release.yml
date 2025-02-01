@@ -11,6 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: thelang-io/setup-the@v1
+
+      - run: sudo apt-get update
+      - run: sudo apt-get install build-essential mingw-w64
+      - run: echo "$HOME/.the/deps/osxcross/bin" >> $GITHUB_PATH
+      - run: sudo sed -e 's/#define _WIN32_WINNT .*/#define _WIN32_WINNT 0x0A00/' -i /usr/share/mingw-w64/include/_mingw.h
+
       - run: |
           msg="${{ github.event.release.tag_name }}"
           echo "VERSION=${msg:1}" >> $GITHUB_ENV
