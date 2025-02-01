@@ -24,7 +24,7 @@ jobs:
       - run: TARGET_DIR="/usr/local/the/osxcross" UNATTENDED=1 ./build.sh
       - run: sudo mv /usr/local/the/osxcross .
       - run: tar -czf build-osxcross.tar.gz osxcross
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-osxcross
           path: build-osxcross.tar.gz
@@ -36,7 +36,7 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: build-osxcross
       - run: sudo mkdir -p /usr/local/the
@@ -48,7 +48,7 @@ jobs:
       - run: make -j4
       - run: make install_sw
       - run: tar -czf build-cross-compile-macos-arm64.tar.gz build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-cross-compile-macos-arm64
           path: build-cross-compile-macos-arm64.tar.gz
@@ -60,7 +60,7 @@ jobs:
         with:
           repository: openssl/openssl
           ref: openssl-3.1.0
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: build-osxcross
       - run: sudo mkdir -p /usr/local/the
@@ -72,7 +72,7 @@ jobs:
       - run: make -j4
       - run: make install_sw
       - run: tar -czf build-cross-compile-macos-x86_64.tar.gz build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-cross-compile-macos-x86_64
           path: build-cross-compile-macos-x86_64.tar.gz
@@ -90,7 +90,7 @@ jobs:
       - run: make -j4
       - run: make install_sw
       - run: tar -czf build-cross-compile-windows.tar.gz build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-cross-compile-windows
           path: build-cross-compile-windows.tar.gz
@@ -106,7 +106,7 @@ jobs:
       - run: make -j4
       - run: make install_sw
       - run: tar -czf build-linux.tar.gz build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-linux
           path: build-linux.tar.gz
@@ -122,7 +122,7 @@ jobs:
       - run: make -j4
       - run: make install_sw
       - run: tar -czf build-macos-arm64.tar.gz build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-macos-arm64
           path: build-macos-arm64.tar.gz
@@ -138,7 +138,7 @@ jobs:
       - run: make -j4
       - run: make install_sw
       - run: tar -czf build-macos-x86_64.tar.gz build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-macos-x86_64
           path: build-macos-x86_64.tar.gz
@@ -158,7 +158,7 @@ jobs:
       - run: cp build/lib/libssl.lib build/lib/ssl.lib
       - run: cp build/lib/libcrypto.lib build/lib/crypto.lib
       - run: tar -czf build-windows.tar.gz build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-windows
           path: build-windows.tar.gz
@@ -174,7 +174,7 @@ jobs:
       - build-windows
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
       - run: |
           config=(
             build-linux:the/cross-compile/linux
@@ -199,7 +199,7 @@ jobs:
             tar -xzf "$tarball_location" -C "$location" --strip-components=1
           done
       - run: tar -czf deps.tar.gz the
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}

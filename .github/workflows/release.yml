@@ -19,7 +19,7 @@ jobs:
       - run: the compile src/main --compiler=compiler --platform=macos   --arch=arm64  && mv a.out cli-core-macos-arm64  && sleep 1
       - run: the compile src/main --compiler=compiler --platform=macos   --arch=x86_64 && mv a.out cli-core-macos-x86_64 && sleep 1
       - run: the compile src/main --compiler=compiler --platform=windows               && mv a.out cli-core-windows      && sleep 1
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET }}
