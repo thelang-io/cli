@@ -12,7 +12,7 @@ import chmodAddSync, mapStr from "./utils"
 import command from "./command"
 import installOfflineCompiler from "./offline"
 
-const VERSION_NUM := "0.14.12"
+const VERSION_NUM := "0.14.13"
 const VERSION_NAME := "Tiarin Rise"
 
 main {
