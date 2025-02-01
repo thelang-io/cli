@@ -4,6 +4,7 @@
  */
 
 import Args from "the/args"
+import * as Config from "./config"
 import Packager_init from "./packager"
 import PackageYAML_parse from "./package-yaml"
 import Runner_init from "./runner"
@@ -224,7 +225,9 @@ main {
   mut action := ""
   mut actionArgument := ""
   mut arch := ""
-  mut compiler := ""
+  mut compiler := fs_existsSync(Config.offlineCompilerPath())
+    ? Config.offlineCompilerPath()
+    : ""
   mut excludePaths := [".git", ".svn", "thumbs.db", ".DS_Store"]
   mut outputPath := ""
   mut platform := ""
