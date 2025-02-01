@@ -21,13 +21,18 @@ export fn getPackagesPath () str {
 
 export fn initHome (packageAuthor := "") {
   homePath := getHomePath()
+  binariesPath := getBinariesPath()
   packagesPath := getPackagesPath()
 
   if !fs_existsSync(homePath) {
     fs_mkdirSync(homePath)
   }
 
-  if !packageAuthor.empty && !fs_existsSync(packagesPath) {
+  if !fs_existsSync(binariesPath) {
+    fs_mkdirSync(binariesPath)
+  }
+
+  if !fs_existsSync(packagesPath) {
     fs_mkdirSync(packagesPath)
   }
 
