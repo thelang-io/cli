@@ -14,8 +14,9 @@ jobs:
 
       - run: sudo apt-get update
       - run: sudo apt-get install build-essential mingw-w64
-      - run: echo "$HOME/.the/deps/osxcross/bin" >> $GITHUB_PATH
       - run: sudo sed -e 's/#define _WIN32_WINNT .*/#define _WIN32_WINNT 0x0A00/' -i /usr/share/mingw-w64/include/_mingw.h
+      - run: curl -fsSL https://cdn.thelang.io/deps.tar.gz | sudo tar -C /usr/local -xz
+      - run: echo "/usr/local/the/osxcross/bin" >> $GITHUB_PATH
 
       - run: |
           VERSION="${{ github.event.release.tag_name || github.ref }}"
@@ -24,9 +25,17 @@ jobs:
       - run: echo $VERSION
       - run: the install
       - run: the compile src/main --compiler=compiler --platform=linux                 && mv a.out cli-core-linux        && sleep 1
+        env:
+          THE_DEPS_DIR: /usr/local/the/cross-compile/linux
       - run: the compile src/main --compiler=compiler --platform=macos   --arch=arm64  && mv a.out cli-core-macos-arm64  && sleep 1
+        env:
+          THE_DEPS_DIR: /usr/local/the/cross-compile/macos/arm64
       - run: the compile src/main --compiler=compiler --platform=macos   --arch=x86_64 && mv a.out cli-core-macos-x86_64 && sleep 1
+        env:
+          THE_DEPS_DIR: /usr/local/the/cross-compile/macos/x86_64
       - run: the compile src/main --compiler=compiler --platform=windows               && mv a.out cli-core-windows      && sleep 1
+        env:
+          THE_DEPS_DIR: /usr/local/the/cross-compile/windows
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
