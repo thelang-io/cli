@@ -29,13 +29,26 @@ export fn request (url: str, path: str) buffer_Buffer {
   return res.data
 }
 
-export fn customCompile (compiler: str, action: str, filePath: str, outputPath: str) buffer_Buffer {
+export fn customCompile (compiler: str, action: str, filePath: str, outputPath: str, platform: str, arch: str) buffer_Buffer {
   isCompile := action == "compile"
   actionArg := isCompile ? "" : " " + action
   quote := os_NAME == "Windows" ? "\"" : "'"
-  optionArg := " " + quote + "--output=" + outputPath + quote
   fileArg := " " + quote + filePath + quote
-  stdout := process_runSync(compiler + actionArg + optionArg + fileArg)
 
+  mut optionsArg := ""
+
+  if !outputPath.empty {
+    optionsArg += " " + quote + "--output=" + outputPath + quote
+  }
+
+  if !platform.empty {
+    optionsArg += " " + quote + "--platform=" + platform + quote
+  }
+
+  if !arch.empty {
+    optionsArg += " " + quote + "--arch=" + arch + quote
+  }
+
+  stdout := process_runSync(compiler + actionArg + optionsArg + fileArg)
   return stdout
 }

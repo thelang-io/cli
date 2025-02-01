@@ -8,7 +8,7 @@ import chmodAddSync from "./utils"
 
 const ENDPOINT_URL := "https://api.thelang.io"
 
-export fn command (compiler: str, action: str, path: str, outputPath: str, qs: str) {
+export fn command (compiler: str, action: str, path: str, outputPath: str, platform: str, arch: str, qs: str) {
   filePath := fs_realpathSync(path)
   mainFile := qs.slice(qs.find("&m=") + 3)
 
@@ -20,14 +20,14 @@ export fn command (compiler: str, action: str, path: str, outputPath: str, qs: s
     data := request(ENDPOINT_URL + "/" + action + qs, filePath)
     print(data.str(), terminator: "")
   } elif action == "lex" || action == "parse" {
-    data := customCompile(compiler, action, filePath + path_SEP + mainFile, outputPath)
+    data := customCompile(compiler, action, filePath + path_SEP + mainFile, outputPath, platform, arch)
     print(data.str(), terminator: "")
   } elif action == "compile" && compiler.empty {
     data := request(ENDPOINT_URL + "/" + action + qs, filePath)
     fs_writeFileSync(outputPath, data)
     chmodAddSync(outputPath, 0o111)
   } elif action == "compile" {
-    customCompile(compiler, action, filePath + path_SEP + mainFile, outputPath)
+    customCompile(compiler, action, filePath + path_SEP + mainFile, outputPath, platform, arch)
     chmodAddSync(outputPath, 0o111)
   }
 }

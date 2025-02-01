@@ -294,7 +294,7 @@ main {
     commandAction := action == "run" ? "compile" : action
     mut runner := Runner_init(actionArgument, excludePaths)
     qs += "&m=" + actionArgument.slice(cwd.len + path_SEP.len)
-    command(compiler, commandAction, runner.outputDir, outputPath, qs)
+    command(compiler, commandAction, runner.outputDir, outputPath, platform, arch, qs)
 
     if action == "run" {
       cmd := outputPath + (runArgs.empty ? "" : " " + runArgs)
@@ -355,7 +355,7 @@ main {
   } elif action == "test" {
     mut tester := Tester_init(actionArgument, excludePaths)
     qs += "&m=__the__main__"
-    command(compiler, "compile", tester.outputDir, tester.outputPath, qs)
+    command(compiler, "compile", tester.outputDir, tester.outputPath, platform, arch, qs)
 
     stdout := process_runSync(tester.outputPath)
     print(stdout.str(), terminator: "")
