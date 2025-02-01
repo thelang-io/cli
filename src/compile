@@ -41,11 +41,11 @@ export fn customCompile (compiler: str, action: str, filePath: str, outputPath: 
     optionsArg += " " + quote + "--output=" + outputPath + quote
   }
 
-  if !platform.empty {
+  if !platform.empty && platform != os_NAME.lower {
     optionsArg += " " + quote + "--platform=" + platform + quote
   }
 
-  if !arch.empty {
+  if !arch.empty && arch != os_ARCH {
     optionsArg += " " + quote + "--arch=" + arch + quote
   }
 

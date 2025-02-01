@@ -21,7 +21,8 @@ jobs:
       - run: |
           VERSION="${{ github.event.release.tag_name || github.ref }}"
           VERSION="${VERSION#refs/tags/}"
-          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+          VERSION="${VERSION:1}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
       - run: echo $VERSION
       - run: the install
       - run: the compile src/main --compiler=compiler --platform=linux                 && mv a.out cli-core-linux        && sleep 1
