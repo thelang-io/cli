@@ -27,7 +27,7 @@ export fn collectTestFunctionNames (path: str) str[] {
     statement := it.asFunctionDeclaration()
     name := statement.name.name
 
-    if name.slice(0, 5) == "TEST_" {
+    if name.slice(0, 5) == "TEST_" && !it.hasParent() {
       result.push(name.slice(5))
     }
   })
