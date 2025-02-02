@@ -3,10 +3,10 @@
  * Licensed under the MIT License
  */
 
+import * as Config from "./config"
 import PackageMetadata, PackageMetadata_parse from "./package-metadata"
 import PackageYAML, PackageYAML_parse from "./package-yaml"
-import removeDirectorySync from "./utils"
-import * as Config from "./config"
+import pathParam, removeDirectorySync from "./utils"
 
 export obj Package {
   name: str
@@ -71,12 +71,12 @@ export obj Package {
     self._checkInitialized("download")
     tempPath := path_tempDirectory()
 
+    process_runSync("git clone " + self._meta.repository + " " + pathParam(tempPath) + " 2>&1")
+
     if os_NAME == "Windows" {
-      process_runSync("git clone " + self._meta.repository + " \"" + tempPath + "\" 2>&1")
-      process_runSync("powershell 'Set-Location \"" + tempPath + "\"; git reset --hard " + self._meta.getVersionHash(self.version) + "' 2>&1")
+      process_runSync("powershell 'Set-Location " + pathParam(tempPath) + "; git reset --hard " + self._meta.getVersionHash(self.version) + "' 2>&1")
     } else {
-      process_runSync("git clone " + self._meta.repository + " '" + tempPath + "' 2>&1")
-      process_runSync("(cd '" + tempPath + "' && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1)")
+      process_runSync("(cd " + pathParam(tempPath) + " && git reset --hard " + self._meta.getVersionHash(self.version) + " 2>&1)")
     }
 
     removeDirectorySync(tempPath + path_SEP + ".git")
@@ -258,12 +258,7 @@ export obj Packager {
     if self.tempPath.empty {
       self.tempPath = path_tempDirectory()
       self._tempPathCreated = true
-
-      if os_NAME == "Windows" {
-        process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git \"" + self.tempPath + "\" 2>&1")
-      } else {
-        process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git '" + self.tempPath + "' 2>&1")
-      }
+      process_runSync("git clone --depth=1 https://github.com/thelang-io/packages.git " + pathParam(self.tempPath) + " 2>&1")
     }
 
     self._packageYAMLPath = self.cwd + path_SEP + "package.yml"

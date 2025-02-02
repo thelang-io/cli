@@ -70,11 +70,15 @@ export fn mapStr (arr: str[], cb: (str, int) -> str) str[] {
   return result
 }
 
+export fn pathParam (param: str) str {
+  return "\"" + param + "\""
+}
+
 export fn removeDirectorySync (path: str) {
   if os_NAME == "Windows" {
-    process_runSync("powershell 'Remove-Item -Recurse -Force \"" + path + "\"'")
+    process_runSync("powershell 'Remove-Item -Recurse -Force " + pathParam(path) + "'")
   } else {
-    process_runSync("rm -rf \"" + path + "\"")
+    process_runSync("rm -rf " + pathParam(path))
   }
 }
 

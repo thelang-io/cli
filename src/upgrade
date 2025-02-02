@@ -1,0 +1,39 @@
+/*!
+ * Copyright (c) Aaron Delasy
+ * Licensed under the MIT License
+ */
+
+import * as Config from "./config"
+import pathParam from "./utils"
+
+export fn upgradeCli () str {
+  binariesPath := Config.getBinariesPath()
+  installPath := binariesPath + path_SEP + (os_NAME == "Windows" ? "the.exe" : "the")
+  upgradePath := binariesPath + path_SEP + "the-upgrade." + (os_NAME == "Windows" ? "ps1" : "sh")
+  coreUrl := "https://cdn.thelang.io/cli-core-" + os_NAME.lower
+  mut upgradeContent := ""
+
+  if os_NAME == "Windows" {
+    upgradeContent = "$InstallPath = " + pathParam(installPath) + os_EOL +
+      "(New-Object -TypeName System.Net.WebClient).DownloadFile('" + coreUrl + "', $InstallPath)" + os_EOL +
+      "$Acl = Get-Acl -Path $InstallPath" + os_EOL +
+      "$AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList Users, Traverse, Allow" + os_EOL +
+      "$Acl.SetAccessRule($AccessRule)" + os_EOL +
+      "Set-Acl -Path $InstallPath -AclObject $Acl" + os_EOL
+  } else {
+    archParam := os_NAME == "macOS" ? "-$(uname -m)" : ""
+
+    upgradeContent =
+      "curl -fsSL " + coreUrl + archParam + " -o " + pathParam(installPath) + " || exit 1" + os_EOL +
+      "chmod +x " + pathParam(installPath) + " || exit 1" + os_EOL
+  }
+
+  fs_writeFileSync(upgradePath, upgradeContent.toBuffer())
+  chmodAddSync(upgradePath, 0o111)
+
+  if os_NAME == "Windows" {
+    process_runSync("start /b powershell " + pathParam(upgradePath) + " 2>&1 > nul")
+  } else {
+    process_runSync(pathParam(upgradePath) + " 2>&1 > /dev/null &")
+  }
+}

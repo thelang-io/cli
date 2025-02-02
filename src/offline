@@ -4,7 +4,7 @@
  */
 
 import * as Config from "./config"
-import profileFileAppend from "./utils"
+import pathParam, profileFileAppend from "./utils"
 
 fn installDependencies (tempDirectory: str) {
   fs_mkdirSync(tempDirectory)
@@ -22,12 +22,12 @@ fn installDependencies (tempDirectory: str) {
   req.close()
 
   fs_writeFileSync(tarballPath, res.data)
-  process_runSync("tar -xz -f '" + tarballPath + "' -C '" + tempDirectory + "'")
+  process_runSync("tar -xz -f " + pathParam(tarballPath) + " -C " + pathParam(tempDirectory))
 
   installPath := Config.getDependenciesPath()
 
   fs_copyDirectorySync(platformDependenciesPath, installPath)
-  profileFileAppend("export THE_DEPS_DIR='" + installPath + "' # Added by `the offline`")
+  profileFileAppend("export THE_DEPS_DIR=" + pathParam(installPath) + " # Added by `the offline`")
 }
 
 fn installCompiler (tempDirectory: str) {
@@ -37,15 +37,14 @@ fn installCompiler (tempDirectory: str) {
   buildDirectory := repositoryDirectory + path_SEP + "build"
   releaseDirectory := buildDirectory + (os_NAME == "Windows" ? path_SEP + "Release" : "")
 
-  process_runSync("git clone -q --depth=1 --single-branch https://github.com/thelang-io/the.git '" + repositoryDirectory + "'")
-  process_runSync("cmake '" + repositoryDirectory + "' -B '" + buildDirectory + "' -D CMAKE_BUILD_TYPE=Release")
-  process_runSync("cmake --build '" + buildDirectory + "' --config Release --target the")
+  process_runSync("git clone -q --depth=1 --single-branch https://github.com/thelang-io/the.git " + pathParam(repositoryDirectory))
+  process_runSync("cmake " + pathParam(repositoryDirectory) + " -B " + pathParam(buildDirectory) + " -D CMAKE_BUILD_TYPE=Release")
+  process_runSync("cmake --build " + pathParam(buildDirectory) + " --config Release --target the")
 
   fs_copyFileSync(releaseDirectory + path_SEP + (os_NAME == "Windows" ? "the.exe" : "the"), Config.offlineCompilerPath())
 }
 
 export fn installOfflineCompiler () str {
-  Config.initHome()
   tempDirectory := path_tempDirectory()
 
   if !fs_existsSync(Config.getDependenciesPath()) {

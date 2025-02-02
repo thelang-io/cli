@@ -12,6 +12,7 @@ import Tester_init from "./tester"
 import chmodAddSync, mapStr from "./utils"
 import command from "./command"
 import installOfflineCompiler from "./offline"
+import upgradeCli from "./upgrade"
 
 const VERSION_NUM := "0.14.13"
 const VERSION_NAME := "Tiarin Rise"
@@ -289,6 +290,8 @@ main {
     process_exit(0)
   }
 
+  Config.initHome()
+
   mut qs := "?v=" + version
   qs += "&p=" + platform
   qs += (arch.empty ? arch : "&a=" + arch)
@@ -365,39 +368,6 @@ main {
 
     tester.deinit()
   } elif action == "upgrade" {
-    mut upgradePath := process_home + path_SEP + ".the" + path_SEP + "bin" + path_SEP + "the-upgrade.sh"
-    mut upgradeContent := ""
-
-    if os_NAME == "Windows" {
-      upgradePath = process_home + path_SEP + "The" + path_SEP + "bin" + path_SEP + "the-upgrade.ps1"
-
-      upgradeContent = "$InstallPath = \"$env:UserProfile\\The\\bin\\the.exe\"" + os_EOL +
-        "(New-Object -TypeName System.Net.WebClient).DownloadFile('https://cdn.thelang.io/cli-core-windows', $InstallPath)" + os_EOL +
-        "$Acl = Get-Acl -Path $InstallPath" + os_EOL +
-        "$AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList Users, Traverse, Allow" + os_EOL +
-        "$Acl.SetAccessRule($AccessRule)" + os_EOL +
-        "Set-Acl -Path $InstallPath -AclObject $Acl" + os_EOL
-    } elif os_NAME == "macOS" {
-      upgradeContent = "install_path=\"$HOME/.the/bin/the\"" + os_EOL +
-        "cdn_url=\"https://cdn.thelang.io/cli-core-macos-$(uname -m)\"" + os_EOL +
-        "curl -fsSL \"$cdn_url\" -o \"$install_path\" || exit 1" + os_EOL +
-        "chmod +x \"$install_path\" || exit 1" + os_EOL
-    } else {
-      upgradeContent := "install_path=\"$HOME/.the/bin/the\"" + os_EOL +
-        "  cdn_url=\"https://cdn.thelang.io/cli-core-linux\"" + os_EOL +
-        "  curl -fsSL \"$cdn_url\" -o \"$install_path\" || exit 1" + os_EOL +
-        "  chmod +x \"$install_path\" || exit 1" + os_EOL
-    }
-
-    fs_writeFileSync(upgradePath, upgradeContent.toBuffer())
-    chmodAddSync(upgradePath, 0o111)
-
-    if os_NAME == "Windows" {
-      process_runSync("start /b powershell \"" + upgradePath + "\" 2>&1 > nul")
-    } elif os_NAME == "macOS" {
-      process_runSync("\"" + upgradePath + "\" 2>&1 > /dev/null &")
-    } else {
-      process_runSync("\"" + upgradePath + "\" 2>&1 > /dev/null &")
-    }
+    upgradeCli()
   }
 }
