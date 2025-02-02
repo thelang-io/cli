@@ -4,7 +4,7 @@
  */
 
 import * as Config from "./config"
-import pathParam, profileFileAppend from "./utils"
+import pathParam, setEnvSystem from "./utils"
 
 fn installDependencies (tempDirectory: str) {
   fs_mkdirSync(tempDirectory)
@@ -27,7 +27,7 @@ fn installDependencies (tempDirectory: str) {
   installPath := Config.getDependenciesPath()
 
   fs_copyDirectorySync(platformDependenciesPath, installPath)
-  profileFileAppend("export THE_DEPS_DIR=" + pathParam(installPath) + " # Added by `the offline`")
+  setEnvSystem("THE_DEPS_DIR", installPath)
 }
 
 fn installCompiler (tempDirectory: str) {

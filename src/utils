@@ -35,32 +35,6 @@ export fn excludePaths (paths: str[], exclude: str[]) str[] {
   return result
 }
 
-export fn profileFileAppend (text: str) {
-  mut filePath := process_home + path_SEP + ".zprofile"
-
-  if !fs_existsSync(filePath) {
-    filePath = process_home + path_SEP + ".bash_profile"
-  }
-
-  if !fs_existsSync(filePath) {
-    filePath = process_home + path_SEP + ".profile"
-  }
-
-  mut content := fs_existsSync(filePath) ? fs_readFileSync(filePath).str() : ""
-
-  if content[content.len - 1] != '\n' {
-    content += os_EOL
-  }
-
-  content += text
-
-  if text[text.len - 1] != '\n' {
-    content += os_EOL
-  }
-
-  fs_writeFileSync(filePath, content.toBuffer())
-}
-
 export fn mapStr (arr: str[], cb: (str, int) -> str) str[] {
   l := arr.len
   mut result := arr
@@ -80,6 +54,38 @@ export fn removeDirectorySync (path: str) {
   } else {
     process_runSync("rm -rf " + pathParam(path))
   }
+}
+
+export fn setEnvSystem (name: str, value: str) {
+  if os_NAME == "Windows" {
+    process_runSync(
+      "powershell '[System.Environment]::SetEnvironmentVariable(" +
+      "\"" + name + "\", \"" + value + "\", " +
+      "[System.EnvironmentVariableTarget]::User" +
+      ")'"
+    )
+
+    return
+  }
+
+  mut filePath := process_home + path_SEP + ".zprofile"
+
+  if !fs_existsSync(filePath) {
+    filePath = process_home + path_SEP + ".bash_profile"
+  }
+
+  if !fs_existsSync(filePath) {
+    filePath = process_home + path_SEP + ".profile"
+  }
+
+  mut content := fs_existsSync(filePath) ? fs_readFileSync(filePath).str() : ""
+
+  if !content.empty && content[content.len - 1] != '\n' {
+    content += os_EOL
+  }
+
+  content += "export " + name + "=\"" + value + "\" # Added by The CLI\n"
+  fs_writeFileSync(filePath, content.toBuffer())
 }
 
 export fn scandirDeepSync (path: str) str[] {
