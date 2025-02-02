@@ -4,7 +4,7 @@
  */
 
 import * as Config from "./config"
-import pathParam from "./utils"
+import chmodAddSync, pathParam from "./utils"
 
 export fn upgradeCli () str {
   binariesPath := Config.getBinariesPath()
