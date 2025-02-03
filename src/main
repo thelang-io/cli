@@ -14,7 +14,7 @@ import command from "./command"
 import installOfflineCompiler from "./offline"
 import upgradeCli from "./upgrade"
 
-const VERSION_NUM := "0.14.14"
+const VERSION_NUM := "0.14.15"
 const VERSION_NAME := "Tiarin Rise"
 
 main {
