@@ -10,7 +10,9 @@ export obj Tester {
   cwd: str
   targetPath: str
   exclude: str[]
+  mut inputFile: str
   mut inputPath: str
+  mut outputBinary: str
   mut outputDir: str
   mut outputPath: str
 
@@ -24,7 +26,8 @@ export obj Tester {
     }
 
     self.outputDir = path_tempDirectory()
-    self.inputPath = self.outputDir + path_SEP + "__the__main__"
+    self.inputFile = "__the_tests_main__"
+    self.inputPath = self.outputDir + path_SEP + self.inputFile
     allFiles := fs_isDirectorySync(realFullPath) ? scandirDeepSync(realFullPath) : [realFullPath]
     files := excludePaths(collectUsedPaths(allFiles), self.exclude)
     mut mainFileImports := "import Tests from \"the/testing\"" + os_EOL
@@ -62,7 +65,8 @@ export obj Tester {
     mainFile += "}" + os_EOL
 
     mainContent := mainFileImports + os_EOL + mainFile
-    self.outputPath = self.outputDir + path_SEP + "a." + (os_NAME == "Windows" ? "exe" : "out")
+    self.outputBinary = "a." + (os_NAME == "Windows" ? "exe" : "out")
+    self.outputPath = self.outputDir + path_SEP + self.outputBinary
     fs_writeFileSync(self.inputPath, mainContent.toBuffer())
 
     packageYamlPath := self.cwd + path_SEP + "package.yml"

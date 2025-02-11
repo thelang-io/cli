@@ -368,14 +368,16 @@ main {
     }
   } elif action == "test" {
     mut tester := Tester_init(actionArgument, excludePaths)
-    qs += "&m=__the__main__"
+    qs += "&m=" + tester.inputFile
     command(compiler, "compile", tester.outputDir, tester.outputPath, platform, arch, qs)
 
-    mut cmd := tester.outputPath
+    mut cmd := "cd \"" + tester.outputDir + "\" && ./" + tester.outputBinary
 
     if filter != nil {
       cmd += " --filter=\"" + filter + "\""
     }
+
+    cmd += " 1>&2"
 
     stdout := process_runSync(cmd)
     print(stdout.str(), terminator: "")
