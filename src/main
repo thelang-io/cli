@@ -371,7 +371,7 @@ main {
     qs += "&m=" + tester.inputFile
     command(compiler, "compile", tester.outputDir, tester.outputPath, platform, arch, qs)
 
-    mut cmd := "cd \"" + tester.outputDir + "\" && ./" + tester.outputBinary
+    mut cmd := tester.outputPath + " --cwd=\"" + tester.outputDir + "\""
 
     if filter != nil {
       cmd += " --filter=\"" + filter + "\""
