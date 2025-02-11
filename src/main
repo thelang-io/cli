@@ -164,6 +164,11 @@ main {
     )
 
     .option(
+      "filter",
+      "Filter underlying tests by name.",
+    )
+
+    .option(
       "help",
       "Print help information.",
       alias: "h",
@@ -230,6 +235,7 @@ main {
     ? Config.offlineCompilerPath()
     : ""
   mut excludePaths := [".git", ".svn", "thumbs.db", ".DS_Store"]
+  mut filter: str?
   mut outputPath := ""
   mut platform := ""
   mut runArgs := ""
@@ -268,6 +274,8 @@ main {
     } elif arg.option == "exclude" {
       paths := mapStr(arg.value.split(","), (it: str, idx: int) -> str { return it.trim() })
       excludePaths.merge(paths)
+    } elif arg.option == "filter" {
+      filter = arg.value
     } elif arg.option == "output" {
       outputPath = fs_isAbsoluteSync(arg.value) ? arg.value : cwd + path_SEP + arg.value
     } elif arg.option == "platform" {
@@ -363,7 +371,13 @@ main {
     qs += "&m=__the__main__"
     command(compiler, "compile", tester.outputDir, tester.outputPath, platform, arch, qs)
 
-    stdout := process_runSync(tester.outputPath)
+    mut cmd := tester.outputPath
+
+    if filter != nil {
+      cmd += " --filter=\"" + filter + "\""
+    }
+
+    stdout := process_runSync(cmd)
     print(stdout.str(), terminator: "")
 
     tester.deinit()
