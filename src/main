@@ -165,7 +165,7 @@ main {
 
     .option(
       "filter",
-      "Filter underlying tests by name.",
+      "Filter underlying tests by a comma separated list of test names.",
     )
 
     .option(
@@ -217,6 +217,7 @@ main {
     .example("the lex /path/to/file")
     .example("the lex /path/to/file --the=1.0.0")
     .example("the run /path/to/file --platform=macos")
+    .example("the test /path/to/file --filter=test1,test2")
 
     .example("the i")
     .example("the install the/error@1.0.0")
