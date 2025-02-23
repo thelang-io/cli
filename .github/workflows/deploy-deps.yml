@@ -11,7 +11,7 @@ env:
 
 jobs:
   build-osxcross:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,7 +30,7 @@ jobs:
           path: build-osxcross.tar.gz
   build-cross-compile-macos-arm64:
     needs: build-osxcross
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,7 +54,7 @@ jobs:
           path: build-cross-compile-macos-arm64.tar.gz
   build-cross-compile-macos-x86_64:
     needs: build-osxcross
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,7 +77,7 @@ jobs:
           name: build-cross-compile-macos-x86_64
           path: build-cross-compile-macos-x86_64.tar.gz
   build-cross-compile-windows:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,7 +95,7 @@ jobs:
           name: build-cross-compile-windows
           path: build-cross-compile-windows.tar.gz
   build-linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -172,7 +172,7 @@ jobs:
       - build-macos-arm64
       - build-macos-x86_64
       - build-windows
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/download-artifact@v4
       - run: |
